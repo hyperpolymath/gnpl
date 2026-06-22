@@ -1,0 +1,16 @@
+// SPDX-License-Identifier: CC-BY-SA-4.0
+// SPDX-FileCopyrightText: 2026 Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>
+= gnpl
+
+[NOTE]
+====
+*Reserved — extraction in progress (not yet migrated).*
+====
+
+*GNPL* is the standalone query language (GQL-dt) associated with LithoglyphDB.
+
+The live source currently lives in
+https://github.com/hyperpolymath/nextgen-databases/tree/main/lithoglyph/gql-dt[nextgen-databases/lithoglyph/gql-dt]
+and will be migrated into this repository. Until then, treat that location as
+canonical. (This repo reserves the name and records the intended home; see the
+owner's notes for the extraction plan.)
