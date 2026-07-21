@@ -1,0 +1,31 @@
+# SPDX-License-Identifier: MPL-2.0
+# SPDX-FileCopyrightText: 2026 Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>
+#
+# Toolchains this repository actually uses.
+#
+# A previous sweep added a generic boilerplate mise.toml here declaring
+# node/python/rust/go/java/bun/deno at "latest" — none of which this project
+# uses — while omitting every toolchain it does. That file is not carried
+# forward. What follows is the measured stack.
+#
+# Deliberately NOT pinned here: Lean.
+#   `lean-toolchain` (leanprover/lean4:v4.15.0) is the single source of truth,
+#   and elan reads it automatically. Duplicating that pin in mise would create
+#   two places to disagree — which is exactly how the estate's "untrusted mise
+#   silently ignores pins" problem bites.
+
+[tools]
+# Zig — builds the FFI bridge in bridge/ that Lean links against
+# (`lakefile.lean`: -Lbridge/zig-out/lib -llith_bridge).
+# 0.16.0 verified: `bridge/` builds clean and `zig build test` passes.
+# NB the stale skeletons in bridge/zig/ and ffi/zig/ use the pre-0.15 Build API
+# and do NOT compile under this version — see issue notes in the PR.
+zig = "0.16.0"
+
+# Idris2 — the ABI layer, src/GQLdt/ABI/{Types,Layout,Foreign}.idr,
+# per the estate ABI/FFI standard (ABI = Idris2, FFI = Zig).
+idris2 = "latest"
+
+[env]
+# Keep Lean's build artefacts out of the way of editors/indexers.
+LEAN_ABORT_ON_PANIC = "1"

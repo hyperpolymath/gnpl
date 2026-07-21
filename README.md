@@ -1,10 +1,10 @@
 # GQLdt: Dependently-Typed Lithoglyph Query Language
 
-image:https://img.shields.io/badge/License-MPL--2.0-blue.svg[License: PMPL-1.0,link="https://github.com/hyperpolymath/palimpsest-license"]
+[![License: MPL-2.0](https://img.shields.io/badge/License-MPL--2.0-blue.svg)](https://www.mozilla.org/en-US/MPL/2.0/)
 // SPDX-License-Identifier: CC-BY-SA-4.0
 // SPDX-FileCopyrightText: 2025 hyperpolymath
 
-GQLdt extends [Lithoglyph](https://github.com/hyperpolymath/lithoglyph)'s query language with **dependent types**, enabling compile-time verification of database constraints, provenance tracking, and reversibility proofs.
+GQLdt extends [Lithoglyph](https://github.com/hyperpolymath/nextgen-databases/tree/main/lithoglyph)'s query language with **dependent types**, enabling compile-time verification of database constraints, provenance tracking, and reversibility proofs.
 
 > **Note**: GQL stands for "Lithoglyph Query Language"—the native query interface for Lithoglyph. It is not related to HTML forms or form builders.
 
@@ -152,10 +152,12 @@ See [spec/normalization-types.md](spec/normalization-types.md) for normalization
 
 ## See Also
 
-- [Lithoglyph](https://github.com/hyperpolymath/lithoglyph) - The narrative-first database
-- [Lithoglyph Self-Normalizing Spec](https://github.com/hyperpolymath/lithoglyph/blob/main/spec/self-normalizing.adoc) - Self-normalizing database specification
-- [Lithoglyph Studio](https://github.com/hyperpolymath/lithoglyph-studio) - Zero-friction GUI for GQLdt
+- [Lithoglyph](https://github.com/hyperpolymath/nextgen-databases/tree/main/lithoglyph) - The narrative-first database
+- [Lithoglyph Self-Normalizing Spec](https://github.com/hyperpolymath/nextgen-databases/tree/main/lithoglyph/spec/self-normalizing.adoc) - Self-normalizing database specification
+- [Glyphbase](https://github.com/hyperpolymath/glyphbase) - Lithoglyph web UI (Airtable-mode delivery)
+- [lithoglyphdb](https://github.com/hyperpolymath/lithoglyphdb) - Reserved future home of the database (extraction pending)
 - [BoFIG](https://github.com/hyperpolymath/bofig) - Evidence graph for investigative journalism
 - [Zotero-Lithoglyph](https://github.com/hyperpolymath/zotero-lithoglyph) - Production pilot: reference manager with PROMPT scores
-- [Lithoglyph Debugger](https://github.com/hyperpolymath/lithoglyph-debugger) - Proof-carrying database debugger (Lean 4 + Idris 2)
+- Lithoglyph Studio - Zero-friction GUI for GQLdt *(planned; not yet published)*
+- Lithoglyph Debugger - Proof-carrying database debugger, Lean 4 + Idris 2 *(planned; not yet published)*
 - [FormBase](https://github.com/hyperpolymath/formbase) - Open-source Airtable alternative with provenance

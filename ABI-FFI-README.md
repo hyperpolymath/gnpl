@@ -374,7 +374,7 @@ When modifying the ABI/FFI:
 
 ## License
 
-PMPL-1.0-or-later
+CC-BY-SA-4.0
 
 ## See Also
 
