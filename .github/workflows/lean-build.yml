@@ -51,8 +51,22 @@ jobs:
           set -o pipefail
           lake build 2>&1 | tee lake-build.log
 
+      # `lake test` exits non-zero BOTH when tests fail and when no test driver
+      # is configured. The previous step was `lake test || echo "..."`, which
+      # swallowed both — so a genuine test failure could never turn this job red.
+      # Tolerate only the "no test driver" case, and surface it as a warning
+      # rather than a silent pass: no driver means no executable test coverage.
       - name: Run Lean tests
-        run: lake test || echo "No tests configured yet"
+        run: |
+          set -o pipefail
+          if lake test 2>&1 | tee lake-test.log; then
+            echo "✅ lake test passed"
+          elif grep -q "no test driver configured" lake-test.log; then
+            echo "::warning::No Lean test driver is configured, so this repository has NO executable test coverage. Add a @[test_driver] to lakefile.lean."
+          else
+            echo "::error::lake test failed"
+            exit 1
+          fi
 
       # Authoritative proof gate. Lean itself emits "declaration uses 'sorry'";
       # the previous gate was `! grep -r "sorry\|admit" src/`, which fired on a
