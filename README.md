@@ -1,10 +1,27 @@
-# GQLdt: Dependently-Typed Lithoglyph Query Language
+# GQLdt — the query layer
 
-image:https://img.shields.io/badge/License-MPL--2.0-blue.svg[License: PMPL-1.0,link="https://github.com/hyperpolymath/palimpsest-license"]
+[![License: MPL-2.0](https://img.shields.io/badge/License-MPL--2.0-blue.svg)](https://www.mozilla.org/en-US/MPL/2.0/)
 // SPDX-License-Identifier: CC-BY-SA-4.0
 // SPDX-FileCopyrightText: 2025 hyperpolymath
 
-GQLdt extends [Lithoglyph](https://github.com/hyperpolymath/lithoglyph)'s query language with **dependent types**, enabling compile-time verification of database constraints, provenance tracking, and reversibility proofs.
+> **This is not the repository README.** It documents **one of two layers**.
+>
+> This repo is **GNPL**, a *narration/projection* language — see
+> **[README.adoc](README.adoc)**, which is what GitHub renders on the landing page.
+> GNPL answers *"what account does this evidence support, from whose stance, with what
+> warrant"*. It is being built **on top of** GQLdt and **lowers to** it:
+>
+> ```
+> GNPL  ──lowers to──▶  GQLdt  ──FFI──▶  Lithoglyph
+> (what account)       (what is)        (the data store)
+> ```
+>
+> The document below describes **GQLdt only** — the extensional query core under `src/GqlDt/`,
+> which is why the sources are namespaced `GqlDt` in a repo named `gnpl`. Nothing here is
+> being discarded; GQLdt becomes GNPL's compilation target. Design rationale:
+> [docs/THEORY.adoc](docs/THEORY.adoc) and [docs/LITHOGLYPH.adoc](docs/LITHOGLYPH.adoc).
+
+GQLdt extends [Lithoglyph](https://github.com/hyperpolymath/nextgen-databases/tree/main/lithoglyph)'s query language with **dependent types**, enabling compile-time verification of database constraints, provenance tracking, and reversibility proofs.
 
 > **Note**: GQL stands for "Lithoglyph Query Language"—the native query interface for Lithoglyph. It is not related to HTML forms or form builders.
 
@@ -152,10 +169,12 @@ See [spec/normalization-types.md](spec/normalization-types.md) for normalization
 
 ## See Also
 
-- [Lithoglyph](https://github.com/hyperpolymath/lithoglyph) - The narrative-first database
-- [Lithoglyph Self-Normalizing Spec](https://github.com/hyperpolymath/lithoglyph/blob/main/spec/self-normalizing.adoc) - Self-normalizing database specification
-- [Lithoglyph Studio](https://github.com/hyperpolymath/lithoglyph-studio) - Zero-friction GUI for GQLdt
+- [Lithoglyph](https://github.com/hyperpolymath/nextgen-databases/tree/main/lithoglyph) - The narrative-first database
+- [Lithoglyph Self-Normalizing Spec](https://github.com/hyperpolymath/nextgen-databases/tree/main/lithoglyph/spec/self-normalizing.adoc) - Self-normalizing database specification
+- [Glyphbase](https://github.com/hyperpolymath/glyphbase) - Lithoglyph web UI (Airtable-mode delivery)
+- [lithoglyphdb](https://github.com/hyperpolymath/lithoglyphdb) - Reserved future home of the database (extraction pending)
 - [BoFIG](https://github.com/hyperpolymath/bofig) - Evidence graph for investigative journalism
 - [Zotero-Lithoglyph](https://github.com/hyperpolymath/zotero-lithoglyph) - Production pilot: reference manager with PROMPT scores
-- [Lithoglyph Debugger](https://github.com/hyperpolymath/lithoglyph-debugger) - Proof-carrying database debugger (Lean 4 + Idris 2)
+- Lithoglyph Studio - Zero-friction GUI for GQLdt *(planned; not yet published)*
+- Lithoglyph Debugger - Proof-carrying database debugger, Lean 4 + Idris 2 *(planned; not yet published)*
 - [FormBase](https://github.com/hyperpolymath/formbase) - Open-source Airtable alternative with provenance

@@ -1,0 +1,204 @@
+// SPDX-License-Identifier: CC-BY-SA-4.0
+// SPDX-FileCopyrightText: 2026 Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>
+= GNPL for Lithoglyph — the tethered case
+:toc: macro
+:toclevels: 3
+
+*Status:* design document. Companion to link:THEORY.adoc[`THEORY.adoc`], which argues the
+general case. This document argues the specific one: **what GNPL buys Lithoglyph**, and why
+Lithoglyph is an unusually good host for it.
+
+toc::[]
+
+== Summary
+
+Lithoglyph already pays, at write time, the cost that a narration language needs someone to
+have paid. Three facts, all verifiable in the code rather than asserted:
+
+. **Every mutation is journalled.** `Form.Blocks` maintains an append-only journal of all
+  mutations, with the invariant that *journal entries are written before block mutations*
+  (`nextgen-databases/lithoglyph/ARCHITECTURE.adoc`).
+. **Every modification carries a reason.** `src/GqlDt/Provenance/Rationale.lean`:
+  *"Every data modification in GQLdt must include a rationale. This is enforced at the type
+  level — you cannot construct a `Tracked` value without providing a non-empty rationale."*
+. **Provenance crosses the ABI.** `bridge/lith_types.zig` already marshals `ActorIdC`,
+  `RationaleC`, `ProvenanceC` and `TrackedValueC` as C-ABI structs, alongside proof blobs
+  and six-dimension source-quality scores.
+
+In most databases, building narration means first retrofitting provenance — the hard,
+invasive part. Here it is already done and already mandatory. **GNPL is the layer that
+makes that investment pay.**
+
+== The argument from sunk cost
+
+Right now, mandatory rationale is a *tax*. Writers must supply a non-empty justification for
+every modification. Nothing in the system consumes it. It is stored, marshalled across the
+FFI boundary, and — absent a reader — mostly never read.
+
+This is a familiar failure mode: a governance feature that imposes cost at write time and
+delivers value nowhere, until it is quietly disabled or filled with boilerplate
+("Initial data entry", "User request" — both are literally the pre-baked constants in
+`Rationale.lean`).
+
+GNPL changes the economics. Once accounts are generated *from* warrant, rationale quality
+becomes directly observable: a lazy rationale produces a visibly weak account. The feature
+starts defending itself.
+
+== Mapping: GNPL constructs to what Lithoglyph already has
+
+[cols="1,2,2",options=header]
+|===
+| GNPL construct | Lithoglyph/GQLdt substrate | Status
+
+| `Fabula`
+| The `Form.Blocks` append-only mutation journal
+| **Exists.** Needs a typed view, not new storage.
+
+| `Warrant`
+| `Provenance/Rationale` + `Types/Confidence`
+| **Exists**, enforced at construction.
+
+| `Focalization`
+| `Provenance/ActorId`
+| **Exists** as an identifier; the *access restriction* is new.
+
+| Entrenchment (for retraction)
+| PROMPT scores — provenance, replicability, objective, methodology, publication,
+  transparency (`bridge/lith_types.zig`)
+| **Exists** as data; not yet used as an ordering.
+
+| `Account`, `Projection`, `Plurality`
+| —
+| **New.** This is the work.
+|===
+
+The right-hand column is the point: three of the six are already built, and the two hardest
+to retrofit (journal, mandatory warrant) are the ones already present.
+
+=== Where GNPL sits in the stack
+
+Lithoglyph's layering (Elixir control plane → Factor runtime → Zig bridge → Forth model →
+Forth blocks) is unchanged. GNPL adds one layer at the top and reuses the existing descent:
+
+----
+  GNPL          (narration: "what account")     <-- new
+    │  lowers to
+  GQLdt         (query: "what is")              <-- exists, builds
+    │  FFI  (liblith_bridge.a)
+  Form.Bridge   (Zig ABI)                       <-- exists
+    │
+  Form.Model / Form.Blocks  (Forth)             <-- exists, journalled
+----
+
+No new descent path, no second storage engine, and no change to the write path. GNPL is
+read-side only — which is also what makes it safe to build incrementally.
+
+== Five concrete capabilities
+
+=== 1. Forensic history as a query, not a report
+
+Today, "reconstruct what happened to record R" is a human task: read the audit trail,
+interpret it, write it up. It is slow, unrepeatable, and its quality varies by analyst.
+
+With GNPL it is a projection:
+
+----
+account of R
+  focalized by actor A
+  as at 2026-03-01
+----
+
+Repeatable, diffable, and — critically — *attributable*: the account states its own warrant,
+so a reader can audit the reasoning rather than trusting the writer.
+
+=== 2. Contradiction as a result, not a defect
+
+Two sources disagree about a field's value. Conventional handling: last-write-wins, or a
+constraint violation, or an application-level "conflict" flag that every consumer
+re-interprets.
+
+GNPL returns *both* accounts, marked **rival**, each with its warrant. The disagreement
+becomes a first-class answer. For an evidence database — which is what "narrative-first"
+means in practice — this is the difference between recording the evidence and destroying it.
+
+=== 3. Impact analysis: "if this source falls, what falls with it?"
+
+This is the counterfactual operation from `THEORY.adoc`, and it is the capability with the
+clearest external demand. A source is retracted, a witness is discredited, a dataset is
+found to be fabricated. The question is immediate and currently very hard: **which of our
+conclusions rested on it?**
+
+Because every assertion in an account carries its warrant chain, this is a retraction and
+re-projection, and the answer is a diff. The estate's misinformation-defence work wants
+exactly this; so does any newsroom or audit function.
+
+Note the honest limit: this answers *which narrated claims lose their warrant*. It does not
+answer whether they are false — an unwarranted claim may still be true.
+
+=== 4. Entrenchment from PROMPT, not from stipulation
+
+`THEORY.adoc` flags an open question in belief revision: AGM says retraction should respect
+an entrenchment ordering, but is silent on where that ordering comes from. Lithoglyph
+already scores sources on six dimensions.
+
+That gives a *defensible*, data-derived entrenchment ordering rather than a stipulated one —
+which is unusual, and worth exploiting.
+
+[WARNING]
+====
+`PromptScoresC.computeOverall` currently takes an **unweighted mean** of the six dimensions,
+and `Confidence.avg` likewise averages. Neither is probabilistically principled, and both
+would be load-bearing if used as an entrenchment ordering. This must be resolved before any
+retraction result is shown to a user — see open question 2 in `THEORY.adoc`.
+====
+
+=== 5. Glyphbase gets a rendering target
+
+`glyphbase` (the Lithoglyph web UI, already extracted to its own repo) currently renders
+records. An `Account` is a *document* — ordered, warranted, attributable. It is a far more
+natural thing to render than a result grid, and it gives the UI a reason to display
+provenance inline rather than in a hidden audit tab.
+
+== What this does not do
+
+Stating the limits plainly, because a narration layer invites over-claiming:
+
+* **It does not adjudicate.** GNPL never says which rival account is true.
+* **It does not improve the data.** Weak rationales yield weak accounts. GNPL makes that
+  visible; it does not fix it.
+* **It does not replace the audit log.** The journal remains the record of fact; an account
+  is an interpretation *of* it, and must never be mistaken for it.
+* **It adds no write-path guarantees.** Everything here is read-side.
+
+== Sequencing
+
+A build order that keeps each step independently useful:
+
+. **Typed view over the journal** — `Fabula` as a read-only projection of `Form.Blocks`.
+  Useful alone: a principled history API.
+. **`Warrant` + `Account`** with the no-narration-without-warrant constructor. Useful alone:
+  generated, attributable audit narratives.
+. **`Focalization`** as access restriction. Useful alone: per-actor views.
+. **`Plurality`** — rival/compatible/entailing relations. The first genuinely novel step.
+. **Counterfactual retraction + stability proofs.** The capability with the most external
+  pull, and the one that most needs open question 2 settled first.
+
+Steps 1–3 are largely engineering over existing substrate. Steps 4–5 are research.
+
+== Prerequisites
+
+* `lake build` green — **partially satisfied**: it builds, 34/35 targets, and Lean reports
+  no incomplete proofs. But Lean's `sorry` warning does not fire on `axiom`, and GQLdt
+  declares **16 axioms**, all stubs — five of them in *executable* position, so those
+  functions have no implementation at all. See `docs/proof-debt.md`. Steps 1–3 of the
+  sequencing above depend on the *types*, which are sound; step 5's stability proofs
+  depend on the axioms actually being discharged.
+* Zig bridge building — **satisfied**: `bridge/` produces `liblith_bridge.a` and its tests
+  pass.
+* A decision on `Confidence` representation. `Types/Confidence.lean` notes it uses runtime
+  validation over `Float` "since Float proofs are complex in Lean 4". A narration layer that
+  proves stability properties will feel this; an exact rational or interval type may be
+  required.
+* Lithoglyph's own extraction to `hyperpolymath/lithoglyphdb` is still pending; until then
+  `nextgen-databases/lithoglyph` is canonical. GNPL should depend on the *interface*
+  (the Zig ABI), not the location.

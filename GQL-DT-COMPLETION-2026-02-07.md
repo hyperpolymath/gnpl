@@ -169,7 +169,7 @@ deno run --allow-net --allow-read cli/lsp-server.ts
   "description": "Language support for GQL-DT queries with dependent type checking",
   "version": "1.0.0",
   "publisher": "hyperpolymath",
-  "license": "PMPL-1.0-or-later",
+  "license": "MPL-2.0",
   "engines": { "vscode": "^1.80.0" }
 }
 ```
@@ -557,4 +557,4 @@ All standard tooling is built, tested, and functional:
 
 **Report Generated:** 2026-02-07
 **Author:** Claude Sonnet 4.5 (Hyperpolymath Standards)
-**License:** PMPL-1.0-or-later
+**License:** CC-BY-SA-4.0

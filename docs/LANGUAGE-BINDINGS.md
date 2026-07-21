@@ -1,6 +1,6 @@
 # GQL-DT Language Bindings: Multi-Language Support
 
-**SPDX-License-Identifier:** PMPL-1.0-or-later
+**SPDX-License-Identifier:** CC-BY-SA-4.0
 **SPDX-FileCopyrightText:** 2026 Jonathan D.A. Jewell (@hyperpolymath)
 
 **Date:** 2026-02-01
@@ -222,7 +222,7 @@ name = "gqldt"
 version = "0.1.0"
 authors = ["Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>"]
 edition = "2021"
-license = "PMPL-1.0-or-later"
+license = "CC-BY-SA-4.0"
 
 [dependencies]
 serde = { version = "1.0", features = ["derive"] }

@@ -4,12 +4,12 @@ package gqldt
 
 version = 0.7.5
 authors = "Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>"
-license = "PMPL-1.0-or-later"
+license = "MPL-2.0"
 brief = "GQLdt - Dependently-typed query language ABI"
 readme = "README.adoc"
-homepage = "https://github.com/hyperpolymath/gql-dt"
-sourceloc = "https://github.com/hyperpolymath/gql-dt"
-bugtracker = "https://github.com/hyperpolymath/gql-dt/issues"
+homepage = "https://github.com/hyperpolymath/gnpl"
+sourceloc = "https://github.com/hyperpolymath/gnpl"
+bugtracker = "https://github.com/hyperpolymath/gnpl/issues"
 
 sourcedir = "src"
 builddir = "build"

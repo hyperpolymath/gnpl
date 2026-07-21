@@ -747,6 +747,6 @@ Suggestions:
 **Document Status**: Specification
 
 **See Also**:
-- [Lithoglyph Self-Normalizing Specification](https://github.com/hyperpolymath/lithoglyph/blob/main/spec/self-normalizing.adoc)
+- [Lithoglyph Self-Normalizing Specification](https://github.com/hyperpolymath/nextgen-databases/tree/main/lithoglyph/spec/self-normalizing.adoc)
 - [GQL Dependent Types Complete Specification](./GQL_Dependent_Types_Complete_Specification.md)
-- [Form.Normalizer Architecture](https://github.com/hyperpolymath/lithoglyph/blob/main/ARCHITECTURE.adoc)
+- [Form.Normalizer Architecture](https://github.com/hyperpolymath/nextgen-databases/tree/main/lithoglyph/ARCHITECTURE.adoc)

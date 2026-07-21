@@ -1,101 +1,137 @@
-= RSR template repo - see RSR_OUTLINE.adoc in root for general background and specification
+// SPDX-License-Identifier: CC-BY-SA-4.0
+// SPDX-FileCopyrightText: 2026 Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>
+= GNPL — a narration/projection language for Lithoglyph
+:toc: macro
+:toclevels: 2
 
-== This is your repo - don't forget to rename me!
+image:https://img.shields.io/badge/License-MPL--2.0-blue.svg[License: MPL-2.0,link="https://www.mozilla.org/en-US/MPL/2.0/"]
+image:https://img.shields.io/badge/docs-CC--BY--SA--4.0-lightgrey.svg[Docs: CC-BY-SA-4.0,link="https://creativecommons.org/licenses/by-sa/4.0/"]
 
-== ABI/FFI Standards (Hyperpolymath Universal Standard)
+**GNPL** is Lithoglyph's narration/projection language: it turns an evidence base into an
+*account* — for forensic histories, counterfactual paths, plural meanings, and
+synchronic/diachronic evidence interpretation.
 
-**All repos with foreign function interfaces MUST follow this standard:**
+Where a query language answers *"what is true in the store?"*, GNPL answers
+*"what account does this evidence support, told from whose stance, with what warrant —
+and what rival accounts does the same evidence also support?"*
 
-* **ABI (Application Binary Interface)** → **Idris2** (`src/abi/*.idr`)
-** Type definitions with dependent type proofs
-** Memory layout verification
-** Platform-specific ABIs with compile-time selection
-** Formal verification of interface correctness
+toc::[]
 
-* **FFI (Foreign Function Interface)** → **Zig** (`ffi/zig/src/*.zig`)
-** C-compatible function implementations
-** Zero-cost abstractions
-** Memory-safe by default
-** Cross-compilation support
+== Read this first: why the code says `GqlDt`
 
-* **Generated C Headers** → Auto-generated from Idris2 ABI (`generated/abi/*.h`)
-** Bridge between Idris2 and Zig
-** Consumed by any language via C ABI
+This repository is named `gnpl`, but every source file under `src/` is currently
+namespaced `GqlDt`. That is expected, not a mistake. **GNPL is being built as a layer on
+top of GQLdt, in this repository.**
 
-**Directory Structure:**
-----
-project/
-├── src/abi/          # Idris2 ABI definitions (REQUIRED)
-├── ffi/zig/          # Zig FFI implementation (REQUIRED)
-├── generated/abi/    # Auto-generated C headers
-└── bindings/         # Language-specific wrappers (optional)
-----
-
-**See:** `ABI-FFI-README.md` for complete documentation
-
-== AI CLI standards
-
-- Include `ai-cli-crash-capture/` and `contractiles/` from this template in new repos.
-- Mirror 6SCM files into `.machine_readable/` (NOT `.machine_readable/6scm/`).
-- Before any code generation, check `/var$REPOS_DIR/proven` for the current Idris "unbreakable" library status.
-- If a project uses that Idris library, add an *Idris Inside* badge to the repo.
-- If new bindings are required, add them in `/var$REPOS_DIR/proven` as `idris2-zig-<language>` during the work.
-- If new code suggests additional "unbreakable" Idris modules, add them under `/var$REPOS_DIR/proven` and update binders across all supported languages.
-
-== Standard Dependencies
-
-=== Web Projects
-
-ReScript web projects in the hyperpolymath ecosystem **MUST** use these formally verified components:
-
-[cols="1,2,1"]
+[cols="1,3,1",options=header]
 |===
-|Library |Purpose |Status
+| Layer | What it is | Status
 
-|link:https://github.com/hyperpolymath/rescript-dom-mounter[rescript-dom-mounter]
-|Formally verified DOM mounting
-|**REQUIRED**
+| `src/GqlDt/`
+| **GQLdt** — a dependently-typed *query* language in Lean 4. Extensional: "what is".
+  Already carries the substrate GNPL needs — `Provenance/ActorId`,
+  `Provenance/Rationale`, `Types/Confidence`.
+| *Builds* ✅
 
-|link:https://github.com/hyperpolymath/rescript-tea[rescript-tea]
-|TEA architecture framework
-|Recommended
-
-|link:https://github.com/hyperpolymath/cadre-tea-router[cadre-tea-router]
-|Proven-safe URL routing
-|Recommended
-
-|link:https://github.com/hyperpolymath/proven[proven]
-|Idris2 formally verified library
-|Core Dependency
+| `src/Gnpl/`
+| **GNPL** — the *narration* layer. Intensional: "what account". Lowers to GQLdt queries.
+| *Not yet implemented*
 |===
 
-==== Why SafeDOM is Required
-
-Traditional DOM mounting can fail:
-
-[source,javascript]
 ----
-// ❌ UNSAFE: Can crash with null pointer
-const el = document.getElementById('app')
-el.innerHTML = html  // 💥
+GNPL  ──lowers to──▶  GQLdt  ──FFI──▶  Lithoglyph
+(what account)      (what is)        (the data store)
 ----
 
-SafeDOM provides **compile-time proofs** that DOM operations cannot fail:
+Nothing in GQLdt is being discarded: it becomes GNPL's compilation target.
 
-[source,rescript]
+**History.** This repo was reserved for GNPL, then filled by a squash-import of the GQLdt
+sources from the `nextgen-databases/lithoglyph/` monorepo. The migration registry of the
+time defined GNPL narrowly, as simply a renamed "Glyph query language". That reading has
+since been superseded: narration/projection is the primary purpose, and practical value to
+Lithoglyph-as-a-database is the second. See the design documents below.
+
+== Design documents
+
+[cols="1,3",options=header]
+|===
+| Document | Question it answers
+
+| link:docs/THEORY.adoc[`docs/THEORY.adoc`]
+| What is a narration/projection language, and what gap does it fill? Positions GNPL
+  against query languages, bitemporal stores, provenance semirings, argumentation
+  frameworks, belief revision and narratology.
+
+| link:docs/LITHOGLYPH.adoc[`docs/LITHOGLYPH.adoc`]
+| What does GNPL concretely give *Lithoglyph*, as a database?
+|===
+
+== Status
+
+[cols="2,1,3",options=header]
+|===
+| Component | State | Notes
+
+| GQLdt core (Lean 4) | *typechecks* | `lake build` completes; 34/35 targets; Lean reports
+  no incomplete proofs — but see the trusted-base caveat below
+| Proof obligations | *16 axioms outstanding* | all stubs, none necessary; enumerated in
+  link:docs/proof-debt.md[`docs/proof-debt.md`]
+| Tests | *none* | `lake test` reports `no test driver configured`
+| Zig FFI bridge (`bridge/`) | *builds* | produces `zig-out/lib/liblith_bridge.a`, the
+  artifact `lakefile.lean` links; `zig build test` passes
+| GNPL narration layer | *design* | `docs/THEORY.adoc` + `docs/LITHOGLYPH.adoc`; no code yet
+| `bridge/zig/`, `ffi/zig/` | *stale* | skeletons on the pre-0.15 Zig Build API; nothing
+  links against them
+|===
+
+== Build
+
+[source,console]
 ----
-// ✅ PROVEN SAFE: Mathematically guaranteed
-SafeDOM.mountSafe("#app", html,
-  ~onSuccess=el => Console.log("Success"),
-  ~onError=err => Console.error(err))
+# Lean core (first build fetches mathlib — expect a long run)
+$ lake build
+
+# Zig FFI bridge — must exist before the Lean FFI executables link
+$ cd bridge && zig build && zig build test
 ----
 
-**Mathematical Guarantees:**
+Toolchains: Lean is pinned by `lean-toolchain` (`v4.15.0`, read automatically by elan);
+Zig and Idris2 are pinned in `mise.toml`. Per the estate ABI/FFI standard, ABI definitions
+are Idris2 (`src/GQLdt/ABI/*.idr`) and the FFI implementation is Zig (`bridge/`).
 
-✓ No null pointer dereferences (Idris2 proof)
-✓ No invalid CSS selectors (dependent types)
-✓ No malformed HTML (balanced tag checking)
-✓ Type-safe operations (ReScript + Idris2)
-✓ Zero runtime overhead (proofs erased)
+=== Proof gate
 
-See link:https://github.com/hyperpolymath/rescript-dom-mounter[rescript-dom-mounter documentation] for full details.
+`scripts/check-lean-proofs.sh` enforces the manifest invariant *"No sorry in Lean 4 proofs"*.
+Its authoritative mode reads Lean's own diagnostics:
+
+[source,console]
+----
+$ lake build 2>&1 | tee lake-build.log
+$ ./scripts/check-lean-proofs.sh --build-log lake-build.log
+----
+
+It deliberately does *not* use a bare `grep -r "sorry\|admit"`: this repo legitimately
+contains an `admit` constructor, a `.admit` reference, a `"sorry"` lexer keyword and a
+commented-out `sorry`, none of which are incomplete proofs.
+
+[IMPORTANT]
+====
+*A green proof gate here means "nothing is admitted mid-proof". It does not mean "nothing
+is assumed."* Lean's `sorry` warning does not fire on `axiom`, and this repository declares
+*16 axioms* — including five in *executable* position (`parseToIR`, `deserializeIR`,
+`many`, `many1`, `sepBy`), which therefore have no implementation at all.
+
+`link:docs/proof-debt.md[docs/proof-debt.md]` enumerates all 16 with file:line, classifies
+each, and is enforced in CI by the estate trusted-base policy. Read it before relying on
+any claim of verification here.
+====
+
+== Licence
+
+Code is **MPL-2.0**; documentation (`.md`, `.adoc`) is **CC-BY-SA-4.0**. See `LICENSE` and
+`LICENSES/`.
+
+== ABI/FFI standard
+
+See link:ABI-FFI-README.md[`ABI-FFI-README.md`] for the estate-wide ABI (Idris2) / FFI (Zig)
+standard this repository follows.
