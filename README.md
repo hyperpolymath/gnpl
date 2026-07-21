@@ -1,8 +1,25 @@
-# GQLdt: Dependently-Typed Lithoglyph Query Language
+# GQLdt — the query layer
 
 [![License: MPL-2.0](https://img.shields.io/badge/License-MPL--2.0-blue.svg)](https://www.mozilla.org/en-US/MPL/2.0/)
 // SPDX-License-Identifier: CC-BY-SA-4.0
 // SPDX-FileCopyrightText: 2025 hyperpolymath
+
+> **This is not the repository README.** It documents **one of two layers**.
+>
+> This repo is **GNPL**, a *narration/projection* language — see
+> **[README.adoc](README.adoc)**, which is what GitHub renders on the landing page.
+> GNPL answers *"what account does this evidence support, from whose stance, with what
+> warrant"*. It is being built **on top of** GQLdt and **lowers to** it:
+>
+> ```
+> GNPL  ──lowers to──▶  GQLdt  ──FFI──▶  Lithoglyph
+> (what account)       (what is)        (the data store)
+> ```
+>
+> The document below describes **GQLdt only** — the extensional query core under `src/GqlDt/`,
+> which is why the sources are namespaced `GqlDt` in a repo named `gnpl`. Nothing here is
+> being discarded; GQLdt becomes GNPL's compilation target. Design rationale:
+> [docs/THEORY.adoc](docs/THEORY.adoc) and [docs/LITHOGLYPH.adoc](docs/LITHOGLYPH.adoc).
 
 GQLdt extends [Lithoglyph](https://github.com/hyperpolymath/nextgen-databases/tree/main/lithoglyph)'s query language with **dependent types**, enabling compile-time verification of database constraints, provenance tracking, and reversibility proofs.
 

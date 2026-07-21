@@ -72,8 +72,11 @@ Lithoglyph-as-a-database is the second. See the design documents below.
 |===
 | Component | State | Notes
 
-| GQLdt core (Lean 4) | *builds* | `lake build` completes; 34/35 targets; Lean reports no
-  incomplete proofs
+| GQLdt core (Lean 4) | *typechecks* | `lake build` completes; 34/35 targets; Lean reports
+  no incomplete proofs — but see the trusted-base caveat below
+| Proof obligations | *16 axioms outstanding* | all stubs, none necessary; enumerated in
+  link:docs/proof-debt.md[`docs/proof-debt.md`]
+| Tests | *none* | `lake test` reports `no test driver configured`
 | Zig FFI bridge (`bridge/`) | *builds* | produces `zig-out/lib/liblith_bridge.a`, the
   artifact `lakefile.lean` links; `zig build test` passes
 | GNPL narration layer | *design* | `docs/THEORY.adoc` + `docs/LITHOGLYPH.adoc`; no code yet
@@ -110,6 +113,18 @@ $ ./scripts/check-lean-proofs.sh --build-log lake-build.log
 It deliberately does *not* use a bare `grep -r "sorry\|admit"`: this repo legitimately
 contains an `admit` constructor, a `.admit` reference, a `"sorry"` lexer keyword and a
 commented-out `sorry`, none of which are incomplete proofs.
+
+[IMPORTANT]
+====
+*A green proof gate here means "nothing is admitted mid-proof". It does not mean "nothing
+is assumed."* Lean's `sorry` warning does not fire on `axiom`, and this repository declares
+*16 axioms* — including five in *executable* position (`parseToIR`, `deserializeIR`,
+`many`, `many1`, `sepBy`), which therefore have no implementation at all.
+
+`link:docs/proof-debt.md[docs/proof-debt.md]` enumerates all 16 with file:line, classifies
+each, and is enforced in CI by the estate trusted-base policy. Read it before relying on
+any claim of verification here.
+====
 
 == Licence
 
