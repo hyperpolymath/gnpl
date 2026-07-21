@@ -187,8 +187,12 @@ Steps 1–3 are largely engineering over existing substrate. Steps 4–5 are res
 
 == Prerequisites
 
-* `lake build` green — **satisfied**: builds, 34/35 targets, no incomplete proofs reported
-  by Lean.
+* `lake build` green — **partially satisfied**: it builds, 34/35 targets, and Lean reports
+  no incomplete proofs. But Lean's `sorry` warning does not fire on `axiom`, and GQLdt
+  declares **16 axioms**, all stubs — five of them in *executable* position, so those
+  functions have no implementation at all. See `docs/proof-debt.md`. Steps 1–3 of the
+  sequencing above depend on the *types*, which are sound; step 5's stability proofs
+  depend on the axioms actually being discharged.
 * Zig bridge building — **satisfied**: `bridge/` produces `liblith_bridge.a` and its tests
   pass.
 * A decision on `Confidence` representation. `Types/Confidence.lean` notes it uses runtime
