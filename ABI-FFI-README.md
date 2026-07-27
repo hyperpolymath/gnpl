@@ -1,385 +1,105 @@
-{{~ Aditionally delete this line and fill out the template below ~}}
+<!--
+SPDX-License-Identifier: CC-BY-SA-4.0
+SPDX-FileCopyrightText: 2026 Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>
+-->
 
-# {{PROJECT}} ABI/FFI Documentation
+# ABI / FFI — how GNPL reaches Lithoglyph
 
-## Overview
+This repository follows the estate standard: **ABI defined in Idris2, FFI implemented in
+Zig**, meeting at the C ABI. No C is written by hand.
 
-This library follows the **Hyperpolymath RSR Standard** for ABI and FFI design:
+> **History:** this file was previously the unfilled RSR template — 385 lines of
+> `{{project}}` placeholders documenting an `ffi/zig/` tree that did not compile. It has
+> been replaced with what the repository actually contains.
 
-- **ABI (Application Binary Interface)** defined in **Idris2** with formal proofs
-- **FFI (Foreign Function Interface)** implemented in **Zig** for C compatibility
-- **Generated C headers** bridge Idris2 ABI to Zig FFI
-- **Any language** can call through standard C ABI
-
-## Architecture
-
-```
-┌─────────────────────────────────────────────┐
-│  ABI Definitions (Idris2)                   │
-│  src/abi/                                   │
-│  - Types.idr      (Type definitions)        │
-│  - Layout.idr     (Memory layout proofs)    │
-│  - Foreign.idr    (FFI declarations)        │
-└─────────────────┬───────────────────────────┘
-                  │
-                  │ generates (at compile time)
-                  ▼
-┌─────────────────────────────────────────────┐
-│  C Headers (auto-generated)                 │
-│  generated/abi/{{project}}.h                │
-└─────────────────┬───────────────────────────┘
-                  │
-                  │ imported by
-                  ▼
-┌─────────────────────────────────────────────┐
-│  FFI Implementation (Zig)                   │
-│  ffi/zig/src/main.zig                       │
-│  - Implements C-compatible functions        │
-│  - Zero-cost abstractions                   │
-│  - Memory-safe by default                   │
-└─────────────────┬───────────────────────────┘
-                  │
-                  │ compiled to lib{{project}}.so/.a
-                  ▼
-┌─────────────────────────────────────────────┐
-│  Any Language via C ABI                     │
-│  - Rust, ReScript, Julia, Python, etc.     │
-└─────────────────────────────────────────────┘
-```
-
-## Directory Structure
+## The path
 
 ```
-{{project}}/
-├── src/
-│   ├── abi/                    # ABI definitions (Idris2)
-│   │   ├── Types.idr           # Core type definitions with proofs
-│   │   ├── Layout.idr          # Memory layout verification
-│   │   └── Foreign.idr         # FFI function declarations
-│   └── lib/                    # Core library (any language)
-│
-├── ffi/
-│   └── zig/                    # FFI implementation (Zig)
-│       ├── build.zig           # Build configuration
-│       ├── build.zig.zon       # Dependencies
-│       ├── src/
-│       │   └── main.zig        # C-compatible FFI implementation
-│       ├── test/
-│       │   └── integration_test.zig
-│       └── include/
-│           └── {{project}}.h   # C header (optional, can be generated)
-│
-├── generated/                  # Auto-generated files
-│   └── abi/
-│       └── {{project}}.h       # Generated from Idris2 ABI
-│
-└── bindings/                   # Language-specific wrappers (optional)
-    ├── rust/
-    ├── rescript/
-    └── julia/
+GNPL  ──lowers to──▶  GQLdt (Lean 4)
+                          │
+                          │ FFI: links -Lbridge/zig-out/lib -llith_bridge
+                          ▼
+                      bridge/ (Zig)  ── C ABI ──▶  Lithoglyph Form.Bridge
 ```
 
-## Why Idris2 for ABI?
+`lakefile.lean` links the Lean executables against `bridge/zig-out/lib/liblith_bridge.a`.
+**That archive must exist before `lake build` runs.**
 
-### 1. **Formal Verification**
+## Layout
 
-Idris2's dependent types allow proving properties about the ABI at compile-time:
+| Path | Role |
+|---|---|
+| `src/GQLdt/ABI/Types.idr` | ABI type definitions |
+| `src/GQLdt/ABI/Layout.idr` | memory-layout proofs |
+| `src/GQLdt/ABI/Foreign.idr` | foreign declarations |
+| `bridge/build.zig` | build script (`addLibrary`, Zig ≥ 0.15 API) |
+| `bridge/lith_root.zig` | FFI entry point — the exported C surface |
+| `bridge/lith_types.zig` | C-ABI structs (`ActorIdC`, `RationaleC`, `ProvenanceC`, `TrackedValueC`, `ProofBlob`, `PromptScoresC`) |
+| `bridge/lith_insert.zig`, `bridge/lith_persist.zig` | insert + persistence implementation |
 
-```idris
--- Prove struct size is correct
-public export
-exampleStructSize : HasSize ExampleStruct 16
-
--- Prove field alignment is correct
-public export
-fieldAligned : Divides 8 (offsetOf ExampleStruct.field)
-
--- Prove ABI is platform-compatible
-public export
-abiCompatible : Compatible (ABI 1) (ABI 2)
-```
-
-### 2. **Type Safety**
-
-Encode invariants that C/Zig cannot express:
-
-```idris
--- Non-null pointer guaranteed at type level
-data Handle : Type where
-  MkHandle : (ptr : Bits64) -> {auto 0 nonNull : So (ptr /= 0)} -> Handle
-
--- Array with length proof
-data Buffer : (n : Nat) -> Type where
-  MkBuffer : Vect n Byte -> Buffer n
-```
-
-### 3. **Platform Abstraction**
-
-Platform-specific types with compile-time selection:
-
-```idris
-CInt : Platform -> Type
-CInt Linux = Bits32
-CInt Windows = Bits32
-
-CSize : Platform -> Type
-CSize Linux = Bits64
-CSize Windows = Bits64
-```
-
-### 4. **Safe Evolution**
-
-Prove that new ABI versions are backward-compatible:
-
-```idris
--- Compiler enforces compatibility
-abiUpgrade : ABI 1 -> ABI 2
-abiUpgrade old = MkABI2 {
-  -- Must preserve all v1 fields
-  v1_compat = old,
-  -- Can add new fields
-  new_features = defaults
-}
-```
-
-## Why Zig for FFI?
-
-### 1. **C ABI Compatibility**
-
-Zig exports C-compatible functions naturally:
-
-```zig
-export fn library_function(param: i32) i32 {
-    return param * 2;
-}
-```
-
-### 2. **Memory Safety**
-
-Compile-time safety without runtime overhead:
-
-```zig
-// Null check enforced at compile time
-const handle = init() orelse return error.InitFailed;
-defer free(handle);
-```
-
-### 3. **Cross-Compilation**
-
-Built-in cross-compilation to any platform:
-
-```bash
-zig build -Dtarget=x86_64-linux
-zig build -Dtarget=aarch64-macos
-zig build -Dtarget=x86_64-windows
-```
-
-### 4. **Zero Dependencies**
-
-No runtime, no libc required (unless explicitly needed):
-
-```zig
-// Minimal binary size
-pub const lib = @import("std");
-// Only includes what you use
-```
+`bridge/` is the **only** live Zig tree. Two earlier skeletons (`bridge/zig/`, `ffi/zig/`)
+were removed — they were written against the pre-0.15 Build API (`addStaticLibrary`,
+`std.heap.GeneralPurposeAllocator`), failed to compile on the pinned Zig 0.16.0, and nothing
+linked against them.
 
 ## Building
 
-### Build FFI Library
+```bash
+cd bridge
+zig build                          # produces zig-out/lib/liblith_bridge.a
+zig build test                     # unit tests
+zig build -Doptimize=ReleaseFast   # optimised
+```
+
+Cross-compilation works as usual (`-Dtarget=aarch64-macos`, etc.).
+
+Then, from the repository root:
 
 ```bash
-cd ffi/zig
-zig build                         # Build debug
-zig build -Doptimize=ReleaseFast  # Build optimized
-zig build test                    # Run tests
+lake build
 ```
 
-### Generate C Header from Idris2 ABI
+Zig is pinned to **0.16.0** in `mise.toml`. Lean is pinned by `lean-toolchain`
+(`leanprover/lean4:v4.15.0`), which elan reads automatically.
 
-```bash
-cd src/abi
-idris2 --cg c-header Types.idr -o ../../generated/abi/{{project}}.h
-```
+## Exported C surface
 
-### Cross-Compile
+Seventeen functions, all `callconv(.C)`, from `bridge/`:
 
-```bash
-cd ffi/zig
+**Lifecycle** — `lith_init`, `lith_is_init`, `lith_close`, `lith_save`
+**Data** — `lith_insert`, `lith_insert_row`, `lith_delete_row`, `lith_table_count`
+**PROMPT scores** — `lith_get_scores`, `lith_compute_overall`
+**Proofs** — `lith_verify_proof`
+**Utility** — `lith_validate_non_empty`, `lith_timestamp_now`, `lith_get_last_error`
+**Debug/test** — `lith_debug_init_counter`, `lith_debug_magic`, `lith_test_fresh`
 
-# Linux x86_64
-zig build -Dtarget=x86_64-linux
+Provenance crosses the boundary as real structs, not opaque blobs: `ActorIdC`,
+`RationaleC`, `ProvenanceC` and `TrackedValueC` are marshalled directly. This is what makes
+the GNPL narration layer buildable over this stack — see `docs/LITHOGLYPH.adoc`.
 
-# macOS ARM64
-zig build -Dtarget=aarch64-macos
+> **Caveat.** `PromptScoresC.computeOverall` takes an **unweighted mean** of the six PROMPT
+> dimensions. It is not probabilistically principled, and must not become a load-bearing
+> entrenchment ordering without being revisited — see open question 2 in `docs/THEORY.adoc`.
 
-# Windows x86_64
-zig build -Dtarget=x86_64-windows
-```
+## Why this split
 
-## Usage
+**Idris2 for the ABI** — dependent types let struct size, field alignment and cross-version
+compatibility be *proved* rather than asserted, so an ABI change that would break a caller
+fails at compile time.
 
-### From C
+**Zig for the FFI** — `export fn … callconv(.C)` is C-compatible without a C compiler,
+without libc, and with cross-compilation built in.
 
-```c
-#include "{{project}}.h"
+## Adding a function
 
-int main() {
-    void* handle = {{project}}_init();
-    if (!handle) return 1;
+1. Declare the type in `src/GQLdt/ABI/Types.idr`; add a layout proof in `Layout.idr`.
+2. Declare it in `src/GQLdt/ABI/Foreign.idr`.
+3. Implement and `export` it in `bridge/` (match the ABI types exactly).
+4. `cd bridge && zig build && zig build test`, then `lake build` from the root.
 
-    int result = {{project}}_process(handle, 42);
-    if (result != 0) {
-        const char* err = {{project}}_last_error();
-        fprintf(stderr, "Error: %s\n", err);
-    }
+## Related
 
-    {{project}}_free(handle);
-    return 0;
-}
-```
-
-Compile with:
-```bash
-gcc -o example example.c -l{{project}} -L./zig-out/lib
-```
-
-### From Idris2
-
-```idris
-import {{PROJECT}}.ABI.Foreign
-
-main : IO ()
-main = do
-  Just handle <- init
-    | Nothing => putStrLn "Failed to initialize"
-
-  Right result <- process handle 42
-    | Left err => putStrLn $ "Error: " ++ errorDescription err
-
-  free handle
-  putStrLn "Success"
-```
-
-### From Rust
-
-```rust
-#[link(name = "{{project}}")]
-extern "C" {
-    fn {{project}}_init() -> *mut std::ffi::c_void;
-    fn {{project}}_free(handle: *mut std::ffi::c_void);
-    fn {{project}}_process(handle: *mut std::ffi::c_void, input: u32) -> i32;
-}
-
-fn main() {
-    unsafe {
-        let handle = {{project}}_init();
-        assert!(!handle.is_null());
-
-        let result = {{project}}_process(handle, 42);
-        assert_eq!(result, 0);
-
-        {{project}}_free(handle);
-    }
-}
-```
-
-### From Julia
-
-```julia
-const lib{{project}} = "lib{{project}}"
-
-function init()
-    handle = ccall((:{{project}}_init, lib{{project}}), Ptr{Cvoid}, ())
-    handle == C_NULL && error("Failed to initialize")
-    handle
-end
-
-function process(handle, input)
-    result = ccall((:{{project}}_process, lib{{project}}), Cint, (Ptr{Cvoid}, UInt32), handle, input)
-    result
-end
-
-function cleanup(handle)
-    ccall((:{{project}}_free, lib{{project}}), Cvoid, (Ptr{Cvoid},), handle)
-end
-
-# Usage
-handle = init()
-try
-    result = process(handle, 42)
-    println("Result: $result")
-finally
-    cleanup(handle)
-end
-```
-
-## Testing
-
-### Unit Tests (Zig)
-
-```bash
-cd ffi/zig
-zig build test
-```
-
-### Integration Tests
-
-```bash
-cd ffi/zig
-zig build test-integration
-```
-
-### ABI Verification (Idris2)
-
-```idris
--- Compile-time verification
-%runElab verifyABI
-
--- Runtime checks
-main : IO ()
-main = do
-  verifyLayoutsCorrect
-  verifyAlignmentsCorrect
-  putStrLn "ABI verification passed"
-```
-
-## Contributing
-
-When modifying the ABI/FFI:
-
-1. **Update ABI first** (`src/abi/*.idr`)
-   - Modify type definitions
-   - Update proofs
-   - Ensure backward compatibility
-
-2. **Generate C header**
-   ```bash
-   idris2 --cg c-header src/abi/Types.idr -o generated/abi/{{project}}.h
-   ```
-
-3. **Update FFI implementation** (`ffi/zig/src/main.zig`)
-   - Implement new functions
-   - Match ABI types exactly
-
-4. **Add tests**
-   - Unit tests in Zig
-   - Integration tests
-   - ABI verification tests
-
-5. **Update documentation**
-   - Function signatures
-   - Usage examples
-   - Migration guide (if breaking changes)
-
-## License
-
-CC-BY-SA-4.0
-
-## See Also
-
-- [Idris2 Documentation](https://idris2.readthedocs.io)
-- [Zig Documentation](https://ziglang.org/documentation/master/)
-- [Rhodium Standard Repositories](https://github.com/hyperpolymath/rhodium-standard-repositories)
-- [FFI Migration Guide](../ffi-migration-guide.md)
-- [ABI Migration Guide](../abi-migration-guide.md)
+- `docs/THEORY.adoc` — what GNPL is, and what gap it fills
+- `docs/LITHOGLYPH.adoc` — what GNPL gives Lithoglyph as a database
+- `docs/proof-debt.md` — the 16 outstanding axioms; **read before relying on any
+  verification claim**
