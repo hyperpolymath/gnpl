@@ -18,7 +18,17 @@ on:
   pull_request:
   workflow_dispatch:
 
+# A called reusable workflow cannot request MORE permissions than its caller
+# grants — if it does, the run is rejected before any job starts
+# (startup_failure, zero jobs, no check run to inspect).
+#
+# standards@0ced540e ("chore: estate-wide security compliance", 2026-07-26)
+# added `actions: read` to governance-reusable.yml's own permissions block.
+# Because this caller pins the reusable at @main rather than a SHA, that change
+# arrived immediately and broke Governance here. `actions: read` is mirrored
+# below to match.
 permissions:
+  actions: read
   contents: read
 
 jobs:

@@ -80,8 +80,6 @@ Lithoglyph-as-a-database is the second. See the design documents below.
 | Zig FFI bridge (`bridge/`) | *builds* | produces `zig-out/lib/liblith_bridge.a`, the
   artifact `lakefile.lean` links; `zig build test` passes
 | GNPL narration layer | *design* | `docs/THEORY.adoc` + `docs/LITHOGLYPH.adoc`; no code yet
-| `bridge/zig/`, `ffi/zig/` | *stale* | skeletons on the pre-0.15 Zig Build API; nothing
-  links against them
 |===
 
 == Build

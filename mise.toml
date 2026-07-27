@@ -18,8 +18,8 @@
 # Zig — builds the FFI bridge in bridge/ that Lean links against
 # (`lakefile.lean`: -Lbridge/zig-out/lib -llith_bridge).
 # 0.16.0 verified: `bridge/` builds clean and `zig build test` passes.
-# NB the stale skeletons in bridge/zig/ and ffi/zig/ use the pre-0.15 Build API
-# and do NOT compile under this version — see issue notes in the PR.
+# `bridge/` is the only Zig tree; the pre-0.15-API skeletons that used to sit in
+# bridge/zig/ and ffi/zig/ were removed (they could not compile under 0.16).
 zig = "0.16.0"
 
 # Idris2 — the ABI layer, src/GQLdt/ABI/{Types,Layout,Foreign}.idr,

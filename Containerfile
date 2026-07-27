@@ -43,15 +43,17 @@ WORKDIR /workspace
 # Copy project files
 COPY . /workspace/
 
-# Build Lean 4 project (download dependencies)
-RUN lake build || echo "Build failed - dependencies may need to be fetched first"
+# Build the Zig FFI bridge FIRST: lakefile.lean links against
+# bridge/zig-out/lib/liblith_bridge.a, so the Lean build needs this artifact to
+# already exist. (The previous order built Lean first and masked the inevitable
+# failure with `|| echo`, which also meant a genuinely broken build still
+# produced a "successful" image.)
+WORKDIR /workspace/bridge
+RUN zig build && test -f zig-out/lib/liblith_bridge.a
 
-# Build Zig FFI bridge
-WORKDIR /workspace/bridge/zig
-RUN zig build || echo "Zig build failed - may need project setup"
-
-# Return to workspace root
+# Build Lean 4 project (fetches mathlib on first run)
 WORKDIR /workspace
+RUN lake build
 
 # Default command: interactive shell
 CMD ["/bin/bash"]

@@ -15,7 +15,7 @@ services:
     volumes:
       - .:/workspace
       - lean-cache:/root/.elan
-      - zig-cache:/workspace/bridge/zig/.zig-cache
+      - zig-cache:/workspace/bridge/.zig-cache
     working_dir: /workspace
     stdin_open: true
     tty: true
