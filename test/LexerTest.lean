@@ -10,6 +10,7 @@
 -- Run with: lake build lexer_test && lake env lean --run test/LexerTest.lean
 
 import GqlDt.Lexer
+import TestHarness
 
 open GqlDt.Lexer
 
@@ -17,12 +18,15 @@ open GqlDt.Lexer
 -- Test Helpers
 -- ============================================================================
 
-/-- Count of test failures, tracked via IO.Ref -/
-def runTest (name : String) (passed : Bool) : IO Unit := do
-  if passed then
-    IO.println s!"  PASS: {name}"
-  else
-    IO.eprintln s!"  FAIL: {name}"
+/--
+Run one named check, recording the outcome in the shared failure counter.
+
+Previously this printed `FAIL` and returned `Unit`, so a failing check left no trace the
+process could act on — despite the doc comment claiming a counter. It now delegates to
+`GnplTest.check`, and `main` turns the tally into an exit code.
+-/
+def runTest (name : String) (passed : Bool) : IO Unit :=
+  GnplTest.check name passed
 
 /-- Extract token types from a tokenization result, excluding EOF -/
 def tokenTypes (result : Except String (List Token)) : List TokenType :=
@@ -259,19 +263,19 @@ def testStringLiterals : IO Unit := do
   -- Escape sequences
   runTest "'line\\nbreak'" (
     match firstType "'line\\nbreak'" with
-    | some (.litString s) => s.containsSubstr "\n"
+    | some (.litString s) => s.contains '\n'
     | _ => false
   )
 
   runTest "'tab\\there'" (
     match firstType "'tab\\there'" with
-    | some (.litString s) => s.containsSubstr "\t"
+    | some (.litString s) => s.contains '\t'
     | _ => false
   )
 
   runTest "'escaped\\\\backslash'" (
     match firstType "'escaped\\\\backslash'" with
-    | some (.litString s) => s.containsSubstr "\\"
+    | some (.litString s) => s.contains '\\'
     | _ => false
   )
 
@@ -586,7 +590,7 @@ def testEdgeCases : IO Unit := do
 -- Main Test Runner
 -- ============================================================================
 
-def main : IO Unit := do
+def main : IO UInt32 := do
   IO.println "==============================================="
   IO.println "  GQL-DT Lexer Unit Tests"
   IO.println "==============================================="
@@ -611,3 +615,4 @@ def main : IO Unit := do
   IO.println "==============================================="
   IO.println "  Lexer tests completed"
   IO.println "==============================================="
+  GnplTest.summarise "Lexer"
