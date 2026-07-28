@@ -1,0 +1,78 @@
+<!--
+SPDX-License-Identifier: CC-BY-SA-4.0
+SPDX-FileCopyrightText: 2026 Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>
+-->
+
+# Architecture
+
+> An earlier unmerged sweep proposed a generic `ARCHITECTURE.md` describing a
+> `src/ tests/ config/` layout with "modular, maintainable architecture designed for
+> clarity, scalability and long-term sustainability". This repository has none of those
+> directories and that text described nothing. What follows is the actual structure.
+
+## Two layers, one repository
+
+```
+GNPL          narration: "what account does this evidence support?"   <-- design only
+  │  lowers to
+GQLdt         query: "what is in the store?"                          <-- built, tested
+  │  FFI (liblith_bridge.a)
+Form.Bridge   Zig, C ABI                                              <-- built, tested
+  │
+Lithoglyph    Form.Model / Form.Blocks (Forth, append-only journal)   <-- separate repo
+```
+
+This is why a repository named `gnpl` contains sources namespaced `GqlDt`: GQLdt is not
+a leftover, it is GNPL's compilation target. See `README.adoc`, and `docs/THEORY.adoc`
+for why the narration layer is the point.
+
+## Layout
+
+| Path | Language | Role |
+|---|---|---|
+| `src/GqlDt/` | Lean 4 | the query core — types, lexer, parser, IR, pipeline |
+| `src/GqlDt/Types/` | Lean 4 | refinement types: `BoundedNat`, `NonEmptyString`, `Confidence` |
+| `src/GqlDt/Provenance/` | Lean 4 | `ActorId`, `Rationale`, `Tracked` — the warrant substrate |
+| `src/GqlDt/Prompt/` | Lean 4 | PROMPT six-dimension source scoring |
+| `src/GQLdt/ABI/` | Idris2 | ABI definitions + memory-layout proofs |
+| `bridge/` | Zig | FFI implementation; emits `zig-out/lib/liblith_bridge.a` |
+| `test/` | Lean 4 | executable suites, run by `lake test` |
+| `spec/` | Markdown/EBNF | the normative grammar and lexical specification |
+| `docs/` | AsciiDoc/Markdown | design rationale and proof debt |
+
+Per the estate standard, **ABI is Idris2 and FFI is Zig** — no hand-written C.
+`bridge/` is the only Zig tree; two pre-0.15-API skeletons were removed in #7.
+
+## Build order (it matters)
+
+`lakefile.lean` links against `bridge/zig-out/lib/liblith_bridge.a`, so the Zig archive
+must exist *before* the Lean executables link:
+
+```sh
+cd bridge && zig build && zig build test   # produces liblith_bridge.a
+cd ..     && lake build && lake test
+```
+
+Getting this backwards is why the `Containerfile` used to mask both steps with
+`|| echo`, which meant a wholly broken build still produced a "successful" image.
+
+## Verification posture
+
+The claims this repository makes about itself are gated, and the gates are tested:
+
+| Gate | What it establishes |
+|---|---|
+| `lake build` | the Lean core typechecks |
+| `lake test` | 163 executable checks across Lexer / Parser / TypeSafety |
+| `scripts/check-lean-proofs.sh --build-log` | Lean reports no *incomplete* proof (`sorry`) |
+| estate `check-trusted-base.sh` | every `axiom` is enumerated in `docs/proof-debt.md` |
+| `cd bridge && zig build test` | the FFI bridge builds and its unit tests pass |
+
+**A green proof gate means "nothing is admitted mid-proof", not "nothing is assumed".**
+Lean's `sorry` warning does not fire on `axiom`, and 16 axioms remain — five of them in
+*executable* position, so those functions have no implementation at all. Read
+`docs/proof-debt.md` before relying on any verification claim here.
+
+New gates are only accepted once they have been shown to go red on a seeded fault. The
+test driver and the proof gate were both canary-tested this way; the repository has a
+history of gates that could not fail, and the remedy is evidence, not intent.

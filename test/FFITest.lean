@@ -11,6 +11,7 @@
 -- 3. Run: .lake/build/bin/ffi_test
 
 import GqlDt.FFI.Bridge
+import TestHarness
 import GqlDt.Types.BoundedNat
 import GqlDt.Prompt.PromptScores
 
@@ -118,7 +119,7 @@ def testIntegration : IO Unit := do
   IO.println "✓ Integration tests passed"
 
 /-- Main test runner -/
-def main : IO Unit := do
+def main : IO UInt32 := do
   IO.println "═══════════════════════════════════════════════"
   IO.println "  GqlDt FFI Integration Tests"
   IO.println "═══════════════════════════════════════════════"
@@ -137,5 +138,6 @@ def main : IO Unit := do
   IO.println ""
 
   IO.println "═══════════════════════════════════════════════"
-  IO.println "  All tests passed!"
+  IO.println "  FFI tests completed"
   IO.println "═══════════════════════════════════════════════"
+  GnplTest.summarise "FFI"

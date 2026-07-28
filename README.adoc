@@ -76,7 +76,8 @@ Lithoglyph-as-a-database is the second. See the design documents below.
   no incomplete proofs — but see the trusted-base caveat below
 | Proof obligations | *16 axioms outstanding* | all stubs, none necessary; enumerated in
   link:docs/proof-debt.md[`docs/proof-debt.md`]
-| Tests | *none* | `lake test` reports `no test driver configured`
+| Tests | *163 checks, green* | `lake test` runs Lexer/Parser/TypeSafety suites. The gate is
+  canary-tested: a seeded false check turns it red
 | Zig FFI bridge (`bridge/`) | *builds* | produces `zig-out/lib/liblith_bridge.a`, the
   artifact `lakefile.lean` links; `zig build test` passes
 | GNPL narration layer | *design* | `docs/THEORY.adoc` + `docs/LITHOGLYPH.adoc`; no code yet
