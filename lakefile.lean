@@ -40,12 +40,19 @@ lean_exe ffi_test where
     "-llith_bridge"
   ]
 
--- Parser test executable
+-- Parser test executable.
+-- The three pure-Lean suites are @[default_target] so a plain `lake build` compiles them.
+-- Without that, `lake build` built only the GqlDt library, the test executables were never
+-- compiled by CI or locally, and two of them silently rotted until they no longer compiled
+-- at all. "Declared but built by nothing" is the failure mode this whole change exists to
+-- close, so the suites must not reintroduce it.
+@[default_target]
 lean_exe parser_test where
   srcDir := "test"
   root := `ParserTest
 
 -- Lexer test executable
+@[default_target]
 lean_exe lexer_test where
   srcDir := "test"
   root := `LexerTest
@@ -53,6 +60,7 @@ lean_exe lexer_test where
 -- Type-safety test executable.
 -- test/TypeSafetyTests.lean existed but was declared by no target, so it was never
 -- built and never run — it could not even fail to compile.
+@[default_target]
 lean_exe type_safety_test where
   srcDir := "test"
   root := `TypeSafetyTests
