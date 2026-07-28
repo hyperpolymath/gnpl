@@ -263,14 +263,14 @@ partial def skipLineComment (s : LexerState) : LexerState :=
   | some _ => skipLineComment s.advance
 
 partial def skipBlockComment (s : LexerState) : LexerState :=
-  match s.curr, s.peek 0 with
+  match s.curr, s.peek 1 with
   | some '*', some '/' => s.advance.advance
   | none, _ => s
   | _, _ => skipBlockComment s.advance
 
 partial def skipWhitespaceAndComments (s : LexerState) : LexerState :=
   let s' := skipWhitespace s
-  match s'.curr, s'.peek 0 with
+  match s'.curr, s'.peek 1 with
   | some '-', some '-' => skipWhitespaceAndComments (skipLineComment (s'.advance.advance))
   | some '/', some '*' => skipWhitespaceAndComments (skipBlockComment (s'.advance.advance))
   | _, _ => s'
@@ -295,7 +295,7 @@ partial def parseString (s : LexerState) (quote : Char) : LexerState × String :
       if c = quote then
         (state.advance, acc)
       else if c = '\\' then
-        match state.peek 0 with
+        match state.peek 1 with
         | some 'n' => loop (state.advance.advance) (acc ++ "\n")
         | some 't' => loop (state.advance.advance) (acc ++ "\t")
         | some 'r' => loop (state.advance.advance) (acc ++ "\r")
@@ -357,21 +357,21 @@ def tokenizeOne (s : LexerState) : Option (Token × LexerState) :=
       else if c = '^' then some ({ type := .opCaret, line := line, column := column, lexeme := "^" }, s'.advance)
       else if c = '=' then some ({ type := .opEq, line := line, column := column, lexeme := "=" }, s'.advance)
       else if c = '<' then
-        match s'.peek 0 with
+        match s'.peek 1 with
         | some '=' => some ({ type := .opLe, line := line, column := column, lexeme := "<=" }, s'.advance.advance)
         | some '>' => some ({ type := .opNeq, line := line, column := column, lexeme := "<>" }, s'.advance.advance)
         | _ => some ({ type := .opLt, line := line, column := column, lexeme := "<" }, s'.advance)
       else if c = '>' then
-        match s'.peek 0 with
+        match s'.peek 1 with
         | some '=' => some ({ type := .opGe, line := line, column := column, lexeme := ">=" }, s'.advance.advance)
         | _ => some ({ type := .opGt, line := line, column := column, lexeme := ">" }, s'.advance)
       else if c = '!' then
-        match s'.peek 0 with
+        match s'.peek 1 with
         | some '=' => some ({ type := .opNeq, line := line, column := column, lexeme := "!=" }, s'.advance.advance)
         | _ => some ({ type := .opNot, line := line, column := column, lexeme := "!" }, s'.advance)
       else if c = '.' then some ({ type := .opDot, line := line, column := column, lexeme := "." }, s'.advance)
       else if c = ':' then
-        match s'.peek 0 with
+        match s'.peek 1 with
         | some ':' => some ({ type := .opDoubleColon, line := line, column := column, lexeme := "::" }, s'.advance.advance)
         | _ => some ({ type := .opColon, line := line, column := column, lexeme := ":" }, s'.advance)
       else if c = '(' then some ({ type := .leftParen, line := line, column := column, lexeme := "(" }, s'.advance)

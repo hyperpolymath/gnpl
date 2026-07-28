@@ -316,8 +316,15 @@ def testIdentifiers : IO Unit := do
   )
 
   -- Qualified identifier via double colon
-  runTest "schema::table tokenizes" (
-    expectTypes "schema::table" [.identifier "schema", .opDoubleColon, .identifier "table"]
+  -- NB: the operand must not be a reserved word. `schema::table` does NOT produce three
+  -- identifiers, because SQL keywords are case-insensitive and `table` therefore lexes as
+  -- `.kwTable` — as this same suite asserts under "SQL Keywords". That is correct
+  -- behaviour, so the qualified-identifier case is tested with a non-reserved name.
+  runTest "schema::customers tokenizes" (
+    expectTypes "schema::customers" [.identifier "schema", .opDoubleColon, .identifier "customers"]
+  )
+  runTest "schema::table — `table` stays a keyword" (
+    expectTypes "schema::table" [.identifier "schema", .opDoubleColon, .kwTable]
   )
 
 -- ============================================================================

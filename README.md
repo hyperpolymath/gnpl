@@ -78,7 +78,10 @@ GQLdt extends [Lithoglyph](https://github.com/hyperpolymath/nextgen-databases/tr
 - 🟡 M6: GQL-DT/GQL Parser (substantially complete - see below)
 
 **M6 Parser Status** (Substantially Complete):
-- ✅ Lexer: Hand-rolled 540-line implementation (80+ keywords, operators, literals, comments)
+- ✅ Lexer: Hand-rolled 540-line implementation (80+ keywords, operators, literals,
+  comments) — verified by 163 executable checks (`lake test`), not asserted. Two-character
+  lookahead was off by one until 2026-07-27, so `<=`/`>=`/`!=`/`<>` never lexed as single
+  tokens, `:` lexed as `::`, and block comments were skipped entirely; fixed and covered.
 - ✅ Parser: Combinator-based parser for INSERT/SELECT/UPDATE/DELETE
 - ✅ Type System: Refinement types, PROMPT scores, provenance tracking
 - ✅ Pipeline: 6-stage compilation (tokenize → parse → type check → IR → validate → serialize)
