@@ -45,10 +45,21 @@ GQLdt sources, recorded honestly for the first time.
 
 ## (b) Budgeted — tested with refutation budget
 
-- (none — this repo has **no executable test coverage**: `lake test` reports
-  `no test driver configured`. Nothing here can currently be budgeted, because there is
-  no refutation budget to cite. Adding a `@[test_driver]` is a prerequisite for moving
-  any item into this section.)
+- (none yet — but the prerequisite is now met.)
+
+**Updated 2026-07-28.** This section previously read *"this repo has no executable test
+coverage: `lake test` reports `no test driver configured` … adding a `@[test_driver]` is a
+prerequisite for moving any item into this section."* That prerequisite has been satisfied:
+`lake test` now runs three suites and **163 checks**, and the gate is canary-tested in both
+directions (a seeded false check turns it red; removing it returns green).
+
+So items *can* now be moved here — but none has been yet, and none should be moved without
+a **stated refutation budget**. Coverage existing is not the same as a given axiom being
+covered. The policy's requirement is a citable budget ("property-tested at N inputs by
+`<command>`, last green on `<date>`"), because without one "covered by tests" is
+unfalsifiable — which is the whole reason this section exists.
+
+The nearest candidate is **D4** (`inferredInsertTypesMatch`); see its entry.
 
 ## (c) Necessary axiom
 
@@ -116,11 +127,14 @@ Declared `axiom`, therefore **unimplemented**, not merely unproven:
   - **Kind**: the one item with a *reasoned* justification in-source — the dynamic schema
     lookup in `inferInsert` already performs the check, and reconstructing that proof
     structurally would require reflecting the schema into the type system.
-  - **Assessment**: plausible, and closest of the 16 to a genuine §(b)/§(c) entry — but it
-    cannot be promoted to §(b) today because there is no test suite to give it a
-    refutation budget, and not to §(c) because it *is* derivable in principle.
-  - **Plan**: promote to §(b) once a test driver exists and this path is property-tested;
-    or discharge via schema reflection (the source's own "future work").
+  - **Assessment**: plausible, and closest of the 16 to a genuine §(b)/§(c) entry. Not
+    §(c), because it *is* derivable in principle. Not yet §(b) either — but the reason has
+    changed as of 2026-07-28: a test suite now exists (163 checks), so the blocker is no
+    longer "no coverage at all", it is that **this specific path is not property-tested**
+    and has no citable refutation budget.
+  - **Plan**: property-test `inferInsert` over generated schema/value pairs, then promote
+    to §(b) quoting the command and the input count; or discharge via schema reflection
+    (the source's own "future work"). The first is now genuinely reachable.
 
 ## (e) Detector false positives — no action
 

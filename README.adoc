@@ -64,6 +64,15 @@ Lithoglyph-as-a-database is the second. See the design documents below.
 
 | link:docs/LITHOGLYPH.adoc[`docs/LITHOGLYPH.adoc`]
 | What does GNPL concretely give *Lithoglyph*, as a database?
+
+| link:docs/STATE-OF-PLAY.adoc[`docs/STATE-OF-PLAY.adoc`]
+| Where the project actually stands, what is verified and by which command, what is known
+  missing, and which decisions are open. Machine-readable twin:
+  `.machine_readable/6a2/STATE.a2ml`.
+
+| link:docs/proof-debt.md[`docs/proof-debt.md`]
+| All 16 outstanding axioms with `file:line` and disposition. **Read before relying on any
+  verification claim.**
 |===
 
 == Status
