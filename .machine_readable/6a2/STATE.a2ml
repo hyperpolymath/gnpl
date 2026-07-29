@@ -1,50 +1,116 @@
 # SPDX-License-Identifier: MPL-2.0
 # Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <j.d.a.jewell@open.ac.uk>
 #
-# STATE.a2ml — Gql Dt project state
+# STATE.a2ml — hyperpolymath/gnpl project state
+#
+# Rewritten 2026-07-28. The previous revision was stale and partly corrupt: it named the
+# project "gql-dt", was dated 2026-02-01, listed already-completed milestones as critical
+# next actions, and its `purpose` field held a fragment of a build error rather than a
+# purpose. Every figure below is measured, not estimated; see [evidence].
+
 [metadata]
-project = "gql-dt"
-version = "0.2.0"
-last-updated = "2026-02-01"
+project = "gnpl"
+version = "0.3.0"
+last-updated = "2026-07-28"
 status = "active"
-session = "converted from scheme — 2026-04-11"
+session = "proof-debt foundation; PRs #6 #7 #8 merged"
 
 [project-context]
-name = "Gql Dt"
-purpose = """References to removed .tracked and .confidence constructors, missing API updates"""
-completion-percentage = 45
+name = "GNPL"
+purpose = """
+GNPL is Lithoglyph's narration/projection language: it turns an evidence base into an
+account — for forensic histories, counterfactual paths, plural meanings, and
+synchronic/diachronic evidence interpretation. Where a query language answers "what is
+true in the store?", GNPL answers "what account does this evidence support, told from
+whose stance, with what warrant, and what rival accounts does the same evidence also
+support?".
+
+It is built as a layer ON TOP OF GQLdt in this repository and lowers to it:
+GNPL (what account) -> GQLdt (what is) -> Zig FFI -> Lithoglyph (the store).
+This is why sources are namespaced GqlDt in a repository named gnpl.
+"""
+completion-percentage = 40
 
 [position]
 phase = "partial-implementation"   # design | implementation | testing | maintenance | archived
-maturity = "experimental"  # experimental | alpha | beta | production | lts
+maturity = "experimental"          # experimental | alpha | beta | production | lts
+
+[layers]
+# Two layers, one repo. Nothing is being extracted or discarded.
+gqldt = "built and tested — the extensional query core, src/GqlDt/"
+gnpl  = "design only — docs/THEORY.adoc + docs/LITHOGLYPH.adoc; no src/Gnpl/ yet"
+
+[verification]
+# What is actually established, and by what. A gate that has never gone red is not
+# evidence; both gates below were canary-tested in both directions.
+lean-build            = "pass"     # lake build, 34/35 targets
+lean-tests            = "pass"     # lake test, 163 checks, 3 suites
+lean-test-count       = 163
+lean-test-suites      = ["lexer_test", "parser_test", "type_safety_test"]
+zig-bridge-build      = "pass"     # cd bridge && zig build && zig build test
+incomplete-proofs     = 0          # Lean reports no `sorry`
+trusted-base-axioms   = 16         # `axiom` does NOT trigger Lean's sorry warning
+trusted-base-doc      = "docs/proof-debt.md"
+gates-canary-tested   = true
+
+[caveat]
+# The single most important thing for a machine reading this file to carry forward.
+note = """
+A green proof gate here means "nothing is admitted mid-proof". It does NOT mean "nothing
+is assumed". Lean 4 emits `declaration uses 'sorry'` for sorry/sorryAx only — `axiom`
+produces no warning at all. This repository declares 16 axioms, all stubs, none necessary
+in the trusted-base-policy sense. FIVE are in EXECUTABLE position (parseToIR,
+deserializeIR, many, many1, sepBy) and therefore have no implementation: code calling them
+typechecks and cannot run. So "34/35 targets build" is a claim about TYPECHECKING, not
+about a working parser. Read docs/proof-debt.md before relying on any verification claim.
+"""
 
 [route-to-mvp]
 milestones = [
-  # No milestones recorded
+  "DONE 2026-07-21 — identity: repo established as GNPL-over-GQLdt; licence restored to MPL-2.0",
+  "DONE 2026-07-21 — design: docs/THEORY.adoc (the general case) + docs/LITHOGLYPH.adoc (the tethered case)",
+  "DONE 2026-07-27 — dead code: two pre-0.15-API Zig trees removed; bridge/ is the only one",
+  "DONE 2026-07-28 — foundation: lake test wired, 163 checks, suites can fail",
+  "DONE 2026-07-28 — lexer conformance: 19 spec defects fixed (peek off-by-one)",
+  "NEXT — proof debt D1: delete or prove executePreservesTypes (currently vacuous)",
+  "NEXT — proof debt D3: construct the six asserted PromptScores examples (gated on averaging decision)",
+  "THEN — proof debt D2: implement many/many1/sepBy, unblocking four parse* axioms",
+  "THEN — src/Gnpl/ skeleton: Fabula, Projection, Focalization, Account, Warrant",
 ]
 
 [blockers-and-issues]
 issues = [
-  # No blockers recorded
+  "DECISION NEEDED — averaging rule for PROMPT scores. PromptScores carries a proof field, overall_correct : overall.val = (sum)/6, so the arithmetic mean is welded into the TYPE. Changing it is a proof-obligation change on every value, in Lean and Zig simultaneously. Gates proof-debt D3.",
+  "DECISION NEEDED — flake.nix vs guix.scm. Estate policy: Guix primary, Nix fallback, satisfying NEITHER is the violation. This repo has no guix.scm, so flake.nix is the only artefact satisfying it; removing it without a verified guix.scm turns Governance red.",
+  "UPSTREAM hyperpolymath/standards#516 — Hypatia setup-beam pin cannot map ImageOS=ubuntu24; scanner never runs for any caller. Only red on gnpl main.",
+  "UPSTREAM hyperpolymath/standards#486 — governance/Allowlist Preflight cannot resolve allowed-actions.json (the file EXISTS; path resolution after sparse-checkout). standards' own main is red on it too.",
+  "UPSTREAM hyperpolymath/standards#520 — scorecard.yml template violates the estate SARIF policy as distributed.",
+  "NO test coverage for the FFI boundary — ffi_test is excluded from lake test because it links liblith_bridge.a; it is covered only by the zig-ffi CI job.",
 ]
 
 [critical-next-actions]
 actions = [
-  "Update Dockerfile for Lean 4 + elan",
-  "Add CI workflow for lake build",
-  "Start Milestone 5: Zig FFI Bridge",
-  "Create bridge/lith_types.zig",
-  "Complete Milestone 5 (Zig FFI)",
-  "Begin Milestone 6 (GQL Parser)",
-  "UNIFIED-ROADMAP.scm",
-  "Dependently-typed query language - critical path item",
-  "M5: Zig FFI Bridge (blocks Studio M3, real type checking)",
-  "M6: GQL Parser (blocks full FQLdt compilation)",
-  "Complete M5 Zig FFI - highest priority",
-  "Integrate with Lithoglyph's EBNF grammar",
-  "Proof blob serialization (CBOR RFC 8949)",
+  "Discharge proof-debt D1: executePreservesTypes reduces to `... -> True` with body commented `-- Placeholder`. It reads as a soundness theorem and discharges nothing. Deleting it is strictly better than keeping a vacuous placeholder.",
+  "Settle the averaging rule, then discharge D3 once against the final definition.",
+  "Add a test driver entry for the FFI boundary once liblith_bridge.a can be assumed present.",
 ]
 
+[history-landmines]
+notes = [
+  "The gnpl extract from nextgen-databases was a SQUASH; granular history survives only in the _split_gnpl branch there. Never prune it.",
+  "Local branches backup/sweeps-mistral-vibe and fix-ci-estate hold three superseded agent-generated sweep commits. Do not replay them: sweep2 is boilerplate mise.toml, sweep3 is an AGPL clobber into an MPL-2.0 repo.",
+  "Callers pin standards reusables at @main, not a SHA, so upstream permission/interface changes reach this repo instantly and unannounced. This caused two separate estate-wide outages in July 2026.",
+]
+
+[evidence]
+# Commands a machine or human can run to reproduce every claim above.
+build          = "lake build"
+test           = "lake test"
+bridge         = "cd bridge && zig build && zig build test"
+proof-gate     = "lake build 2>&1 | tee lake-build.log && ./scripts/check-lean-proofs.sh --build-log lake-build.log"
+trusted-base   = "bash <standards>/scripts/check-trusted-base.sh ."
+
 [maintenance-status]
-last-run-utc = "2026-02-01T00:00:00Z"
-last-result = "unknown"  # unknown | pass | warn | fail
+last-run-utc = "2026-07-28T18:45:00Z"
+last-result = "pass"  # unknown | pass | warn | fail
+last-result-detail = "lake build exit 0; lake test exit 0 with 163 checks across 3 suites; verified from a clean checkout of merged main (9de0713)."

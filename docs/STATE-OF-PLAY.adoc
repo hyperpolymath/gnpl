@@ -1,0 +1,155 @@
+// SPDX-License-Identifier: CC-BY-SA-4.0
+// SPDX-FileCopyrightText: 2026 Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>
+= GNPL — state of play
+:toc: macro
+:toclevels: 2
+
+*As at 2026-07-28, `main` = `9de0713`.* The machine-readable counterpart is
+`.machine_readable/6a2/STATE.a2ml`; both are regenerated together and should agree.
+
+This document exists because the repository's own claims about itself were, for a period,
+false — a README describing a template, a lexer advertised as supporting operators it could
+not lex, and a manifest pointing at six files that did not exist. What follows is written
+to be *checkable*: every claim names the command that establishes it.
+
+toc::[]
+
+== What this is, in one paragraph
+
+GNPL is Lithoglyph's *narration/projection* language. A query language answers
+"what is true in the store?"; GNPL answers "what account does this evidence support, told
+from whose stance, with what warrant — and what rival accounts does the same evidence also
+support?". It is built as a layer on top of GQLdt *in this repository* and lowers to it.
+That is why every source file is namespaced `GqlDt` in a repo called `gnpl`: GQLdt is not
+a leftover, it is the compilation target.
+
+----
+GNPL  ──lowers to──▶  GQLdt  ──FFI──▶  Lithoglyph
+(what account)       (what is)        (the data store)
+----
+
+== Where things actually stand
+
+[cols="2,1,3",options=header]
+|===
+| Component | State | Established by
+
+| GQLdt core (Lean 4)
+| *typechecks*
+| `lake build` — 34/35 targets, exit 0
+
+| Test suites
+| *163 checks, green*
+| `lake test` — Lexer, Parser, TypeSafety; exit 0
+
+| Zig FFI bridge (`bridge/`)
+| *builds, tests pass*
+| `cd bridge && zig build && zig build test` — emits `liblith_bridge.a`
+
+| Incomplete proofs (`sorry`)
+| *none*
+| `scripts/check-lean-proofs.sh --build-log`
+
+| Trusted base
+| *16 axioms outstanding*
+| estate `check-trusted-base.sh`; enumerated in `docs/proof-debt.md`
+
+| GNPL narration layer
+| *design only*
+| `docs/THEORY.adoc`, `docs/LITHOGLYPH.adoc`; no `src/Gnpl/` yet
+|===
+
+=== The caveat that matters most
+
+[IMPORTANT]
+====
+*A green proof gate means "nothing is admitted mid-proof". It does not mean "nothing is
+assumed."*
+
+Lean 4 emits `declaration uses 'sorry'` for `sorry`/`sorryAx` only — **`axiom` produces no
+warning at all**. This repository declares *16 axioms*, all stubs, none necessary in the
+policy sense. **Five sit in executable position** (`parseToIR`, `deserializeIR`, `many`,
+`many1`, `sepBy`) and therefore have *no implementation*: code calling them typechecks and
+cannot run.
+
+So "34/35 targets build" is a statement about **typechecking**, not about a working parser.
+Read `docs/proof-debt.md` before relying on any verification claim made here.
+====
+
+== How to check any of this yourself
+
+[source,console]
+----
+$ lake build                                   # the Lean core typechecks
+$ lake test                                    # 163 checks, 3 suites
+$ cd bridge && zig build && zig build test     # the FFI bridge
+$ cd .. && lake build 2>&1 | tee lake-build.log
+$ ./scripts/check-lean-proofs.sh --build-log lake-build.log
+----
+
+Build *order* matters: `lakefile.lean` links `bridge/zig-out/lib/liblith_bridge.a`, so the
+Zig archive must exist before the Lean FFI executables link.
+
+== Gates, and why they are trusted
+
+Every gate here has been shown to go *red* on a seeded fault and green when it is removed.
+That is the standard, because this repository has shipped, and since removed, four gates
+that could not fail:
+
+* a naming check that compared a string to itself, over files that did not exist;
+* a `lake test` step whose `|| echo` swallowed genuine failures;
+* test suites whose `main : IO Unit` always exited 0 while printing "All tests passed!";
+* a `Containerfile` masking both its build steps with `|| echo`.
+
+A gate that has never gone red is not evidence of anything.
+
+== What is known to be missing
+
+* **No FFI-boundary coverage in `lake test`.** `ffi_test` links `liblith_bridge.a`, so it
+  is excluded from the driver and covered only by the `zig-ffi` CI job.
+* **No property tests.** Nothing in `docs/proof-debt.md` §(b) can cite a refutation budget
+  yet, so nothing has been promoted there.
+* **`src/Gnpl/` does not exist.** The narration layer is specified, not built.
+
+== Open decisions
+
+Two questions are recorded here because work is genuinely blocked on them, and guessing
+would be worse than waiting.
+
+*1. The averaging rule for PROMPT scores.* `PromptScores` carries a proof field —
+`overall_correct : overall.val = (…sum…) / 6` — so the arithmetic mean is welded into the
+*type*. Changing it is a proof-obligation change on every value, in Lean and in Zig
+simultaneously, not an edit to one function. An unweighted arithmetic mean also lets a
+source with *zero provenance* score 83/100, which is hard to defend for an evidence
+database. This gates proof-debt item D3.
+
+*2. `flake.nix` versus `guix.scm`.* Estate policy is Guix primary, Nix fallback, and
+satisfying *neither* is the violation. This repo has no `guix.scm`, so `flake.nix` is the
+only artefact satisfying the policy; removing it without a verified replacement turns
+Governance red.
+
+== Sequencing
+
+Foundation first, breadth before depth — the base layer is whatever makes everything else
+*verifiable*.
+
+. *Done.* Suites can fail; `lake test` runs; gates canary-tested.
+. *Next, unblocked:* proof-debt **D1** — `executePreservesTypes` reduces to `… → True`
+  with its body commented `-- Placeholder`. It reads as a soundness theorem and discharges
+  nothing. Deleting it is strictly better than keeping it.
+. *Next, gated on decision 1:* **D3** — construct the six asserted `PromptScores` examples.
+  They are the demonstrations of the repo's central claim, and are currently axioms, so
+  they demonstrate the opposite of what their comments say.
+. *Then:* **D2** — implement `many`/`many1`/`sepBy`; the four `parse*` axioms exist only
+  because these three do.
+. *Then:* `src/Gnpl/` — `Fabula`, `Projection`, `Focalization`, `Account`, `Warrant`,
+  carrying the no-narration-without-warrant constructor discipline.
+
+== Related
+
+* `README.adoc` — start here; the two-layer story
+* `ARCHITECTURE.md` — layout, build order, verification posture
+* `GOVERNANCE.md` — the rules a change must clear, and why each exists
+* `docs/proof-debt.md` — all 16 axioms with `file:line` and disposition
+* `docs/THEORY.adoc` — what a narration language is, and what gap it fills
+* `docs/LITHOGLYPH.adoc` — what GNPL gives Lithoglyph specifically

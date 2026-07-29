@@ -6,9 +6,9 @@
 
 (manifest
   (identity
-    (name "GQL-DT")
-    (full-name "Dependently-Typed Glyph Query Language")
-    (version "0.2.0")
+    (name "GNPL")
+    (full-name "Glyph Narration & Projection Language")
+    (version "0.3.0")
     (repo "https://github.com/hyperpolymath/gnpl")
     (license "MPL-2.0")
     (author "Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>")
@@ -16,22 +16,63 @@
     (monorepo-parent "nextgen-databases"))
 
   (purpose
-    "Compile-time verification of database constraints via dependent types.
-     Lean 4 implementation with Mathlib integration. Provides type-safe
-     query language for Lithoglyph with proofs of query correctness,
-     normalization, and constraint satisfaction.")
+    "Lithoglyph's narration/projection language. Where a query language answers
+     'what is true in the store?', GNPL answers 'what account does this evidence
+     support, told from whose stance, with what warrant, and what rival accounts
+     does the same evidence also support?' — for forensic histories, counterfactual
+     paths, plural meanings, and synchronic/diachronic evidence interpretation.
 
+     TWO LAYERS, ONE REPO. GNPL is built on top of GQLdt here and lowers to it:
+     GNPL (what account) -> GQLdt (what is) -> Zig FFI -> Lithoglyph (the store).
+     This is why every source file is namespaced GqlDt in a repo named gnpl; that
+     is expected, not a mistake. GQLdt is the dependently-typed query core — Lean 4
+     with Mathlib, compile-time verification of database constraints, provenance
+     tracking and normalization proofs — and it is GNPL's compilation target.
+
+     STATUS: GQLdt builds and is tested (163 checks). GNPL itself is DESIGN ONLY —
+     docs/THEORY.adoc and docs/LITHOGLYPH.adoc; there is no src/Gnpl/ yet.")
+
+  (caveat-for-agents
+    "A green proof gate here means 'nothing is admitted mid-proof'. It does NOT mean
+     'nothing is assumed'. Lean's sorry warning does not fire on `axiom`, and this
+     repo declares 16 axioms — five in EXECUTABLE position (parseToIR, deserializeIR,
+     many, many1, sepBy), which therefore have no implementation at all. Code calling
+     them typechecks and cannot run. Do not report this repository as 'verified' on the
+     strength of a green build. See docs/proof-debt.md.")
+
+  ;; Corrected 2026-07-28: all six of the previous entries pointed at files that do not
+  ;; exist. The .scm state/meta/ecosystem/roadmap files were converted to .a2ml under
+  ;; .machine_readable/6a2/ and never repointed; there is no AI.a2ml and no justfile.
+  ;; Every path below was checked to exist at the time of writing.
   (canonical-locations
-    (ai-instructions "AI.a2ml")
-    (state ".machine_readable/STATE.scm")
-    (meta ".machine_readable/META.scm")
-    (ecosystem ".machine_readable/ECOSYSTEM.scm")
-    (roadmap ".machine_readable/ROADMAP.scm")
-    (build "justfile")
+    (agent-instructions ".machine_readable/6a2/AGENTIC.a2ml")
+    (state ".machine_readable/6a2/STATE.a2ml")
+    (meta ".machine_readable/6a2/META.a2ml")
+    (ecosystem ".machine_readable/6a2/ECOSYSTEM.a2ml")
+    (playbook ".machine_readable/6a2/PLAYBOOK.a2ml")
+    (neurosym ".machine_readable/6a2/NEUROSYM.a2ml")
+    (roadmap ".machine_readable/ROADMAP.a2ml")
+    (proof-debt "docs/proof-debt.md")
+    (design-theory "docs/THEORY.adoc")
+    (design-application "docs/LITHOGLYPH.adoc")
+    (architecture "ARCHITECTURE.md")
+    (governance "GOVERNANCE.md")
+    (build "lakefile.lean")
+    (test "lakefile.lean")            ;; @[test_driver] script test
+    (proof-gate "scripts/check-lean-proofs.sh")
     (container-build "Containerfile")
     (container-deploy "selur-compose.yml")
     (spec "spec/")
+    (ffi-bridge "bridge/")
+    (abi "src/GQLdt/ABI/")
     (lean-entry "src/GqlDt.lean"))
+
+  ;; Commands that reproduce every claim this manifest makes.
+  (evidence
+    (build "lake build")
+    (test "lake test")                ;; 163 checks across 3 suites
+    (bridge "cd bridge && zig build && zig build test")
+    (proof-gate "lake build 2>&1 | tee lake-build.log && ./scripts/check-lean-proofs.sh --build-log lake-build.log"))
 
   (tech-stack
     (primary "Lean 4")
