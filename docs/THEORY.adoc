@@ -1,0 +1,299 @@
+// SPDX-License-Identifier: CC-BY-SA-4.0
+// SPDX-FileCopyrightText: 2026 Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>
+= GNPL — Theory: narration and projection over evidence
+:toc: macro
+:toclevels: 3
+
+*Status:* design document. No implementation yet; see `README.adoc` for what does exist.
+
+toc::[]
+
+== What this document is
+
+This is the *untethered* half of GNPL's rationale: what a narration/projection language is,
+what gap it fills, and — importantly — what it does *not* claim to be first to do. The
+companion document, link:LITHOGLYPH.adoc[`LITHOGLYPH.adoc`], is the tethered half: what
+GNPL concretely buys Lithoglyph as a database.
+
+The two are deliberately separable. If the theory is right, it should be implementable over
+evidence bases other than Lithoglyph. If it is wrong, Lithoglyph should not inherit the
+error.
+
+== The problem
+
+Databases are very good at answering *what is the case*. They are poor at answering
+*what account the evidence supports*.
+
+Consider an evidence base assembled from mutually inconsistent sources — witness
+statements, sensor logs, retracted publications, edits by actors with different access and
+different interests. Ask it a question. A conventional store must do one of three things:
+
+. **Reconcile before storage.** Pick a winner, discard the rest. The disagreement — often
+  the most informative thing present — is destroyed at write time.
+. **Return everything.** Emit all rows and make the caller sort it out. The database
+  disclaims the interpretive question entirely.
+. **Model the conflict explicitly** in application-level schema. Now every consumer
+  re-implements the interpretation logic, inconsistently, in application code.
+
+None of these is *telling*. What a forensic analyst, historian, investigative journalist or
+auditor actually wants is: **given this evidence, what accounts does it support; which of
+them is the strongest; from whose standpoint; and what would have to be false for a
+different account to hold instead?**
+
+That is a narration problem, and it has structure worth typing.
+
+=== Four properties conventional query languages have
+
+SQL, Cypher, SPARQL and GraphQL share four assumptions. Each is reasonable; together they
+make narration inexpressible.
+
+[cols="1,3",options=header]
+|===
+| Property | Consequence
+
+| *Extensional*
+| A query denotes a set of tuples/nodes. There is no object denoting *an account*, so
+  accounts cannot be compared, diffed, or reasoned about.
+
+| *Presentist*
+| The current state is privileged. History is an add-on (audit tables, triggers), and the
+  *history of the interpretation* is not represented at all.
+
+| *Univocal*
+| One query, one answer. Plurality is an error condition, not a result.
+
+| *Stance-free*
+| No notion of who is telling, to whom, with what access or what interest. Every answer is
+  narrated from nowhere.
+|===
+
+== Prior art, and what each already does
+
+The claim "nothing does this" is cheap and usually false. Here is what the neighbours
+genuinely do, and precisely where each stops short. GNPL's contribution is only what
+remains after all of these are credited.
+
+=== Temporal and bitemporal databases
+
+SQL:2011 system-versioned tables, Datomic, XTDB and the temporal-database literature
+(Snodgrass; Jensen & Snodgrass) give *valid time* versus *transaction time*. This is real
+synchronic/diachronic machinery and GNPL should not reinvent it: "as at time T, as believed
+at time T′" is a solved modelling problem.
+
+*Where it stops:* a bitemporal store still yields **one consistent world per coordinate**.
+Ask it a question at `(valid=t, tx=t′)` and you get *the* answer. Two irreconcilable
+witness accounts at the same coordinate remain a data-quality defect, not a result.
+
+=== Provenance
+
+This is the closest prior art. Provenance semirings (Green, Karvounarakis & Tannen 2007)
+and why/where/how-provenance (Buneman, Khanna & Tan) annotate an answer with the lineage
+that produced it, algebraically and compositionally. Systems like ProvSQL and the W3C PROV
+model make this practical.
+
+*Where it stops:* provenance annotates *a result*. It answers "where did this tuple come
+from", which is a question *about* an answer, not an account *of* the matter. Provenance is
+GNPL's substrate — arguably its most important input — but it is not a language for telling.
+
+=== Argumentation and non-monotonic reasoning
+
+Dung's abstract argumentation frameworks, defeasible logic, ASPIC+ and Dempster–Shafer
+evidence theory are built precisely for rival conclusions under conflicting, weighted
+evidence. Dung's semantics (grounded, preferred, stable extensions) already formalise
+"here are the mutually-consistent maximal positions" — which is very close to GNPL's
+*plural meanings*.
+
+*Where it stops:* these are reasoning formalisms, not database languages, and their output
+is a set of acceptable argument-sets, not an ordered, focalized account. They also have no
+notion of narrative *arrangement* — order, granularity, what to omit.
+
+GNPL should *borrow* here rather than compete: the relation between rival accounts is
+plausibly an argumentation semantics, and saying so is more honest than inventing a new one.
+
+=== Belief revision (AGM)
+
+Alchourrón, Gärdenfors & Makinson's AGM postulates formalise contraction and revision:
+what it means to retract a belief and re-close a belief set rationally, and why that is
+non-monotonic. This *already is* the theory of GNPL's counterfactual-path operation.
+
+*Where it stops:* AGM is about belief *sets*, not narrated accounts, and is famously silent
+on where the entrenchment ordering comes from. GNPL's contribution here is not new
+revision theory; it is that the entrenchment ordering can be *read off* recorded warrant —
+`Confidence` and `Rationale` — rather than stipulated.
+
+=== Event calculus and situation calculus
+
+Kowalski & Sergot's event calculus and McCarthy & Hayes' situation calculus give
+temporal-causal reasoning: what holds after which events, with principled treatment of the
+frame problem.
+
+*Where it stops:* they reason about *what follows*, given events taken as known. They do
+not model contested evidence *about whether the event occurred*, nor perspective. They are
+a natural lowering target for the causal fragment of a Fabula, not a competitor.
+
+=== Computational narratology and story generation
+
+There is a long tradition — TALE-SPIN, MEXICA, Propp-inspired generators, and modern
+narrative-planning work — of *generating* stories, plus formal narratology tooling in the
+digital humanities (e.g. CIDOC-CRM for cultural-heritage assertions).
+
+*Where it stops:* story generators optimise for narrative interest over an invented world;
+their commitment is aesthetic, not evidential. GNPL inverts this: the world is given and
+contested, invention is forbidden, and the *only* freedom is arrangement and stance.
+
+=== Narratology proper
+
+Genette's `Narrative Discourse` supplies the vocabulary the computing side lacks:
+**fabula** (what happened) versus **sjuzhet** (how it is told), decomposed into order,
+duration, frequency, **focalization** (whose perspective constrains what is knowable) and
+voice.
+
+*Where it stops:* it is a descriptive literary theory. Nothing is mechanised.
+
+== The claim, scoped
+
+Crediting all of the above, what is actually missing is a *single* artifact:
+
+[quote]
+____
+A **typed, proof-carrying language whose output is a narration** — in which the projection
+from evidence to account is a first-class value that can be compared, diffed and proved
+stable, and in which no assertion can appear in an account without a warrant derivable from
+the evidence base under a declared stance.
+____
+
+Note what this does **not** claim:
+
+* not the first to model time (temporal DBs did);
+* not the first to track lineage (provenance did);
+* not the first to handle rival conclusions (argumentation did);
+* not the first to formalise retraction (AGM did);
+* not the first to reason causally over events (event calculus did);
+* not the first to describe narrative structure (narratology did).
+
+The contribution is **composition under a type discipline**: taking narratological
+structure seriously as *types*, over an evidence base that already carries provenance, with
+the warrant obligation enforced by the compiler rather than by convention. Each ingredient
+is borrowed; the assembly is what is new — and it is the assembly that makes accounts into
+objects a machine can check.
+
+An honest summary: *GNPL is a synthesis, not a discovery.* Its value stands or falls on
+whether the synthesis is usable, not on novelty of parts.
+
+== Core constructs
+
+[cols="1,3",options=header]
+|===
+| Construct | Meaning
+
+| `Fabula`
+| A **partially**-ordered set of evidenced events. Partial, not total, because evidence
+  frequently does not settle order. Each event carries its warrant.
+
+| `Focalization`
+| An `ActorId`-indexed restriction on which evidence is accessible. Narrating *from* an
+  actor's standpoint means projecting under their restriction — including their ignorance.
+
+| `Projection` (sjuzhet)
+| Selection, ordering, granularity and emphasis over a `Fabula`. **A first-class value**:
+  projections can be named, compared, composed and diffed.
+
+| `Warrant`
+| The `Rationale` + `Confidence` chain licensing a narrated proposition. Not an annotation
+  — a *constructor obligation*.
+
+| `Account`
+| The output. An ordered set of warranted assertions under a stated focalization.
+
+| `Plurality`
+| A projection yields a **set** of accounts with an explicit relation between them —
+  compatible, rival, or entailing — rather than collapsing to one.
+|===
+
+=== The governing invariant
+
+GQLdt already enforces an analogous rule at the data layer: `Provenance/Rationale.lean`
+states that *"you cannot construct a `Tracked` value without providing a non-empty
+rationale"*. GNPL's rule is the narrative counterpart:
+
+[IMPORTANT]
+====
+**No narration without warrant.** The type system forbids constructing an `Account`
+containing an assertion not derivable from its `Fabula` under the stated `Focalization`.
+====
+
+This is the whole point. A narration language without this invariant is a template engine.
+
+=== Counterfactual paths
+
+Retract an evidence item, re-project, diff the account:
+
+----
+counterfactual : Fabula → EvidenceId → Focalization → (Account, Account, Diff)
+----
+
+Dependent types earn their place here: the interesting object is not the diff but a
+*proof of stability* — that an account is invariant under retraction of item `e`. An
+account that survives the removal of any single piece of evidence is epistemically
+different from one balanced on a single source, and that difference should be
+machine-checkable rather than editorial.
+
+=== Synchronic and diachronic
+
+* **Synchronic** — project at a time-slice: the account as it stands at `t`.
+* **Diachronic** — project across evolution, *including how the account itself changed*.
+
+The second is the unusual one. It is historiography rather than history: not only "what
+happened" but "when did we come to believe this, and what changed our minds". Because
+`Projection` is first-class and the evidence base is versioned, this is a diff over
+projections rather than a new mechanism.
+
+=== Non-monotonicity is typed
+
+Adding evidence may *retract* narrated claims. The type system must therefore refuse to
+treat `Account` as monotone in its `Fabula`. This is where AGM contraction is the guide,
+with entrenchment read from recorded `Confidence` rather than stipulated.
+
+== What GNPL is not
+
+* **Not a story generator.** It may not invent. Every assertion traces to evidence.
+* **Not a summariser.** Selection is declared by a `Projection`, not inferred by a model.
+* **Not a truth oracle.** It never adjudicates which rival account is correct; it
+  characterises the accounts the evidence supports and their relations.
+* **Not a replacement for GQLdt.** It lowers to it.
+
+That third point is a design commitment, not a limitation: a system that silently picked a
+winner would reintroduce exactly the reconciliation loss described at the top.
+
+== Open questions
+
+. **What is the relation lattice on accounts?** "Compatible / rival / entailing" is a first
+  sketch. Should this simply *be* a Dung argumentation semantics? If so, which one, and is
+  the choice a language parameter?
+. **Where does `Confidence` composition come from?** The current `Confidence.avg` and
+  `.mul` are placeholders and are not probabilistically principled. Dempster–Shafer? A
+  provenance semiring? This must be decided before any number is shown to a user.
+. **Is `Focalization` a restriction, or a full epistemic modality?** Restriction is simpler;
+  a modality is needed for "A believes that B knows X", which forensic work does want.
+. **How much of narratological *duration* and *frequency* is worth mechanising?** Order and
+  focalization clearly earn their keep; iterative/singulative may not.
+. **What is the proof burden in practice?** "No narration without warrant" is only useful
+  if discharging it is not so painful that users route around it.
+. **Does the partial order need to be a lattice** for projection to be well-behaved, or is
+  a DAG enough?
+. **Confidence is currently `Float`** with runtime-only validation (see the note in
+  `Types/Confidence.lean`). Proof-level guarantees over floats are hard in Lean 4; does the
+  narration layer need an exact rational or interval representation instead?
+
+== References
+
+* Genette, G. — _Narrative Discourse: An Essay in Method_.
+* Green, T., Karvounarakis, G. & Tannen, V. (2007) — "Provenance Semirings", PODS.
+* Buneman, P., Khanna, S. & Tan, W.-C. — "Why and Where: A Characterization of Data
+  Provenance", ICDT 2001.
+* Dung, P. M. (1995) — "On the acceptability of arguments…", _Artificial Intelligence_.
+* Alchourrón, C., Gärdenfors, P. & Makinson, D. (1985) — "On the Logic of Theory Change",
+  _Journal of Symbolic Logic_.
+* Kowalski, R. & Sergot, M. (1986) — "A Logic-Based Calculus of Events".
+* Snodgrass, R. T. — _Developing Time-Oriented Database Applications in SQL_.
+* Shafer, G. (1976) — _A Mathematical Theory of Evidence_.

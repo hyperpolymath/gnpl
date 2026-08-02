@@ -31,8 +31,11 @@ jobs:
           lean --version
           lake --version
 
+      # Was actions/cache@0c45773b… — a deprecated version that GitHub hard-fails.
+      # That failure aborted this job BEFORE `lake build` ever ran, which is why
+      # CI never once reported whether this project compiles.
       - name: Cache Lean dependencies
-        uses: actions/cache@0c45773b623bea8c8e75f6c82b208c3cf94ea4f9 # v4
+        uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
         with:
           path: |
             .lake
@@ -41,19 +44,44 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-lean-
 
+      # Tee the build so the proof gate can read Lean's own diagnostics.
+      # pipefail so a build failure is not masked by the pipe into tee.
       - name: Build Lean 4 project
-        run: lake build
-
-      - name: Run Lean tests
-        run: lake test || echo "No tests configured yet"
-
-      - name: Check for proof errors
         run: |
-          echo "Checking for sorry/admit in proofs..."
-          ! grep -r "sorry\|admit" src/ || {
-            echo "❌ Found incomplete proofs (sorry/admit)"
+          set -o pipefail
+          lake build 2>&1 | tee lake-build.log
+
+      # `lake test` exits non-zero BOTH when tests fail and when no test driver
+      # is configured. The previous step was `lake test || echo "..."`, which
+      # swallowed both — so a genuine test failure could never turn this job red.
+      # Tolerate only the "no test driver" case, and surface it as a warning
+      # rather than a silent pass: no driver means no executable test coverage.
+      - name: Run Lean tests
+        run: |
+          set -o pipefail
+          if lake test 2>&1 | tee lake-test.log; then
+            echo "✅ lake test passed"
+          elif grep -q "no test driver configured" lake-test.log; then
+            echo "::warning::No Lean test driver is configured, so this repository has NO executable test coverage. Add a @[test_driver] to lakefile.lean."
+          else
+            echo "::error::lake test failed"
             exit 1
-          }
+          fi
+
+      # Authoritative proof gate. Lean itself emits "declaration uses 'sorry'";
+      # the previous gate was `! grep -r "sorry\|admit" src/`, which fired on a
+      # lexer keyword table, a string literal, a comment and two constructor
+      # references — and could not see a sorry reached through a tactic block.
+      - name: Check for incomplete proofs (authoritative)
+        run: ./scripts/check-lean-proofs.sh --build-log lake-build.log
+
+      - name: Upload build log
+        if: always()
+        uses: actions/upload-artifact@26f96dfa697d77e81fd5907df203aa23a56210a8 # v4
+        with:
+          name: lake-build-log
+          path: lake-build.log
+          retention-days: 30
 
   zig-ffi:
     name: Build Zig FFI Bridge
@@ -63,22 +91,33 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4
 
+      # Was goto-bus-stop/setup-zig@2a9625d… — that SHA does not exist and the
+      # action is unmaintained (it has no v2 tag at all), so this job could
+      # never start. mlugg/setup-zig is the maintained successor.
       - name: Setup Zig
-        uses: goto-bus-stop/setup-zig@2a9625d550eefc3a8b5fe73f3f4ca4cf9b74d84c # v2
+        uses: mlugg/setup-zig@d1434d08867e3ee9daa34448df10607b98908d29 # v2
         with:
-          version: 0.13.0
+          version: 0.16.0
 
+      # Was `working-directory: bridge/zig`. That is a stale skeleton on the
+      # pre-0.15 Build API (`addStaticLibrary`, `linkLibC`) which no longer
+      # compiles, and nothing links against it. The real bridge is `bridge/`:
+      # `lakefile.lean` links `-Lbridge/zig-out/lib -llith_bridge`, and
+      # `bridge/build.zig` is what produces `liblith_bridge.a` at that path.
       - name: Build Zig bridge
-        working-directory: bridge/zig
+        working-directory: bridge
         run: zig build
 
-      - name: Run Zig tests
-        working-directory: bridge/zig
-        run: zig build test
+      - name: Verify the artifact Lean links against exists
+        working-directory: bridge
+        run: test -f zig-out/lib/liblith_bridge.a
 
-      - name: Run integration tests
-        working-directory: bridge/zig
-        run: zig build test-integration
+      # bridge/build.zig declares exactly two steps: "shared" and "test".
+      # The old workflow also ran `zig build test-integration`, which is not a
+      # step in any build.zig here and would always have failed.
+      - name: Run Zig tests
+        working-directory: bridge
+        run: zig build test
 
   spec-validation:
     name: Validate Specifications
@@ -91,36 +130,36 @@ jobs:
       - name: Check EBNF grammar syntax
         run: |
           echo "Validating EBNF grammar..."
-          # Basic validation - check for balanced brackets
           if ! grep -E '::=' spec/GQLdt-Grammar.ebnf > /dev/null; then
             echo "❌ No production rules found in grammar"
             exit 1
           fi
           echo "✅ Grammar file appears valid"
 
+      # Filenames corrected: these are GQL-DT-*, not GQLdt-*. The old list made
+      # this job fail on a spelling mismatch and report it as a MISSING SPEC.
       - name: Verify specification files
         run: |
+          missing=0
           for file in spec/GQL_Dependent_Types_Complete_Specification.md \
                       spec/normalization-types.md \
                       spec/GQLdt-Grammar.ebnf \
-                      spec/GQLdt-Lexical.md \
-                      spec/GQLdt-Railroad-Diagrams.md; do
+                      spec/GQL-DT-Lexical.md \
+                      spec/GQL-DT-Railroad-Diagrams.md; do
             if [ ! -f "$file" ]; then
               echo "❌ Missing required spec file: $file"
-              exit 1
+              missing=1
             fi
           done
+          [ "$missing" -eq 0 ] || exit 1
           echo "✅ All specification files present"
 
-      - name: Check for naming consistency
-        run: |
-          echo "Checking for naming inconsistencies..."
-          # Check STATE.scm and ECOSYSTEM.scm use gql-dt not gql-dt
-          if grep -i "gql-dt" STATE.scm ECOSYSTEM.scm 2>/dev/null; then
-            echo "❌ Found old naming (gql-dt instead of gql-dt)"
-            exit 1
-          fi
-          echo "✅ Naming is consistent"
+      # REMOVED: a "naming consistency" step that ran
+      #     grep -i "gql-dt" STATE.scm ECOSYSTEM.scm 2>/dev/null
+      #   -> echo "Found old naming (gql-dt instead of gql-dt)"
+      # It compared a string to itself, over two files that do not exist in this
+      # repo (2>/dev/null swallowed the error), so it could only ever pass.
+      # Deleted rather than repaired: there is no naming rule for it to enforce.
 
   documentation:
     name: Build Documentation

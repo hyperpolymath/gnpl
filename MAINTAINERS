@@ -1,0 +1,23 @@
+# Maintainers — hyperpolymath/gnpl
+
+## Active
+
+| Name                    | GitHub          | Role    |
+|-------------------------|-----------------|---------|
+| Jonathan D.A. Jewell    | @hyperpolymath  | Primary |
+
+## Scope
+
+GNPL (the narration/projection layer) and GQLdt (the query layer it lowers to) live in
+this repository together — see `README.adoc`. The Zig FFI bridge under `bridge/` and the
+Idris2 ABI under `src/GQLdt/ABI/` are maintained here too; the Lithoglyph data store they
+talk to is maintained separately.
+
+## Expectations
+
+- Changes touching `src/GqlDt/`, `src/GQLdt/ABI/` or `bridge/` need review — they carry the
+  correctness claims.
+- `docs/proof-debt.md` must be updated in the same change as any axiom added or discharged.
+  The estate trusted-base policy enforces this in CI.
+- Gates must be able to fail. A new gate is not accepted until it has been shown to go red
+  on a seeded fault.

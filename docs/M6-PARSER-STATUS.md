@@ -359,4 +359,4 @@ def inferInsert (schema : Schema) (table : String) (columns : List String) (valu
 
 **Document Version:** 1.0
 **Author:** Jonathan D.A. Jewell (@hyperpolymath)
-**License:** PMPL-1.0-or-later
+**License:** CC-BY-SA-4.0

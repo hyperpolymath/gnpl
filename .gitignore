@@ -25,3 +25,26 @@ deps/
 *.tmp
 Thumbs.db
 dist/
+
+# Secrets — never commit these
+.env
+.env.*
+*.key
+*.pem
+secrets/
+
+# Agent scratch and worktrees
+.claude/
+
+# SQLite artifacts (the Zig bridge links libsqlite3)
+*.db
+*.db-journal
+*.db-shm
+*.db-wal
+
+# Editors
+*.swp
+*.swo
+*.bak
+.idea/
+.vscode/

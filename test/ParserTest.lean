@@ -6,6 +6,7 @@
 -- Run with: lake build && lean --run test/ParserTest.lean
 
 import GqlDt.Query
+import TestHarness
 
 open GqlDt.Query
 open GqlDt.Query.Parser
@@ -17,7 +18,7 @@ def testSelectAll : IO Unit := do
   | .ok q =>
     IO.println s!"  ✓ Parsed: table = {q.from.name}, projection = all"
   | .error e =>
-    IO.println s!"  ✗ Failed: {e}"
+    GnplTest.fail s!"✗ Failed: {e}"
 
 /-- Test SELECT with columns -/
 def testSelectColumns : IO Unit := do
@@ -31,7 +32,7 @@ def testSelectColumns : IO Unit := do
     | _ =>
       IO.println "    (unexpected projection type)"
   | .error e =>
-    IO.println s!"  ✗ Failed: {e}"
+    GnplTest.fail s!"✗ Failed: {e}"
 
 /-- Test SELECT with WHERE clause -/
 def testSelectWhere : IO Unit := do
@@ -45,7 +46,7 @@ def testSelectWhere : IO Unit := do
     | none =>
       IO.println "    where = none"
   | .error e =>
-    IO.println s!"  ✗ Failed: {e}"
+    GnplTest.fail s!"✗ Failed: {e}"
 
 /-- Test INSERT statement -/
 def testInsert : IO Unit := do
@@ -57,9 +58,9 @@ def testInsert : IO Unit := do
       IO.println s!"  ✓ Parsed INSERT: table = {i.table.name}"
       IO.println s!"    values count = {i.values.length}"
     | _ =>
-      IO.println "  ✗ Got wrong statement type"
+      GnplTest.fail "✗ Got wrong statement type"
   | .error e =>
-    IO.println s!"  ✗ Failed: {e}"
+    GnplTest.fail s!"✗ Failed: {e}"
 
 /-- Test INSERT with provenance -/
 def testInsertProvenance : IO Unit := do
@@ -73,9 +74,9 @@ def testInsertProvenance : IO Unit := do
       IO.println s!"    actor = {repr i.actor}"
       IO.println s!"    rationale = {repr i.rationale}"
     | _ =>
-      IO.println "  ✗ Got wrong statement type"
+      GnplTest.fail "✗ Got wrong statement type"
   | .error e =>
-    IO.println s!"  ✗ Failed: {e}"
+    GnplTest.fail s!"✗ Failed: {e}"
 
 /-- Test UPDATE statement -/
 def testUpdate : IO Unit := do
@@ -88,9 +89,9 @@ def testUpdate : IO Unit := do
       IO.println s!"    set count = {u.set.length}"
       IO.println s!"    has where = {u.whereClause.isSome}"
     | _ =>
-      IO.println "  ✗ Got wrong statement type"
+      GnplTest.fail "✗ Got wrong statement type"
   | .error e =>
-    IO.println s!"  ✗ Failed: {e}"
+    GnplTest.fail s!"✗ Failed: {e}"
 
 /-- Test DELETE statement -/
 def testDelete : IO Unit := do
@@ -102,9 +103,9 @@ def testDelete : IO Unit := do
       IO.println s!"  ✓ Parsed DELETE: table = {d.table.name}"
       IO.println s!"    has where = {d.whereClause.isSome}"
     | _ =>
-      IO.println "  ✗ Got wrong statement type"
+      GnplTest.fail "✗ Got wrong statement type"
   | .error e =>
-    IO.println s!"  ✗ Failed: {e}"
+    GnplTest.fail s!"✗ Failed: {e}"
 
 /-- Test expression parsing -/
 def testExpressions : IO Unit := do
@@ -113,31 +114,31 @@ def testExpressions : IO Unit := do
   -- Simple comparison
   match parseExpr "x = 1" with
   | .ok _ => IO.println "  ✓ x = 1"
-  | .error e => IO.println s!"  ✗ x = 1: {e}"
+  | .error e => GnplTest.fail s!"✗ x = 1: {e}"
 
   -- String comparison
   match parseExpr "name = \"Alice\"" with
   | .ok _ => IO.println "  ✓ name = \"Alice\""
-  | .error e => IO.println s!"  ✗ name = \"Alice\": {e}"
+  | .error e => GnplTest.fail s!"✗ name = \"Alice\": {e}"
 
   -- AND expression
   match parseExpr "a = 1 AND b = 2" with
   | .ok _ => IO.println "  ✓ a = 1 AND b = 2"
-  | .error e => IO.println s!"  ✗ a = 1 AND b = 2: {e}"
+  | .error e => GnplTest.fail s!"✗ a = 1 AND b = 2: {e}"
 
   -- OR expression
   match parseExpr "a = 1 OR b = 2" with
   | .ok _ => IO.println "  ✓ a = 1 OR b = 2"
-  | .error e => IO.println s!"  ✗ a = 1 OR b = 2: {e}"
+  | .error e => GnplTest.fail s!"✗ a = 1 OR b = 2: {e}"
 
   -- Comparison operators
   match parseExpr "x > 10" with
   | .ok _ => IO.println "  ✓ x > 10"
-  | .error e => IO.println s!"  ✗ x > 10: {e}"
+  | .error e => GnplTest.fail s!"✗ x > 10: {e}"
 
   match parseExpr "x <= 100" with
   | .ok _ => IO.println "  ✓ x <= 100"
-  | .error e => IO.println s!"  ✗ x <= 100: {e}"
+  | .error e => GnplTest.fail s!"✗ x <= 100: {e}"
 
 /-- Test SELECT with ORDER BY and LIMIT -/
 def testSelectAdvanced : IO Unit := do
@@ -148,10 +149,10 @@ def testSelectAdvanced : IO Unit := do
     IO.println s!"    orderBy count = {q.orderBy.length}"
     IO.println s!"    limit = {repr q.limit}"
   | .error e =>
-    IO.println s!"  ✗ Failed: {e}"
+    GnplTest.fail s!"✗ Failed: {e}"
 
 /-- Main test runner -/
-def main : IO Unit := do
+def main : IO UInt32 := do
   IO.println "═══════════════════════════════════════════════"
   IO.println "  GQL Parser Tests"
   IO.println "═══════════════════════════════════════════════"
@@ -187,3 +188,4 @@ def main : IO Unit := do
   IO.println "═══════════════════════════════════════════════"
   IO.println "  Parser tests completed"
   IO.println "═══════════════════════════════════════════════"
+  GnplTest.summarise "Parser"

@@ -5,6 +5,7 @@
 -- Demonstrate type safety enforcement at compile time
 
 import GqlDt.TypeSafe
+import TestHarness
 import GqlDt.TypeChecker
 import GqlDt.Types.BoundedNat
 import GqlDt.Types.NonEmptyString
@@ -12,19 +13,28 @@ import GqlDt.Prompt
 
 namespace GqlDt.Tests.TypeSafety
 
-open TypeSafe TypeChecker AST Types
+-- `Prompt` and `Provenance` are needed for PromptScores.create and Rationale respectively.
+-- Their absence is why this file stopped compiling: it was declared by no Lake target, so
+-- nothing ever built it and the rot went unnoticed.
+open TypeSafe TypeChecker AST Types Prompt Provenance
 
 -- Test 1: Valid insertion compiles
 def test_valid_insert : InsertStmt evidenceSchema :=
   let title := NonEmptyString.mk "Test Evidence" (by decide)
+  -- `min`/`max` are structure *parameters* of BoundedNat, not fields — the old
+  -- `BoundedNat.mk 0 100 100 …` passed them as data, which is why this stopped
+  -- elaborating. The anonymous constructor lets the expected type (PromptDimension,
+  -- i.e. BoundedNat 0 100) supply them, leaving val + the two bound proofs.
   let scores := PromptScores.create
-    (BoundedNat.mk 0 100 100 (by omega) (by omega))
-    (BoundedNat.mk 0 100 100 (by omega) (by omega))
-    (BoundedNat.mk 0 100 95 (by omega) (by omega))
-    (BoundedNat.mk 0 100 95 (by omega) (by omega))
-    (BoundedNat.mk 0 100 100 (by omega) (by omega))
-    (BoundedNat.mk 0 100 95 (by omega) (by omega))
-  let rationale := NonEmptyString.mk "Test rationale" (by decide)
+    ⟨100, by omega, by omega⟩
+    ⟨100, by omega, by omega⟩
+    ⟨95,  by omega, by omega⟩
+    ⟨95,  by omega, by omega⟩
+    ⟨100, by omega, by omega⟩
+    ⟨95,  by omega, by omega⟩
+  -- insertEvidence takes a Provenance.Rationale, not a bare NonEmptyString — the whole
+  -- point of the type is that a rationale cannot be confused with any other string.
+  let rationale := Rationale.fromString "Test rationale"
 
   insertEvidence title scores rationale
 
@@ -130,7 +140,7 @@ theorem typeSafeQueriesPreserveInvariants {schema : Schema} (stmt : InsertStmt s
   exact valueInvariant_holds (stmt.values.get i)
 
 -- Run all tests
-def main : IO Unit := do
+def main : IO UInt32 := do
   IO.println "=== GQLdt Type Safety Tests ==="
   IO.println ""
 
@@ -151,6 +161,11 @@ def main : IO Unit := do
   test_execution_safety
   IO.println ""
 
-  IO.println "=== All tests passed! ==="
+  IO.println "=== Type-safety tests completed ==="
+  GnplTest.summarise "TypeSafety"
 
 end GqlDt.Tests.TypeSafety
+
+/-- Top-level entry point. The suite's `main` lives inside `GqlDt.Tests.TypeSafety`, so
+    without this alias the linker finds no `main` symbol and the executable fails to link. -/
+def main : IO UInt32 := GqlDt.Tests.TypeSafety.main

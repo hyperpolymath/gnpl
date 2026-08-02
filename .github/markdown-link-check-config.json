@@ -1,9 +1,6 @@
 {
   "ignorePatterns": [
     {
-      "pattern": "^https://github.com/hyperpolymath/lith"
-    },
-    {
       "pattern": "^http://localhost"
     }
   ],
@@ -11,5 +8,8 @@
   "retryOn429": true,
   "retryCount": 3,
   "fallbackRetryDelay": "30s",
-  "aliveStatusCodes": [200, 206]
+  "aliveStatusCodes": [
+    200,
+    206
+  ]
 }

@@ -1,6 +1,6 @@
 # GQL-DT Execution Strategy: SQL vs IR vs Native
 
-**SPDX-License-Identifier:** PMPL-1.0-or-later
+**SPDX-License-Identifier:** CC-BY-SA-4.0
 **SPDX-FileCopyrightText:** 2026 Jonathan D.A. Jewell (@hyperpolymath)
 
 **Date:** 2026-02-01

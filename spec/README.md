@@ -1,6 +1,6 @@
 # GQL-DT Specification Suite
 
-**SPDX-License-Identifier:** PMPL-1.0-or-later
+**SPDX-License-Identifier:** CC-BY-SA-4.0
 **SPDX-FileCopyrightText:** 2026 Jonathan D.A. Jewell (@hyperpolymath)
 
 **Version:** 1.0.0
@@ -299,15 +299,15 @@ lossless_tactic -- Lossless transformation proofs
 
 ## License
 
-All specification documents are licensed under **PMPL-1.0-or-later** (Palimpsest License).
+All specification documents are licensed under **CC-BY-SA-4.0**.
 
-**SPDX-License-Identifier:** PMPL-1.0-or-later
+**SPDX-License-Identifier:** CC-BY-SA-4.0
 **SPDX-FileCopyrightText:** 2026 Jonathan D.A. Jewell (@hyperpolymath)
 
 ## Contact
 
 - **Project:** Lithoglyph Query Language with Dependent Types (GQL-DT)
-- **Repository:** https://github.com/hyperpolymath/gql-dt
+- **Repository:** https://github.com/hyperpolymath/gnpl
 - **Organization:** hyperpolymath
 - **Author:** Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>
 
