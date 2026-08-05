@@ -1,13 +1,4 @@
-# Code owners for hyperpolymath/gnpl.
-#
-# NB: an earlier unmerged sweep proposed this file naming @metadatastician, which owns
-# other repositories in the estate but not this one. Ownership here is @hyperpolymath.
-
-* @hyperpolymath
-
-# The proof surface and the FFI boundary carry the load-bearing correctness claims;
-# call them out so changes there are never merged unreviewed.
-/src/GqlDt/       @hyperpolymath
-/src/GQLdt/ABI/   @hyperpolymath
-/bridge/          @hyperpolymath
-/docs/proof-debt.md @hyperpolymath
+# SPDX-License-Identifier: MPL-2.0
+# Solo-maintained hyperpolymath repo: no owner lines by policy.
+# See hyperpolymath/standards CODEOWNERS-POLICY.adoc (Rule 1).
+# Sole-maintainer review is moot; SPDX headers carry attribution.
