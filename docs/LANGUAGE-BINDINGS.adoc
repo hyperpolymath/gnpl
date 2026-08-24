@@ -1,21 +1,21 @@
-# GQL-DT Language Bindings: Multi-Language Support
+== GQL-DT Language Bindings: Multi-Language Support
 
-**SPDX-License-Identifier:** CC-BY-SA-4.0
-**SPDX-FileCopyrightText:** 2026 Jonathan D.A. Jewell (@hyperpolymath)
+*SPDX-License-Identifier:* CC-BY-SA-4.0 *SPDX-FileCopyrightText:* 2026
+Jonathan D.A. Jewell (@hyperpolymath)
 
-**Date:** 2026-02-01
-**Status:** Language Binding Specifications
-**Priority:** MEDIUM - Post-Core Implementation
+*Date:* 2026-02-01 *Status:* Language Binding Specifications *Priority:*
+MEDIUM - Post-Core Implementation
 
----
+'''''
 
-## Overview
+=== Overview
 
-GQL-DT provides language bindings for all **allowed languages** in the hyperpolymath ecosystem (per `CLAUDE.md` language policy).
+GQL-DT provides language bindings for all *allowed languages* in the
+hyperpolymath ecosystem (per `+CLAUDE.md+` language policy).
 
-### Binding Architecture
+==== Binding Architecture
 
-```
+....
 GQL-DT Core (Lean 4)
     ↓
 Typed IR (CBOR)
@@ -32,36 +32,36 @@ Zig FFI (C-compatible bridge)
     ├─ Haskell (type-heavy tools, Scaffoldia)
     ├─ Deno/JavaScript (runtime, glue code)
     └─ Ada (safety-critical systems, where required)
-```
+....
 
----
+'''''
 
-## 1. ReScript Bindings (PRIMARY)
+=== 1. ReScript Bindings (PRIMARY)
 
-**Status:** ✅ Specified in `docs/INTEGRATION.md`
+*Status:* ✅ Specified in `+docs/INTEGRATION.md+`
 
-**Priority:** CRITICAL - Primary language for application development
+*Priority:* CRITICAL - Primary language for application development
 
-**Location:** `bindings/rescript/`
+*Location:* `+bindings/rescript/+`
 
-**Use Cases:**
-- Lithoglyph Studio (web UI)
-- Client-side query validation
-- Browser-based type checking
-- Deno backend services
+*Use Cases:* - Lithoglyph Studio (web UI) - Client-side query validation
+- Browser-based type checking - Deno backend services
 
-**See:** `docs/INTEGRATION.md` for complete ReScript binding specification
+*See:* `+docs/INTEGRATION.md+` for complete ReScript binding
+specification
 
----
+'''''
 
-## 2. Rust Bindings
+=== 2. Rust Bindings
 
-**Priority:** HIGH - Systems programming, CLI tools, performance-critical code
+*Priority:* HIGH - Systems programming, CLI tools, performance-critical
+code
 
-**Location:** `bindings/rust/`
+*Location:* `+bindings/rust/+`
 
-**Directory Structure:**
-```
+*Directory Structure:*
+
+....
 bindings/rust/
 ├── Cargo.toml
 ├── build.rs                    # Build script for Zig FFI linking
@@ -78,10 +78,12 @@ bindings/rust/
 │   └── type_safe_query.rs
 └── tests/
     └── integration_test.rs
-```
+....
 
-**Example: Rust API**
-```rust
+*Example: Rust API*
+
+[source,rust]
+----
 // bindings/rust/src/lib.rs
 use serde::{Deserialize, Serialize};
 
@@ -160,10 +162,12 @@ fn main() -> Result<(), Error> {
     insert.execute(&database)?;
     Ok(())
 }
-```
+----
 
-**FFI Integration (Rust ↔ Zig):**
-```rust
+*FFI Integration (Rust ↔ Zig):*
+
+[source,rust]
+----
 // bindings/rust/src/ffi.rs
 #[link(name = "gqldt", kind = "static")]
 extern "C" {
@@ -183,10 +187,12 @@ extern "C" {
 
     fn gqldt_insert_free(stmt: *mut InsertStmt);
 }
-```
+----
 
-**Build Script (build.rs):**
-```rust
+*Build Script (build.rs):*
+
+[source,rust]
+----
 // bindings/rust/build.rs
 use std::env;
 use std::path::PathBuf;
@@ -213,10 +219,12 @@ fn main() {
     // Re-run if Zig sources change
     println!("cargo:rerun-if-changed=../../ffi/zig/src");
 }
-```
+----
 
-**Cargo.toml:**
-```toml
+*Cargo.toml:*
+
+[source,toml]
+----
 [package]
 name = "gqldt"
 version = "0.1.0"
@@ -233,18 +241,19 @@ serde_cbor = "0.11"  # For CBOR proof blobs
 
 [dev-dependencies]
 criterion = "0.5"  # For benchmarks
-```
+----
 
----
+'''''
 
-## 3. Julia Bindings
+=== 3. Julia Bindings
 
-**Priority:** MEDIUM - Batch scripts, data processing (per RSR)
+*Priority:* MEDIUM - Batch scripts, data processing (per RSR)
 
-**Location:** `bindings/julia/`
+*Location:* `+bindings/julia/+`
 
-**Directory Structure:**
-```
+*Directory Structure:*
+
+....
 bindings/julia/
 ├── Project.toml
 ├── src/
@@ -257,10 +266,12 @@ bindings/julia/
 │   └── basic_usage.jl
 └── test/
     └── runtests.jl
-```
+....
 
-**Example: Julia API**
-```julia
+*Example: Julia API*
+
+[source,julia]
+----
 # bindings/julia/src/GqlDt.jl
 module GqlDt
 
@@ -365,10 +376,12 @@ column!(insert, "title", NonEmptyString("ONS Data"))
 column!(insert, "prompt_provenance", BoundedNat(0, 100, 95))
 rationale!(insert, "Official statistics")
 execute!(insert, database)
-```
+----
 
-**Project.toml:**
-```toml
+*Project.toml:*
+
+[source,toml]
+----
 name = "GqlDt"
 uuid = "..." # Generate with UUIDs.uuid4()
 authors = ["Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>"]
@@ -376,18 +389,19 @@ version = "0.1.0"
 
 [compat]
 julia = "1.9"
-```
+----
 
----
+'''''
 
-## 4. Gleam Bindings
+=== 4. Gleam Bindings
 
-**Priority:** MEDIUM - Backend services on BEAM
+*Priority:* MEDIUM - Backend services on BEAM
 
-**Location:** `bindings/gleam/`
+*Location:* `+bindings/gleam/+`
 
-**Directory Structure:**
-```
+*Directory Structure:*
+
+....
 bindings/gleam/
 ├── gleam.toml
 ├── src/
@@ -399,10 +413,12 @@ bindings/gleam/
 │   │   └── types.gleam        # Gleam type definitions
 └── test/
     └── gqldt_test.gleam
-```
+....
 
-**Example: Gleam API**
-```gleam
+*Example: Gleam API*
+
+[source,gleam]
+----
 // bindings/gleam/src/gqldt/types.gleam
 pub type TypedValue {
   Nat(Int)
@@ -480,10 +496,12 @@ pub fn main() {
   |> insert.rationale("Official statistics")
   |> insert.execute(database)
 }
-```
+----
 
-**FFI via Erlang NIF:**
-```gleam
+*FFI via Erlang NIF:*
+
+[source,gleam]
+----
 // bindings/gleam/src/gqldt/ffi.gleam
 @external(erlang, "gqldt_nif", "insert_create")
 pub fn insert_create(
@@ -495,10 +513,12 @@ pub fn insert_create(
 
 @external(erlang, "gqldt_nif", "insert_execute")
 pub fn insert_execute(stmt: InsertStmt, db: Database) -> Result(Nil, String)
-```
+----
 
-**Erlang NIF (C/Zig bridge):**
-```c
+*Erlang NIF (C/Zig bridge):*
+
+[source,c]
+----
 // bindings/gleam/c_src/gqldt_nif.c
 #include <erl_nif.h>
 #include "gqldt.h"  // From Idris2 ABI
@@ -520,18 +540,19 @@ static ErlNifFunc nif_funcs[] = {
 };
 
 ERL_NIF_INIT(gqldt_nif, nif_funcs, NULL, NULL, NULL, NULL)
-```
+----
 
----
+'''''
 
-## 5. Elixir Bindings
+=== 5. Elixir Bindings
 
-**Priority:** MEDIUM - Distributed systems, Phoenix backend
+*Priority:* MEDIUM - Distributed systems, Phoenix backend
 
-**Location:** `bindings/elixir/`
+*Location:* `+bindings/elixir/+`
 
-**Directory Structure:**
-```
+*Directory Structure:*
+
+....
 bindings/elixir/
 ├── mix.exs
 ├── lib/
@@ -543,10 +564,12 @@ bindings/elixir/
 │   │   └── nif.ex             # NIF wrapper
 └── test/
     └── gql_dt_test.exs
-```
+....
 
-**Example: Elixir API**
-```elixir
+*Example: Elixir API*
+
+[source,elixir]
+----
 # bindings/elixir/lib/gql_dt/types.ex
 defmodule GqlDt.Types do
   @type typed_value ::
@@ -614,10 +637,12 @@ Insert.new("evidence")
 |> Insert.column("prompt_provenance", {:bounded_nat, 0, 100, 95})
 |> Insert.rationale("Official statistics")
 |> Insert.execute(database)
-```
+----
 
-**mix.exs:**
-```elixir
+*mix.exs:*
+
+[source,elixir]
+----
 defmodule GqlDt.MixProject do
   use Mix.Project
 
@@ -640,18 +665,19 @@ defmodule GqlDt.MixProject do
     ]
   end
 end
-```
+----
 
----
+'''''
 
-## 6. Haskell Bindings
+=== 6. Haskell Bindings
 
-**Priority:** LOW-MEDIUM - Scaffoldia CLI, type-heavy tools
+*Priority:* LOW-MEDIUM - Scaffoldia CLI, type-heavy tools
 
-**Location:** `bindings/haskell/`
+*Location:* `+bindings/haskell/+`
 
-**Directory Structure:**
-```
+*Directory Structure:*
+
+....
 bindings/haskell/
 ├── gqldt.cabal
 ├── src/
@@ -663,10 +689,12 @@ bindings/haskell/
 │   │   └── Types.hs           # Haskell type definitions
 └── test/
     └── Spec.hs
-```
+....
 
-**Example: Haskell API**
-```haskell
+*Example: Haskell API*
+
+[source,haskell]
+----
 -- bindings/haskell/src/GqlDt/Types.hs
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE DataKinds #-}
@@ -740,10 +768,12 @@ example = do
   case result of
     Left err -> putStrLn $ "Error: " ++ err
     Right () -> putStrLn "Success!"
-```
+----
 
-**FFI (Haskell ↔ Zig):**
-```haskell
+*FFI (Haskell ↔ Zig):*
+
+[source,haskell]
+----
 -- bindings/haskell/src/GqlDt/FFI.hs
 {-# LANGUAGE ForeignFunctionInterface #-}
 
@@ -769,18 +799,19 @@ insertCreate table columns values rationale = do
   -- Call c_insert_create
   -- Handle errors
   undefined -- Implementation details
-```
+----
 
----
+'''''
 
-## 7. Deno/JavaScript Bindings
+=== 7. Deno/JavaScript Bindings
 
-**Priority:** MEDIUM - Runtime, glue code, MCP protocol
+*Priority:* MEDIUM - Runtime, glue code, MCP protocol
 
-**Location:** `bindings/deno/`
+*Location:* `+bindings/deno/+`
 
-**Directory Structure:**
-```
+*Directory Structure:*
+
+....
 bindings/deno/
 ├── deno.json
 ├── mod.ts                     # Main Deno module
@@ -791,10 +822,12 @@ bindings/deno/
 │   └── types.ts               # TypeScript type definitions
 └── examples/
     └── basic_usage.ts
-```
+....
 
-**Example: Deno API**
-```typescript
+*Example: Deno API*
+
+[source,typescript]
+----
 // bindings/deno/src/types.ts
 export type TypedValue =
   | { type: "nat"; value: number }
@@ -869,111 +902,115 @@ await new InsertBuilder("evidence")
   .column("prompt_provenance", { type: "bounded_nat", min: 0, max: 100, value: 95 })
   .setRationale("Official statistics")
   .execute(database);
-```
+----
 
----
+'''''
 
-## 8. Ada Bindings
+=== 8. Ada Bindings
 
-**Priority:** LOW - Safety-critical systems (where required per ecosystem)
+*Priority:* LOW - Safety-critical systems (where required per ecosystem)
 
-**Location:** `bindings/ada/`
+*Location:* `+bindings/ada/+`
 
-**Note:** Ada bindings follow same pattern as other languages but use Ada's package system and GNAT FFI (Interfaces.C).
+*Note:* Ada bindings follow same pattern as other languages but use
+Ada’s package system and GNAT FFI (Interfaces.C).
 
----
+'''''
 
-## Language Priority Summary
+=== Language Priority Summary
 
-| Language | Priority | Use Case | Status |
-|----------|----------|----------|--------|
-| **ReScript** | ✅ CRITICAL | Web, apps, primary development | ✅ Specified |
-| **Rust** | 🔥 HIGH | Systems, CLI, performance | ⏳ Spec ready |
-| **Zig** | ✅ CRITICAL | FFI layer (universal) | ✅ Core |
-| **Julia** | ⚠️ MEDIUM | Batch, data processing | ⏳ Spec ready |
-| **Gleam** | ⚠️ MEDIUM | BEAM backend services | ⏳ Spec ready |
-| **Elixir** | ⚠️ MEDIUM | Distributed systems | ⏳ Spec ready |
-| **Haskell** | ⚠️ LOW-MEDIUM | Scaffoldia, type-heavy tools | ⏳ Spec ready |
-| **Deno/JS** | ⚠️ MEDIUM | Runtime, glue, MCP | ⏳ Spec ready |
-| **Ada** | ⚠️ LOW | Safety-critical (if needed) | 📝 Noted |
+[width="100%",cols="27%,26%,26%,21%",options="header",]
+|===
+|Language |Priority |Use Case |Status
+|*ReScript* |✅ CRITICAL |Web, apps, primary development |✅ Specified
+|*Rust* |🔥 HIGH |Systems, CLI, performance |⏳ Spec ready
+|*Zig* |✅ CRITICAL |FFI layer (universal) |✅ Core
+|*Julia* |⚠️ MEDIUM |Batch, data processing |⏳ Spec ready
+|*Gleam* |⚠️ MEDIUM |BEAM backend services |⏳ Spec ready
+|*Elixir* |⚠️ MEDIUM |Distributed systems |⏳ Spec ready
+|*Haskell* |⚠️ LOW-MEDIUM |Scaffoldia, type-heavy tools |⏳ Spec ready
+|*Deno/JS* |⚠️ MEDIUM |Runtime, glue, MCP |⏳ Spec ready
+|*Ada* |⚠️ LOW |Safety-critical (if needed) |📝 Noted
+|===
 
----
+'''''
 
-## Common Patterns Across All Bindings
+=== Common Patterns Across All Bindings
 
-### 1. Builder Pattern
+==== 1. Builder Pattern
+
 All languages use ergonomic builder APIs:
-```
+
+....
 new(table) → column(name, value) → rationale(text) → execute()
-```
+....
 
-### 2. Type Safety
-Type systems leveraged where possible:
-- Rust: Enums + Result types
-- Haskell: GADTs + phantom types
-- ReScript: Variants + polymorphic variants
-- Gleam: Custom types + Result
-- Elixir: Type specs + structs
+==== 2. Type Safety
 
-### 3. Error Handling
-All bindings return `Result`/`Either`/tuple types:
-- Rust: `Result<T, Error>`
-- ReScript: `result<'a, 'e>`
-- Gleam: `Result(a, String)`
-- Elixir: `{:ok, value} | {:error, msg}`
-- Haskell: `Either String a`
+Type systems leveraged where possible: - Rust: Enums + Result types -
+Haskell: GADTs + phantom types - ReScript: Variants + polymorphic
+variants - Gleam: Custom types + Result - Elixir: Type specs + structs
 
-### 4. FFI Safety
-All bindings validate inputs before calling Zig FFI:
-- Non-null strings
-- Array bounds
-- Type tags
+==== 3. Error Handling
 
----
+All bindings return `+Result+`/`+Either+`/tuple types: - Rust:
+`+Result<T, Error>+` - ReScript: `+result<'a, 'e>+` - Gleam:
+`+Result(a, String)+` - Elixir: `+{:ok, value} | {:error, msg}+` -
+Haskell: `+Either String a+`
 
-## Implementation Timeline
+==== 4. FFI Safety
 
-### M9: ReScript Bindings (PRIORITY)
-- [ ] Create `bindings/rescript/` structure
-- [ ] Implement FFI bindings to Zig
-- [ ] Builder API with type safety
-- [ ] Examples and documentation
-- [ ] WASM compatibility
+All bindings validate inputs before calling Zig FFI: - Non-null strings
+- Array bounds - Type tags
 
-### M10: Rust Bindings
-- [ ] Create `bindings/rust/` structure
-- [ ] Cargo.toml + build.rs
-- [ ] FFI bindings via unsafe blocks
-- [ ] Safe Rust API wrapper
-- [ ] Examples and tests
+'''''
 
-### M11: Julia + Deno Bindings
-- [ ] Julia: `bindings/julia/` with ccall
-- [ ] Deno: `bindings/deno/` with dlopen
-- [ ] Examples for both
+=== Implementation Timeline
 
-### M12: BEAM Bindings (Gleam + Elixir)
-- [ ] Erlang NIF (C bridge to Zig)
-- [ ] Gleam bindings
-- [ ] Elixir bindings
-- [ ] Phoenix integration example
+==== M9: ReScript Bindings (PRIORITY)
 
-### M13: Haskell Bindings (Low Priority)
-- [ ] Haskell FFI via Foreign.C
-- [ ] GADT-based type-safe API
-- [ ] Scaffoldia integration
+* [ ] Create `+bindings/rescript/+` structure
+* [ ] Implement FFI bindings to Zig
+* [ ] Builder API with type safety
+* [ ] Examples and documentation
+* [ ] WASM compatibility
 
----
+==== M10: Rust Bindings
 
-**Document Status:** Complete language binding specifications
+* [ ] Create `+bindings/rust/+` structure
+* [ ] Cargo.toml + build.rs
+* [ ] FFI bindings via unsafe blocks
+* [ ] Safe Rust API wrapper
+* [ ] Examples and tests
 
-**Next Steps:**
-1. Complete M6 Parser (typed IR generation)
-2. Complete M7 Idris2 ABI + M8 Zig FFI (foundation for all bindings)
-3. Implement M9 ReScript bindings (highest priority)
-4. Implement remaining bindings based on ecosystem needs
+==== M11: Julia + Deno Bindings
 
-**See Also:**
-- `docs/INTEGRATION.md` - ReScript, WASM, ABI/FFI architecture
-- `docs/EXECUTION-STRATEGY.md` - Why native IR execution
-- `~/abi-migration-guide.md` - Idris2 ABI + Zig FFI universal standard
+* [ ] Julia: `+bindings/julia/+` with ccall
+* [ ] Deno: `+bindings/deno/+` with dlopen
+* [ ] Examples for both
+
+==== M12: BEAM Bindings (Gleam + Elixir)
+
+* [ ] Erlang NIF (C bridge to Zig)
+* [ ] Gleam bindings
+* [ ] Elixir bindings
+* [ ] Phoenix integration example
+
+==== M13: Haskell Bindings (Low Priority)
+
+* [ ] Haskell FFI via Foreign.C
+* [ ] GADT-based type-safe API
+* [ ] Scaffoldia integration
+
+'''''
+
+*Document Status:* Complete language binding specifications
+
+*Next Steps:* 1. Complete M6 Parser (typed IR generation) 2. Complete M7
+Idris2 ABI + M8 Zig FFI (foundation for all bindings) 3. Implement M9
+ReScript bindings (highest priority) 4. Implement remaining bindings
+based on ecosystem needs
+
+*See Also:* - `+docs/INTEGRATION.md+` - ReScript, WASM, ABI/FFI
+architecture - `+docs/EXECUTION-STRATEGY.md+` - Why native IR execution
+- `+~/abi-migration-guide.md+` - Idris2 ABI + Zig FFI universal standard

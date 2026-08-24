@@ -1,36 +1,39 @@
-# GQL-dt Normalization Types
+== GQL-dt Normalization Types
 
-**Version**: 0.1.0
-**Status**: Specification
-**Date**: 2026-01-11
-**License**: MPL-2.0
+*Version*: 0.1.0 *Status*: Specification *Date*: 2026-01-11 *License*:
+MPL-2.0
 
-## Overview
+=== Overview
 
-This specification defines dependent types for encoding functional dependencies, normal forms, and proof-carrying schema normalization in GQL-dt. These types enable:
+This specification defines dependent types for encoding functional
+dependencies, normal forms, and proof-carrying schema normalization in
+GQL-dt. These types enable:
 
-- **Compile-time verification** that schemas satisfy target normal forms
-- **Proof-carrying normalization** with equivalence guarantees
-- **Type-safe schema evolution** with reversibility
-- **Integration with Form.Normalizer** for automatic FD discovery
+* *Compile-time verification* that schemas satisfy target normal forms
+* *Proof-carrying normalization* with equivalence guarantees
+* *Type-safe schema evolution* with reversibility
+* *Integration with Form.Normalizer* for automatic FD discovery
 
-## Table of Contents
+=== Table of Contents
 
-1. [Functional Dependencies](#1-functional-dependencies)
-2. [Normal Form Predicates](#2-normal-form-predicates)
-3. [Normalization Steps](#3-normalization-steps)
-4. [Multi-Valued Dependencies](#4-multi-valued-dependencies)
-5. [Integration with Form.Normalizer](#5-integration-with-formnormalizer)
-6. [GQL Syntax Extensions](#6-gql-syntax-extensions)
-7. [Complete Examples](#7-complete-examples)
+[arabic]
+. link:#1-functional-dependencies[Functional Dependencies]
+. link:#2-normal-form-predicates[Normal Form Predicates]
+. link:#3-normalization-steps[Normalization Steps]
+. link:#4-multi-valued-dependencies[Multi-Valued Dependencies]
+. link:#5-integration-with-formnormalizer[Integration with
+Form.Normalizer]
+. link:#6-gql-syntax-extensions[GQL Syntax Extensions]
+. link:#7-complete-examples[Complete Examples]
 
----
+'''''
 
-## 1. Functional Dependencies
+=== 1. Functional Dependencies
 
-### 1.1 Core Types
+==== 1.1 Core Types
 
-```lean
+[source,lean]
+----
 /-- An attribute in a schema -/
 structure Attribute where
   name : String
@@ -52,11 +55,12 @@ structure FDHolds (fd : FunDep S) (r : Relation S) : Prop where
   proof : ∀ t1 t2 : Tuple S,
     (∀ a ∈ fd.determinant, t1.get a = t2.get a) →
     (∀ a ∈ fd.dependent, t1.get a = t2.get a)
-```
+----
 
-### 1.2 FD Properties
+==== 1.2 FD Properties
 
-```lean
+[source,lean]
+----
 /-- A trivial FD (Y ⊆ X) -/
 def FunDep.isTrivial (fd : FunDep S) : Prop :=
   fd.dependent ⊆ fd.determinant
@@ -77,11 +81,12 @@ def FunDep.isPartial (fd : FunDep S) (keys : List AttrSet) : Prop :=
 def FunDep.isTransitive (fd1 fd2 : FunDep S) (keys : List AttrSet) : Prop :=
   fd1.dependent = fd2.determinant ∧
   ¬fd2.determinantIsSuperkey keys
-```
+----
 
-### 1.3 Armstrong's Axioms
+==== 1.3 Armstrong’s Axioms
 
-```lean
+[source,lean]
+----
 /-- Reflexivity: If Y ⊆ X, then X → Y -/
 theorem fd_reflexivity (X Y : AttrSet) (h : Y ⊆ X) :
     FDHolds ⟨X, Y, hX, hY⟩ r := by
@@ -109,11 +114,12 @@ theorem fd_transitivity (fd1 : FunDep S) (fd2 : FunDep S)
     rw [← heq] at hb
     exact h1.proof t1 t2 hdet b hb
   exact h2.proof t1 t2 hmid a ha
-```
+----
 
-### 1.4 Discovered FDs with Confidence
+==== 1.4 Discovered FDs with Confidence
 
-```lean
+[source,lean]
+----
 /-- An FD discovered from data with a confidence score -/
 structure DiscoveredFD (S : Schema) where
   fd : FunDep S
@@ -128,15 +134,16 @@ def DiscoveredFD.isApproximate (dfd : DiscoveredFD S) : Prop :=
 
 /-- Threshold for treating approximate FD as exact -/
 def approximateFDThreshold : Float := 0.99
-```
+----
 
----
+'''''
 
-## 2. Normal Form Predicates
+=== 2. Normal Form Predicates
 
-### 2.1 First Normal Form (1NF)
+==== 2.1 First Normal Form (1NF)
 
-```lean
+[source,lean]
+----
 /-- All attributes have atomic (non-composite, non-repeating) types -/
 def FirstNormalForm (S : Schema) : Prop :=
   ∀ attr ∈ S.attributes, attr.type.isAtomic
@@ -153,11 +160,12 @@ def GQLType.isAtomic : GQLType → Bool
   | .Object _ => false     -- Not atomic
   | .Option t => t.isAtomic
   | _ => true
-```
+----
 
-### 2.2 Second Normal Form (2NF)
+==== 2.2 Second Normal Form (2NF)
 
-```lean
+[source,lean]
+----
 /-- 1NF + no partial dependencies on candidate keys -/
 def SecondNormalForm (S : Schema) (fds : List (FunDep S)) (keys : List AttrSet) : Prop :=
   FirstNormalForm S ∧
@@ -173,11 +181,12 @@ def SecondNormalForm' (S : Schema) (fds : List (FunDep S)) (keys : List AttrSet)
 theorem second_nf_equiv (S : Schema) (fds : List (FunDep S)) (keys : List AttrSet) :
     SecondNormalForm S fds keys ↔ SecondNormalForm' S fds keys := by
   sorry -- Proof of equivalence
-```
+----
 
-### 2.3 Third Normal Form (3NF)
+==== 2.3 Third Normal Form (3NF)
 
-```lean
+[source,lean]
+----
 /-- 2NF + no transitive dependencies on candidate keys -/
 def ThirdNormalForm (S : Schema) (fds : List (FunDep S)) (keys : List AttrSet) : Prop :=
   SecondNormalForm S fds keys ∧
@@ -191,11 +200,12 @@ def ThirdNormalForm' (S : Schema) (fds : List (FunDep S)) (keys : List AttrSet) 
   FirstNormalForm S ∧
   ∀ fd ∈ fds, ¬fd.isTrivial →
     fd.determinantIsSuperkey keys ∨ fd.dependentIsPrime keys
-```
+----
 
-### 2.4 Boyce-Codd Normal Form (BCNF)
+==== 2.4 Boyce-Codd Normal Form (BCNF)
 
-```lean
+[source,lean]
+----
 /-- Every non-trivial FD has a superkey as determinant -/
 def BCNF (S : Schema) (fds : List (FunDep S)) (keys : List AttrSet) : Prop :=
   FirstNormalForm S ∧
@@ -220,11 +230,12 @@ theorem bcnf_implies_3nf (S : Schema) (fds : List (FunDep S)) (keys : List AttrS
 /-- 3NF does not imply BCNF (counterexample exists) -/
 -- The classic counterexample: R(A, B, C) with FDs {AB → C, C → B}
 -- This is in 3NF but not BCNF because C → B and C is not a superkey
-```
+----
 
-### 2.5 Normal Form Hierarchy
+==== 2.5 Normal Form Hierarchy
 
-```lean
+[source,lean]
+----
 /-- The normal form of a schema -/
 inductive NormalForm where
   | unnormalized : NormalForm
@@ -256,15 +267,16 @@ instance : LE NormalForm where
       | .bcnf => 4
       | .fourth => 5
       | .fifth => 6
-```
+----
 
----
+'''''
 
-## 3. Normalization Steps
+=== 3. Normalization Steps
 
-### 3.1 Schema Transformation
+==== 3.1 Schema Transformation
 
-```lean
+[source,lean]
+----
 /-- A transformation from one schema to another -/
 structure SchemaTransform where
   source : Schema
@@ -282,11 +294,12 @@ structure LosslessTransform (t : SchemaTransform) : Prop where
 structure PreservesFDs (t : SchemaTransform) (fds : List (FunDep t.source)) : Prop where
   preserved : ∀ fd ∈ fds, ∃ fd' : FunDep t.target,
     FDHolds fd r → FDHolds fd' (t.forward r)
-```
+----
 
-### 3.2 Normalization Step
+==== 3.2 Normalization Step
 
-```lean
+[source,lean]
+----
 /-- A single normalization step with proofs -/
 structure NormalizationStep where
   transform : SchemaTransform
@@ -310,11 +323,12 @@ inductive FDPreservationStatus where
                     (lost : List (FunDep source)) →
                     (lostRationale : NonEmptyString) →
                     FDPreservationStatus
-```
+----
 
-### 3.3 Decomposition Operations
+==== 3.3 Decomposition Operations
 
-```lean
+[source,lean]
+----
 /-- Decompose a schema by splitting on a violating FD -/
 def decomposeOn (S : Schema) (fd : FunDep S) : SchemaTransform :=
   let s1Attrs := fd.determinant ++ fd.dependent
@@ -340,11 +354,12 @@ theorem decomposition_lossless (S : Schema) (fd : FunDep S) (r : Relation S)
   -- The key insight: natural join on determinant reconstructs original
   -- because the FD guarantees no spurious tuples
   sorry
-```
+----
 
-### 3.4 Normalization Algorithms
+==== 3.4 Normalization Algorithms
 
-```lean
+[source,lean]
+----
 /-- Normalize to 3NF using synthesis algorithm (preserves all FDs) -/
 def normalizeTo3NF (S : Schema) (fds : List (FunDep S)) (keys : List AttrSet) :
     List NormalizationStep :=
@@ -370,15 +385,16 @@ def normalize (S : Schema) (fds : List (FunDep S)) (keys : List AttrSet)
       let bcnfSteps := normalizeToBCNF S fds keys
       if bcnfSteps.all (·.fdPreservation.isAllPreserved) then bcnfSteps
       else normalizeTo3NF S fds keys
-```
+----
 
----
+'''''
 
-## 4. Multi-Valued Dependencies
+=== 4. Multi-Valued Dependencies
 
-### 4.1 MVD Definition
+==== 4.1 MVD Definition
 
-```lean
+[source,lean]
+----
 /-- A multi-valued dependency X →→ Y -/
 structure MVD (S : Schema) where
   determinant : AttrSet
@@ -406,11 +422,12 @@ theorem fd_implies_mvd (fd : FunDep S) (h : FDHolds fd r) :
 def MVD.isTrivial (mvd : MVD S) : Prop :=
   mvd.dependent ⊆ mvd.determinant ∨
   mvd.determinant ++ mvd.dependent = S.attributes
-```
+----
 
-### 4.2 Fourth Normal Form (4NF)
+==== 4.2 Fourth Normal Form (4NF)
 
-```lean
+[source,lean]
+----
 /-- BCNF + no non-trivial MVDs where determinant is not a superkey -/
 def FourthNormalForm (S : Schema) (fds : List (FunDep S)) (mvds : List (MVD S))
     (keys : List AttrSet) : Prop :=
@@ -425,15 +442,16 @@ theorem fourth_nf_implies_bcnf (S : Schema) (fds : List (FunDep S)) (mvds : List
     FourthNormalForm S fds mvds keys → BCNF S fds keys := by
   intro ⟨hbcnf, _⟩
   exact hbcnf
-```
+----
 
----
+'''''
 
-## 5. Integration with Form.Normalizer
+=== 5. Integration with Form.Normalizer
 
-### 5.1 Bidirectional FFI
+==== 5.1 Bidirectional FFI
 
-```zig
+[source,zig]
+----
 /// Zig FFI for normalization proofs
 /// Forward: Form.Normalizer → GQL-dt (for proof verification)
 pub export fn lith_verify_normalization_proof(
@@ -462,11 +480,12 @@ pub export fn lith_get_discovered_fds(
     out_fds: *[*]u8,
     out_len: *usize,
 ) callconv(.C) LithStatus;
-```
+----
 
-### 5.2 Proof Obligations
+==== 5.2 Proof Obligations
 
-```lean
+[source,lean]
+----
 /-- Required proofs for applying a normalization step -/
 structure NormalizationProofObligation (step : NormalizationStep) where
   /-- Proof that source schema exists -/
@@ -487,15 +506,16 @@ def verifyNormalization (step : NormalizationStep)
   if ¬proof.achievesTarget.verify then
     return .error "Target normal form proof failed"
   return .ok ()
-```
+----
 
----
+'''''
 
-## 6. GQL Syntax Extensions
+=== 6. GQL Syntax Extensions
 
-### 6.1 Schema Definition with Normal Form
+==== 6.1 Schema Definition with Normal Form
 
-```gql
+[source,gql]
+----
 -- Declare target normal form
 CREATE COLLECTION employees (
   employee_id : UUID PRIMARY KEY,
@@ -505,11 +525,12 @@ CREATE COLLECTION employees (
   salary : BoundedNat 0 10000000
 ) WITH DEPENDENT_TYPES
   TARGET_NORMAL_FORM BCNF;  -- Compile error if schema violates BCNF
-```
+----
 
-### 6.2 Functional Dependency Declaration
+==== 6.2 Functional Dependency Declaration
 
-```gql
+[source,gql]
+----
 -- Explicit FD declaration
 CREATE COLLECTION employees (
   employee_id : UUID PRIMARY KEY,
@@ -523,11 +544,12 @@ CREATE COLLECTION employees (
   );
 
 -- Type checker: Warning - transitive dependency violates 3NF
-```
+----
 
-### 6.3 Normalization Commands
+==== 6.3 Normalization Commands
 
-```gql
+[source,gql]
+----
 -- Discover FDs
 DISCOVER DEPENDENCIES
 FROM employees
@@ -556,15 +578,16 @@ WITH_PROOF {
   authorized: AdminAuth.normalize
 }
 RATIONALE "Eliminating transitive dependency department -> dept_location";
-```
+----
 
----
+'''''
 
-## 7. Complete Examples
+=== 7. Complete Examples
 
-### 7.1 Employee Schema Normalization
+==== 7.1 Employee Schema Normalization
 
-```gql
+[source,gql]
+----
 -- Initial schema (2NF, violates 3NF)
 CREATE COLLECTION employees_raw (
   employee_id : UUID PRIMARY KEY,
@@ -616,11 +639,12 @@ RATIONALE "Normalizing to 3NF to eliminate update anomalies";
 -- Result: Two new collections
 -- employees(employee_id, name, department, salary)  -- 3NF
 -- departments(department, dept_location)             -- 3NF
-```
+----
 
-### 7.2 Type-Safe Query After Normalization
+==== 7.2 Type-Safe Query After Normalization
 
-```gql
+[source,gql]
+----
 -- Query across normalized tables (type-safe join)
 SELECT (
   e : Employee | e.salary > 50000,
@@ -633,11 +657,12 @@ RETURNING (List (Employee × Department) |
            ∀ (e, d) ∈ result, e.salary > 50000 ∧ d.dept_location = 'London');
 
 -- Type proves all results satisfy conditions!
-```
+----
 
-### 7.3 Reversible Normalization
+==== 7.3 Reversible Normalization
 
-```gql
+[source,gql]
+----
 -- Apply normalization
 APPLY NORMALIZATION proposal
 WITH_INVERSE (
@@ -658,13 +683,14 @@ WITH_PROOF {
   inverse_exists: proposal.lossless,
   authorized: AdminAuth.denormalize
 };
-```
+----
 
----
+'''''
 
-## Appendix A: Proof Tactics
+=== Appendix A: Proof Tactics
 
-```lean
+[source,lean]
+----
 namespace Lithoglyph.Normalization.Tactics
 
 /-- Solve FD-related goals -/
@@ -696,15 +722,15 @@ macro_rules
       | simp [decomposeOn, SchemaTransform.forward, SchemaTransform.inverse])
 
 end Lithoglyph.Normalization.Tactics
-```
+----
 
----
+'''''
 
-## Appendix B: Error Messages
+=== Appendix B: Error Messages
 
-### B.1 Normal Form Violation
+==== B.1 Normal Form Violation
 
-```
+....
 NORMAL FORM VIOLATION at line 5:
 
   CREATE COLLECTION employees (...) TARGET_NORMAL_FORM BCNF
@@ -720,11 +746,11 @@ Suggestions:
 • Remove TARGET_NORMAL_FORM BCNF
 • Split collection: PROPOSE NORMALIZATION employees TO BCNF
 • Make department a key: PRIMARY KEY (employee_id, department)
-```
+....
 
-### B.2 Missing Proof
+==== B.2 Missing Proof
 
-```
+....
 PROOF OBLIGATION FAILED at line 12:
 
   APPLY NORMALIZATION proposal WITH_PROOF { ... }
@@ -740,13 +766,16 @@ Missing: roundTrip proof
 Suggestions:
 • Add: lossless: by decomposition_lossless employees fd h
 • Provide manual proof: lossless: by { intro r; simp [decomposeOn]; ... }
-```
+....
 
----
+'''''
 
-**Document Status**: Specification
+*Document Status*: Specification
 
-**See Also**:
-- [Lithoglyph Self-Normalizing Specification](https://github.com/hyperpolymath/nextgen-databases/tree/main/lithoglyph/spec/self-normalizing.adoc)
-- [GQL Dependent Types Complete Specification](./GQL_Dependent_Types_Complete_Specification.md)
-- [Form.Normalizer Architecture](https://github.com/hyperpolymath/nextgen-databases/tree/main/lithoglyph/ARCHITECTURE.adoc)
+*See Also*: -
+https://github.com/hyperpolymath/nextgen-databases/tree/main/lithoglyph/spec/self-normalizing.adoc[Lithoglyph
+Self-Normalizing Specification] -
+link:./GQL_Dependent_Types_Complete_Specification.md[GQL Dependent Types
+Complete Specification] -
+https://github.com/hyperpolymath/nextgen-databases/tree/main/lithoglyph/ARCHITECTURE.adoc[Form.Normalizer
+Architecture]

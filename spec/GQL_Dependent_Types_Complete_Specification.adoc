@@ -1,40 +1,43 @@
-# GQL with Dependent Types: Complete Specification
+== GQL with Dependent Types: Complete Specification
 
-**Version**: 0.2.0 (Dependent Types Extension)  
-**Status**: Research Prototype  
-**Date**: 2025-01-11  
-**Authors**: Jonathan D.A. Jewell, Claude (Anthropic)  
-**License**: MPL-2.0
+*Version*: 0.2.0 (Dependent Types Extension) +
+*Status*: Research Prototype +
+*Date*: 2025-01-11 +
+*Authors*: Jonathan D.A. Jewell, Claude (Anthropic) +
+*License*: MPL-2.0
 
-## Table of Contents
+=== Table of Contents
 
-1. [Introduction](#1-introduction)
-2. [Type System](#2-type-system)
-3. [Refinement Types](#3-refinement-types)
-4. [Dependent Types](#4-dependent-types)
-5. [DDL with Types](#5-ddl-with-types)
-6. [DML with Proofs](#6-dml-with-proofs)
-7. [Queries with Refinements](#7-queries-with-refinements)
-8. [Proof Obligations](#8-proof-obligations)
-9. [Tactics and Automation](#9-tactics-and-automation)
-10. [Complete Examples](#10-complete-examples)
+[arabic]
+. link:#1-introduction[Introduction]
+. link:#2-type-system[Type System]
+. link:#3-refinement-types[Refinement Types]
+. link:#4-dependent-types[Dependent Types]
+. link:#5-ddl-with-types[DDL with Types]
+. link:#6-dml-with-proofs[DML with Proofs]
+. link:#7-queries-with-refinements[Queries with Refinements]
+. link:#8-proof-obligations[Proof Obligations]
+. link:#9-tactics-and-automation[Tactics and Automation]
+. link:#10-complete-examples[Complete Examples]
 
----
+'''''
 
-## 1. Introduction
+=== 1. Introduction
 
-### 1.1 What This Document Covers
+==== 1.1 What This Document Covers
 
-This specification extends GQL with **dependent types**—types that can depend on values. This enables:
+This specification extends GQL with *dependent types*—types that can
+depend on values. This enables:
 
-- **Compile-time verification** of constraints (e.g., PROMPT scores in [0, 100])
-- **Provenance in types** (can't create data without provenance)
-- **Reversibility proofs** (prove operations have inverses)
-- **Machine-checkable correctness** (types ARE proofs)
+* *Compile-time verification* of constraints (e.g., PROMPT scores in [0,
+100])
+* *Provenance in types* (can’t create data without provenance)
+* *Reversibility proofs* (prove operations have inverses)
+* *Machine-checkable correctness* (types ARE proofs)
 
-### 1.2 Relationship to Standard GQL
+==== 1.2 Relationship to Standard GQL
 
-```
+....
 Standard GQL (runtime checks):
   CREATE COLLECTION evidence (
     prompt_provenance INT CHECK (prompt_provenance BETWEEN 0 AND 100)
@@ -44,31 +47,34 @@ GQL with Dependent Types (compile-time proofs):
   CREATE COLLECTION evidence (
     prompt_provenance : BoundedNat 0 100  -- Proof at type level
   ) WITH DEPENDENT_TYPES;
-```
+....
 
-**Backward Compatibility**: Standard GQL is valid in dependent-type mode (types are inferred).
+*Backward Compatibility*: Standard GQL is valid in dependent-type mode
+(types are inferred).
 
-### 1.3 Implementation Languages
+==== 1.3 Implementation Languages
 
-GQL with dependent types can be implemented in:
-- **Idris 2**: Good balance of practicality and power
-- **Lean 4**: Excellent IDE support, strong automation
-- **Agda**: Most expressive, research-oriented
-- **F*** / Dafny**: Refinement types, SMT-based
+GQL with dependent types can be implemented in: - *Idris 2*: Good
+balance of practicality and power - *Lean 4*: Excellent IDE support,
+strong automation - *Agda*: Most expressive, research-oriented - *F** /
+Dafny**: Refinement types, SMT-based
 
-**Recommendation**: Lean 4 (best LSP support, large proof library).
+*Recommendation*: Lean 4 (best LSP support, large proof library).
 
-### 1.4 Related Specifications
+==== 1.4 Related Specifications
 
-- **[Normalization Types](normalization-types.md)**: Extends this specification with type-encoded functional dependencies, normal form predicates (1NF through BCNF), and proof-carrying schema evolution. Integrates with Lithoglyph's self-normalizing database feature.
+* *link:normalization-types.md[Normalization Types]*: Extends this
+specification with type-encoded functional dependencies, normal form
+predicates (1NF through BCNF), and proof-carrying schema evolution.
+Integrates with Lithoglyph’s self-normalizing database feature.
 
----
+'''''
 
-## 2. Type System
+=== 2. Type System
 
-### 2.1 Type Universe
+==== 2.1 Type Universe
 
-```
+....
 Type Hierarchy (Lean 4 notation):
 
 Type 0 (Sort 0):  Prop           -- Propositions (proofs)
@@ -76,11 +82,12 @@ Type 1 (Sort 1):  Type           -- Data types
 Type 2 (Sort 2):  Type 1         -- Types of types
 ...
 Type ω (Sort ω):  Type ω-1       -- Infinite hierarchy
-```
+....
 
-### 2.2 Primitive Types
+==== 2.2 Primitive Types
 
-```lean
+[source,lean]
+----
 -- Lean 4 primitives (available in GQL-DT)
 Nat       : Type      -- Natural numbers (0, 1, 2, ...)
 Int       : Type      -- Integers (..., -1, 0, 1, ...)
@@ -89,11 +96,12 @@ Bool      : Type      -- true, false
 Float     : Type      -- IEEE 754 floats
 Char      : Type      -- Unicode characters
 Unit      : Type      -- Single value: ()
-```
+----
 
-### 2.3 Type Constructors
+==== 2.3 Type Constructors
 
-```lean
+[source,lean]
+----
 -- Product types (tuples, structs)
 α × β                 -- Pair type
 (a : α) × (b : β)     -- Dependent pair (Sigma type)
@@ -101,11 +109,12 @@ Unit      : Type      -- Single value: ()
 -- Sum types (tagged unions)
 α ⊕ β                 -- Either α or β
 Option α              -- Some a | None
-```
+----
 
-### 2.4 Dependent Function Types
+==== 2.4 Dependent Function Types
 
-```lean
+[source,lean]
+----
 -- Simple function (non-dependent)
 α → β                 -- Function from α to β
 
@@ -114,25 +123,27 @@ Option α              -- Some a | None
 
 -- Universal quantification
 ∀ (x : α), P x        -- For all x of type α, P x holds
-```
+----
 
-### 2.5 Dependent Pair Types
+==== 2.5 Dependent Pair Types
 
-```lean
+[source,lean]
+----
 -- Sigma type (exists with witness)
 (x : α) × β x         -- Pair where second component depends on first
 
 -- Existential quantification
 ∃ (x : α), P x        -- There exists x of type α such that P x holds
-```
+----
 
----
+'''''
 
-## 3. Refinement Types
+=== 3. Refinement Types
 
-### 3.1 Bounded Natural Numbers
+==== 3.1 Bounded Natural Numbers
 
-```lean
+[source,lean]
+----
 -- Definition
 structure BoundedNat (min max : Nat) where
   val : Nat
@@ -153,11 +164,12 @@ CREATE COLLECTION evidence (
   id : UUID,
   prompt_provenance : PromptDimension
 );
-```
+----
 
-### 3.2 Bounded Floats
+==== 3.2 Bounded Floats
 
-```lean
+[source,lean]
+----
 -- Definition
 structure BoundedFloat (min max : Float) where
   val : Float
@@ -172,11 +184,12 @@ CREATE COLLECTION claims (
   id : UUID,
   confidence_level : Confidence
 );
-```
+----
 
-### 3.3 Non-Empty Strings
+==== 3.3 Non-Empty Strings
 
-```lean
+[source,lean]
+----
 -- Definition
 structure NonEmptyString where
   val : String
@@ -190,11 +203,12 @@ abbrev ActorId := NonEmptyString
 INSERT INTO claims (text)
 VALUES ('Some claim')
 RATIONALE (r : Rationale);  -- Must be non-empty!
-```
+----
 
-### 3.4 Email Addresses
+==== 3.4 Email Addresses
 
-```lean
+[source,lean]
+----
 -- Definition
 structure Email where
   val : String
@@ -204,11 +218,12 @@ structure Email where
 CREATE COLLECTION users (
   email : Email  -- Only valid emails!
 );
-```
+----
 
-### 3.5 Validated UUIDs
+==== 3.5 Validated UUIDs
 
-```lean
+[source,lean]
+----
 -- Definition
 structure ValidUUID where
   val : String
@@ -219,15 +234,16 @@ structure ValidUUID where
 CREATE COLLECTION entities (
   id : ValidUUID PRIMARY KEY
 );
-```
+----
 
----
+'''''
 
-## 4. Dependent Types
+=== 4. Dependent Types
 
-### 4.1 Length-Indexed Vectors
+==== 4.1 Length-Indexed Vectors
 
-```lean
+[source,lean]
+----
 -- Definition
 inductive Vector (α : Type) : Nat → Type where
   | nil  : Vector α 0
@@ -238,20 +254,23 @@ def head {α : Type} {n : Nat} : Vector α (n + 1) → α
   | .cons a _ => a
 
 -- Type guarantees non-empty vector
-```
+----
 
-**GQL Usage**:
-```gql
+*GQL Usage*:
+
+[source,gql]
+----
 -- Fixed-size array (compile-time checked)
 CREATE COLLECTION survey_responses (
   id : UUID,
   ratings : Vector PromptDimension 6  -- Exactly 6 PROMPT dimensions
 );
-```
+----
 
-### 4.2 Provenance-Tracked Values
+==== 4.2 Provenance-Tracked Values
 
-```lean
+[source,lean]
+----
 -- Definition
 structure Tracked (α : Type) where
   value : α
@@ -265,10 +284,12 @@ def mkTracked (a : α) (actor : ActorId) (ts : Timestamp) (rat : Rationale)
   ⟨a, actor, ts, rat⟩
 
 -- Can't construct without provenance!
-```
+----
 
-**GQL Usage**:
-```gql
+*GQL Usage*:
+
+[source,gql]
+----
 -- All values automatically tracked
 CREATE COLLECTION claims (
   id : UUID,
@@ -281,11 +302,12 @@ VALUES ('Inflation claim')
 ADDED_BY "alice"
 RATIONALE "Based on ONS data";
 -- Automatically wrapped in Tracked
-```
+----
 
-### 4.3 PROMPT Scores with Proof
+==== 4.3 PROMPT Scores with Proof
 
-```lean
+[source,lean]
+----
 -- Definition
 structure PromptScores where
   provenance : PromptDimension
@@ -303,10 +325,12 @@ structure PromptScores where
 def mkPromptScores (p r o m pub t : PromptDimension) : PromptScores :=
   let avg := (p.val + r.val + o.val + m.val + pub.val + t.val) / 6
   ⟨p, r, o, m, pub, t, ⟨avg, by omega, by omega⟩, by simp [avg]⟩
-```
+----
 
-**GQL Usage**:
-```gql
+*GQL Usage*:
+
+[source,gql]
+----
 INSERT INTO evidence (prompt_scores)
 VALUES ({
   provenance: 100,
@@ -318,11 +342,12 @@ VALUES ({
   -- 'overall' computed automatically with proof
 })
 RATIONALE "Official statistics";
-```
+----
 
-### 4.4 Reversible Operations
+==== 4.4 Reversible Operations
 
-```lean
+[source,lean]
+----
 -- Definition
 inductive ReversibleOp (α : Type) : Type where
   | insert : (data : Tracked α) → 
@@ -346,10 +371,12 @@ inductive ReversibleOp (α : Type) : Type where
 axiom roundTrip {α : Type} : α → (α → α) → α
 axiom roundTripPreservesIdentity {α : Type} (x : α) (f : α → α) 
   : roundTrip x f = x
-```
+----
 
-**GQL Usage**:
-```gql
+*GQL Usage*:
+
+[source,gql]
+----
 -- Reversible insertion
 INSERT INTO claims (text)
 VALUES ('Some claim')
@@ -368,11 +395,12 @@ JUSTIFICATION {
   user_request_id: "REQ-001",
   physical_deletion: true
 };
-```
+----
 
-### 4.5 Confidence-Indexed Claims
+==== 4.5 Confidence-Indexed Claims
 
-```lean
+[source,lean]
+----
 -- Definition
 structure Claim (c : Confidence) where
   id : UUID
@@ -388,10 +416,12 @@ def combineClaims {c1 c2 : Confidence}
   (claim1 : Claim c1) (claim2 : Claim c2)
   (prf : compatible c1 c2) 
   : Claim (fuseConfidence c1 c2) := sorry
-```
+----
 
-**GQL Usage**:
-```gql
+*GQL Usage*:
+
+[source,gql]
+----
 -- Claim with confidence in type
 CREATE COLLECTION claims (
   id : UUID,
@@ -404,11 +434,12 @@ SELECT combineClaims(claim1, claim2)
 FROM claims claim1, claims claim2
 WHERE compatible(claim1.confidence, claim2.confidence);
 -- Type error if not compatible!
-```
+----
 
-### 4.6 Ordered Navigation Paths
+==== 4.6 Ordered Navigation Paths
 
-```lean
+[source,lean]
+----
 -- Definition
 structure NavigationPath (ordering : Evidence → Evidence → Bool) where
   nodes : List Evidence
@@ -426,10 +457,12 @@ def createPath {ordering : Evidence → Evidence → Bool}
   : NavigationPath ordering :=
   let sorted := List.insertionSort ordering evs
   ⟨sorted, insertionSortIsSorted ordering evs⟩
-```
+----
 
-**GQL Usage**:
-```gql
+*GQL Usage*:
+
+[source,gql]
+----
 -- Path with proven ordering
 CREATE NAVIGATION_PATH 'skeptic_path'
 FOR INVESTIGATION 'uk_inflation_2023'
@@ -440,26 +473,30 @@ BEGIN
   WHERE investigation_id = 'uk_inflation_2023'
 END;
 -- Type checker proves path is sorted
-```
+----
 
----
+'''''
 
-## 5. DDL with Types
+=== 5. DDL with Types
 
-### 5.1 CREATE COLLECTION (With Dependent Types)
+==== 5.1 CREATE COLLECTION (With Dependent Types)
 
-**Syntax**:
-```gql
+*Syntax*:
+
+[source,gql]
+----
 CREATE COLLECTION [IF NOT EXISTS] collection_name (
   column_name : type [constraints],
   ...
 ) [WITH options];
-```
+----
 
-**Examples**:
+*Examples*:
 
-**Simple Refinement Types**:
-```gql
+*Simple Refinement Types*:
+
+[source,gql]
+----
 CREATE COLLECTION evidence (
   id : UUID,
   title : NonEmptyString,
@@ -470,95 +507,111 @@ CREATE COLLECTION evidence (
   prompt_publication : BoundedNat 0 100,
   prompt_transparency : BoundedNat 0 100
 ) WITH DEPENDENT_TYPES;
-```
+----
 
-**Provenance Tracking**:
-```gql
+*Provenance Tracking*:
+
+[source,gql]
+----
 CREATE COLLECTION claims (
   id : UUID,
   text : NonEmptyString,
   confidence : Confidence
 ) WITH PROVENANCE_TRACKING;
 -- All values automatically wrapped in Tracked
-```
+----
 
-**PROMPT Scores with Proof**:
-```gql
+*PROMPT Scores with Proof*:
+
+[source,gql]
+----
 CREATE COLLECTION evidence (
   id : UUID,
   title : NonEmptyString,
   prompt_scores : PromptScores  -- Proof of correct computation!
 ) WITH DEPENDENT_TYPES;
-```
+----
 
-**Length-Indexed Arrays**:
-```gql
+*Length-Indexed Arrays*:
+
+[source,gql]
+----
 CREATE COLLECTION survey (
   id : UUID,
   responses : Vector (BoundedNat 1 5) 10  -- Exactly 10 ratings (1-5 scale)
 ) WITH DEPENDENT_TYPES;
-```
+----
 
-### 5.2 CREATE EDGE_COLLECTION (With Types)
+==== 5.2 CREATE EDGE_COLLECTION (With Types)
 
-```gql
+[source,gql]
+----
 CREATE EDGE_COLLECTION relationships (
   from_id : UUID,
   to_id : UUID,
   weight : BoundedFloat 0.0 1.0,
   reasoning : Rationale  -- Non-empty!
 ) WITH DEPENDENT_TYPES;
-```
+----
 
-### 5.3 CREATE CONSTRAINT (With Proofs)
+==== 5.3 CREATE CONSTRAINT (With Proofs)
 
-```gql
+[source,gql]
+----
 CREATE CONSTRAINT chk_adult_content
 ON users (age : BoundedNat 0 150)
 CHECK (age.val ≥ 18)
 WITH_PROOF (λ u. ageProof u.age)
 RATIONALE "COPPA compliance"
 APPROVERS "legal_team";
-```
+----
 
----
+'''''
 
-## 6. DML with Proofs
+=== 6. DML with Proofs
 
-### 6.1 INSERT (With Proof Obligations)
+==== 6.1 INSERT (With Proof Obligations)
 
-**Syntax**:
-```gql
+*Syntax*:
+
+[source,gql]
+----
 INSERT INTO collection_name (columns : types)
 VALUES (values)
 RATIONALE (rationale : Rationale)
 [WITH_PROOF proofs];
-```
+----
 
-**Examples**:
+*Examples*:
 
-**Simple Bounded Values**:
-```gql
+*Simple Bounded Values*:
+
+[source,gql]
+----
 INSERT INTO evidence (title, prompt_provenance)
 VALUES (
   'ONS CPI Data',
   100  -- Type checker proves: 0 ≤ 100 ≤ 100 ✓
 )
 RATIONALE "Official statistics";
-```
+----
 
-**Invalid Value (Type Error)**:
-```gql
+*Invalid Value (Type Error)*:
+
+[source,gql]
+----
 INSERT INTO evidence (prompt_provenance)
 VALUES (150)  -- TYPE ERROR!
 RATIONALE "Test";
 
 -- Error: Cannot prove 150 ≤ 100
 -- Suggestion: Use value between 0 and 100
-```
+----
 
-**PROMPT Scores (Auto-Computed)**:
-```gql
+*PROMPT Scores (Auto-Computed)*:
+
+[source,gql]
+----
 INSERT INTO evidence (prompt_scores)
 VALUES ({
   provenance: 100,
@@ -570,10 +623,12 @@ VALUES ({
   -- 'overall' computed with proof automatically!
 })
 RATIONALE "Official statistics";
-```
+----
 
-**With Explicit Proof**:
-```gql
+*With Explicit Proof*:
+
+[source,gql]
+----
 INSERT INTO claims (text, confidence, evidence_list)
 VALUES (
   'Inflation claim',
@@ -585,32 +640,38 @@ WITH_PROOF {
   confidence_justified: confidenceProof text evidence_list 0.95
   -- Proves confidence matches evidence
 };
-```
+----
 
-### 6.2 UPDATE (With Correction Proof)
+==== 6.2 UPDATE (With Correction Proof)
 
-**Syntax**:
-```gql
+*Syntax*:
+
+[source,gql]
+----
 UPDATE collection_name
 SET column = value
 WHERE condition
 REASON (reason : Rationale)
 [WITH_PROOF proofs];
-```
+----
 
-**Examples**:
+*Examples*:
 
-**Simple Update**:
-```gql
+*Simple Update*:
+
+[source,gql]
+----
 UPDATE evidence
 SET prompt_replicability = 30  -- Type checker: 0 ≤ 30 ≤ 100 ✓
 WHERE id = 'study_x'
 REASON "Study failed to replicate"
 DISCLOSED_AT NOW();
-```
+----
 
-**Update with Proof of Validity**:
-```gql
+*Update with Proof of Validity*:
+
+[source,gql]
+----
 UPDATE claims
 SET text = 'Corrected text',
     confidence = 0.98
@@ -620,10 +681,12 @@ WITH_PROOF {
   new_confidence_justified: confidenceProof new_text new_evidence 0.98,
   correction_documented: reasonValid "ONS revised figures"
 };
-```
+----
 
-**Reversible Update**:
-```gql
+*Reversible Update*:
+
+[source,gql]
+----
 UPDATE claims
 SET text = 'New text'
 WHERE id = 'claim_123'
@@ -637,12 +700,14 @@ WITH_INVERSE (
 WITH_PROOF {
   inverse_correct: roundTripProof old_text new_text inverse_op
 };
-```
+----
 
-### 6.3 DELETE (With Justification)
+==== 6.3 DELETE (With Justification)
 
-**Reversible Delete**:
-```gql
+*Reversible Delete*:
+
+[source,gql]
+----
 DELETE FROM temp_data
 WHERE created_at < NOW() - INTERVAL '30 days'
 REASON "Temporary data expired"
@@ -653,10 +718,12 @@ WITH_INVERSE (
 WITH_PROOF {
   inverse_restores: deleteInsertRoundTrip data inverse
 };
-```
+----
 
-**Irreversible Delete**:
-```gql
+*Irreversible Delete*:
+
+[source,gql]
+----
 DELETE FROM sensitive_data
 WHERE user = 'xyz'
 REASON "GDPR right to erasure"
@@ -667,36 +734,42 @@ WITH_JUSTIFICATION {
   no_backup: true,
   crypto_deletion: true
 };
-```
+----
 
----
+'''''
 
-## 7. Queries with Refinements
+=== 7. Queries with Refinements
 
-### 7.1 SELECT with Type Refinements
+==== 7.1 SELECT with Type Refinements
 
-**Syntax**:
-```gql
+*Syntax*:
+
+[source,gql]
+----
 SELECT (columns : refined_types)
 FROM collection
 WHERE (condition : Prop)
 RETURNING (result : ResultType);
-```
+----
 
-**Examples**:
+*Examples*:
 
-**Simple Refinement**:
-```gql
+*Simple Refinement*:
+
+[source,gql]
+----
 -- Return only high-quality evidence
 SELECT (e : Evidence | e.prompt_overall > 90)
 FROM evidence e
 WHERE investigation_id = 'uk_inflation_2023';
 
 -- Return type proves all results satisfy predicate!
-```
+----
 
-**Multiple Refinements**:
-```gql
+*Multiple Refinements*:
+
+[source,gql]
+----
 SELECT (
   c : Claim | c.confidence > 0.85,
   e : Evidence | e.prompt_overall > 90
@@ -707,10 +780,12 @@ FROM claims c
 WHERE r.relationship_type = 'SUPPORTS';
 
 -- Type proves all results satisfy both conditions
-```
+----
 
-**Exists with Witness**:
-```gql
+*Exists with Witness*:
+
+[source,gql]
+----
 -- Find claims with at least one supporting evidence
 SELECT (c : Claim, ∃ e : Evidence, supports(c, e))
 FROM claims c
@@ -720,11 +795,12 @@ WHERE EXISTS (
 );
 
 -- Returns pairs (claim, evidence) with proof that e supports c
-```
+----
 
-### 7.2 Aggregates with Proofs
+==== 7.2 Aggregates with Proofs
 
-```gql
+[source,gql]
+----
 -- Compute average with proof it's in bounds
 SELECT (
   investigation_id,
@@ -735,47 +811,54 @@ FROM evidence
 GROUP BY investigation_id;
 
 -- Type proves average is in [0, 100]
-```
+----
 
-### 7.3 JOIN with Type Safety
+==== 7.3 JOIN with Type Safety
 
-```gql
+[source,gql]
+----
 -- Type-safe join
 SELECT *
 FROM claims c
   JOIN (e : Evidence | e.prompt_overall > 85) ON ...
 -- Can only join with high-quality evidence
-```
+----
 
----
+'''''
 
-## 8. Proof Obligations
+=== 8. Proof Obligations
 
-### 8.1 Automatic Proof Search
+==== 8.1 Automatic Proof Search
 
-**Simple Arithmetic**:
-```gql
+*Simple Arithmetic*:
+
+[source,gql]
+----
 INSERT INTO evidence (prompt_provenance)
 VALUES (95);  -- Type checker auto-proves: 0 ≤ 95 ≤ 100
 
 -- Behind the scenes (Lean 4 tactics):
 -- by omega  -- Linear arithmetic solver
-```
+----
 
-**Computed Fields**:
-```gql
+*Computed Fields*:
+
+[source,gql]
+----
 INSERT INTO evidence (prompt_scores)
 VALUES ({provenance: 100, ...});
 -- Type checker auto-computes overall and proves correctness
 
 -- Behind the scenes:
 -- overall_correct: by simp [computeOverall]; omega
-```
+----
 
-### 8.2 Manual Proofs
+==== 8.2 Manual Proofs
 
-**When Auto-Proof Fails**:
-```gql
+*When Auto-Proof Fails*:
+
+[source,gql]
+----
 INSERT INTO claims (text, confidence, evidence_list)
 VALUES ('Complex claim', 0.92, [e1, e2, e3])
 RATIONALE "Multi-source synthesis"
@@ -786,12 +869,14 @@ WITH_PROOF {
       intro text evidence conf
       sorry  -- User must complete
 };
-```
+----
 
-### 8.3 Proof Tactics
+==== 8.3 Proof Tactics
 
-**Available Tactics**:
-```lean
+*Available Tactics*:
+
+[source,lean]
+----
 -- Arithmetic
 omega           -- Linear arithmetic
 norm_num        -- Numeric normalization
@@ -811,21 +896,25 @@ constructor     -- Construct data/proof
 trivial         -- Solve trivial goals
 decide          -- Decision procedures
 aesop           -- Automated search
-```
+----
 
-**Example Usage**:
-```gql
+*Example Usage*:
+
+[source,gql]
+----
 WITH_PROOF {
   score_in_bounds: by omega,
   overall_correct: by simp [computeOverall]; norm_num,
   rationale_nonempty: by decide
 }
-```
+----
 
-### 8.4 Proof Libraries
+==== 8.4 Proof Libraries
 
-**Pre-Proved Theorems**:
-```lean
+*Pre-Proved Theorems*:
+
+[source,lean]
+----
 -- Lithoglyph standard library
 namespace Lithoglyph.Proofs
 
@@ -847,15 +936,16 @@ theorem insertDeleteRoundTrip {α : Type} (x : Tracked α)
   : roundTrip x (delete (insert x)) = x := by ...
 
 end Lithoglyph.Proofs
-```
+----
 
----
+'''''
 
-## 9. Tactics and Automation
+=== 9. Tactics and Automation
 
-### 9.1 Lithoglyph-Specific Tactics
+==== 9.1 Lithoglyph-Specific Tactics
 
-```lean
+[source,lean]
+----
 -- Custom tactics for Lithoglyph
 namespace Lithoglyph.Tactics
 
@@ -879,41 +969,42 @@ macro_rules
       lithoglyph_bounds)
 
 end Lithoglyph.Tactics
-```
+----
 
-**Usage in GQL**:
-```gql
+*Usage in GQL*:
+
+[source,gql]
+----
 WITH_PROOF {
   score_valid: by lithoglyph_prompt,
   provenance_exists: by lithoglyph_prov,
   confidence_in_range: by lithoglyph_bounds
 }
-```
+----
 
-### 9.2 IDE Integration
+==== 9.2 IDE Integration
 
-**Lean 4 VSCode Extension**:
-```
+*Lean 4 VSCode Extension*:
+
+....
 Features:
 • Type on hover (see inferred types)
 • Error highlighting (red underlines for proof failures)
 • Proof state view (see current goal)
 • Tactic suggestions (auto-complete)
 • Proof search (find relevant lemmas)
-```
+....
 
-**Example IDE Workflow**:
-1. Write GQL with `VALUES (...)`
-2. IDE shows: "Missing proof of X"
-3. User writes `WITH_PROOF { x: by }`
-4. IDE suggests tactics: `omega, simp, decide`
-5. User selects tactic, proof completes
-6. IDE shows: ✓ Type checked successfully
+*Example IDE Workflow*: 1. Write GQL with `+VALUES (...)+` 2. IDE shows:
+"`Missing proof of X`" 3. User writes `+WITH_PROOF { x: by }+` 4. IDE
+suggests tactics: `+omega, simp, decide+` 5. User selects tactic, proof
+completes 6. IDE shows: ✓ Type checked successfully
 
-### 9.3 Proof Caching
+==== 9.3 Proof Caching
 
-**Incremental Type Checking**:
-```
+*Incremental Type Checking*:
+
+....
 # First type-check (slow)
 $ lean4 lithoglyph_queries.lean
 Type checking... 25s
@@ -923,21 +1014,24 @@ Type checking... 25s
 $ lean4 lithoglyph_queries.lean
 Type checking... 0.5s (95% cached)
 ✓ All proofs valid
-```
+....
 
-**Proof Cache Format**:
-```lean
+*Proof Cache Format*:
+
+[source,lean]
+----
 -- .lithoglyph-cache/proofs.lean
 theorem cached_proof_12345 : P := by <...compiled proof...>
-```
+----
 
----
+'''''
 
-## 10. Complete Examples
+=== 10. Complete Examples
 
-### 10.1 BoFIG UK Inflation 2023 (Fully Typed)
+==== 10.1 BoFIG UK Inflation 2023 (Fully Typed)
 
-```gql
+[source,gql]
+----
 -- Step 1: Create evidence collection with dependent types
 CREATE COLLECTION bofig_evidence (
   id : UUID,
@@ -1035,11 +1129,12 @@ WHERE c.investigation_id = 'uk_inflation_2023'
 RETURNING (List (Claim × Evidence × Relationship) | 
            ∀ (c, e, r) ∈ result, c.confidence > 0.85 ∧ e.prompt_overall > 90);
 -- Return type PROVES all results satisfy conditions!
-```
+----
 
-### 10.2 Correction Workflow (With Reversiibility Proof)
+==== 10.2 Correction Workflow (With Reversiibility Proof)
 
-```gql
+[source,gql]
+----
 -- Original insertion
 INSERT INTO bofig_claims (text, confidence)
 VALUES ('Inflation reached 12% in 2023', 0.90)
@@ -1079,11 +1174,12 @@ INTROSPECT bofig_claims.claim_123 CORRECTION_HISTORY
 RETURNING (List CorrectionEntry | 
            ∀ e ∈ result, e.inverse_correct ∧ e.reason.length > 0);
 -- Type proves all corrections have valid inverses!
-```
+----
 
-### 10.3 My-Newsroom Belief Fusion (Type-Safe)
+==== 10.3 My-Newsroom Belief Fusion (Type-Safe)
 
-```gql
+[source,gql]
+----
 -- Define belief type
 abbrev AgentBelief := Belief Confidence String
 
@@ -1137,11 +1233,12 @@ WITH_PROOF {
   fusion_correct: fusionMatchesDempster b1 b2
 };
 -- Type checker proves fusion result is in [0.0, 1.0]!
-```
+----
 
-### 10.4 Navigation Path (With Ordering Proof)
+==== 10.4 Navigation Path (With Ordering Proof)
 
-```gql
+[source,gql]
+----
 -- Create path with proven ordering
 CREATE NAVIGATION_PATH 'skeptic_path_typed'
 FOR INVESTIGATION 'uk_inflation_2023'
@@ -1163,15 +1260,16 @@ WITH_PROOF {
 SELECT * FROM NAVIGATION_PATH 'skeptic_path_typed'
 RETURNING (NavigationPath (λ e₁ e₂. e₁.prompt_objective < e₂.prompt_objective));
 -- Return type carries ordering proof!
-```
+----
 
----
+'''''
 
-## Appendix A: Type Notation Reference
+=== Appendix A: Type Notation Reference
 
-### A.1 Lean 4 Notation
+==== A.1 Lean 4 Notation
 
-```lean
+[source,lean]
+----
 -- Types
 α : Type              -- Type variable
 α → β                 -- Function type
@@ -1192,26 +1290,36 @@ P ↔ Q                 -- If and only if
 a ≤ b                 -- Less than or equal
 a < b                 -- Less than
 a = b                 -- Equality
-```
+----
 
-### A.2 GQL Notation Mapping
+==== A.2 GQL Notation Mapping
 
-| GQL Syntax | Lean 4 Type | Meaning |
-|------------|-------------|---------|
-| `BoundedNat 0 100` | `{n : Nat // 0 ≤ n ∧ n ≤ 100}` | Nat in [0, 100] |
-| `NonEmptyString` | `{s : String // s.length > 0}` | Non-empty string |
-| `Confidence` | `BoundedFloat 0.0 1.0` | Float in [0.0, 1.0] |
-| `Tracked α` | `(α × ActorId × Timestamp × Rationale)` | Provenance-tracked value |
-| `Vector α n` | Dependent array of exactly n elements | Fixed-length array |
-| `Claim c` | Claim indexed by confidence level c | Confidence-indexed claim |
+[width="100%",cols="36%,38%,26%",options="header",]
+|===
+|GQL Syntax |Lean 4 Type |Meaning
+|`+BoundedNat 0 100+` |`+{n : Nat // 0 ≤ n ∧ n ≤ 100}+` |Nat in [0, 100]
 
----
+|`+NonEmptyString+` |`+{s : String // s.length > 0}+` |Non-empty string
 
-## Appendix B: Error Messages
+|`+Confidence+` |`+BoundedFloat 0.0 1.0+` |Float in [0.0, 1.0]
 
-### B.1 Bound Violation
+|`+Tracked α+` |`+(α × ActorId × Timestamp × Rationale)+`
+|Provenance-tracked value
 
-```
+|`+Vector α n+` |Dependent array of exactly n elements |Fixed-length
+array
+
+|`+Claim c+` |Claim indexed by confidence level c |Confidence-indexed
+claim
+|===
+
+'''''
+
+=== Appendix B: Error Messages
+
+==== B.1 Bound Violation
+
+....
 TYPE ERROR at line 5, column 23:
 
   INSERT INTO evidence (prompt_provenance) VALUES (150)
@@ -1226,11 +1334,11 @@ Proof failed: 150 ≤ 100
 Suggestions:
 • Use a value between 0 and 100
 • Check if you meant 15 (typo)?
-```
+....
 
-### B.2 Missing Proof
+==== B.2 Missing Proof
 
-```
+....
 PROOF OBLIGATION FAILED at line 12:
 
   INSERT INTO claims (confidence, evidence_list) VALUES (0.95, [...])
@@ -1244,11 +1352,11 @@ Suggestions:
 • Provide WITH_PROOF { confidence_justified: <proof> }
 • Use a tactic: by confidenceFromEvidence text evidence_list 0.95
 • Lower confidence to match evidence quality
-```
+....
 
-### B.3 Type Mismatch
+==== B.3 Type Mismatch
 
-```
+....
 TYPE ERROR at line 8, column 15:
 
   SELECT combineClaims(claim1, claim2) FROM ...
@@ -1260,26 +1368,28 @@ Type mismatch:
 Cannot combine claims with incompatible confidence levels.
 
 Suggestion: Filter claims WHERE confidence BETWEEN 0.8 AND 1.0
-```
+....
 
----
+'''''
 
-## Appendix C: Proof Cookbook
+=== Appendix C: Proof Cookbook
 
-### C.1 Bounded Integers
+==== C.1 Bounded Integers
 
-```lean
+[source,lean]
+----
 -- Prove n is in bounds
 example : 95 ≤ 100 := by omega
 
 -- Prove average preserves bounds
 example (a b : BoundedNat 0 100) : let avg := (a.val + b.val) / 2; avg ≤ 100 := by
   omega
-```
+----
 
-### C.2 Non-Empty Strings
+==== C.2 Non-Empty Strings
 
-```lean
+[source,lean]
+----
 -- Prove string is non-empty
 example : "hello".length > 0 := by decide
 
@@ -1288,11 +1398,12 @@ example (s1 s2 : NonEmptyString) : (s1.val ++ s2.val).length > 0 := by
   have h1 := s1.nonempty
   have h2 := s2.nonempty
   omega
-```
+----
 
-### C.3 Provenance Tracking
+==== C.3 Provenance Tracking
 
-```lean
+[source,lean]
+----
 -- Prove tracked value has provenance
 example (t : Tracked α) : t.rationale.val.length > 0 := 
   t.rationale.nonempty
@@ -1301,11 +1412,12 @@ example (t : Tracked α) : t.rationale.val.length > 0 :=
 example (ts : List (Tracked α)) : ∀ t ∈ ts, t.rationale.val.length > 0 := by
   intro t ht
   exact t.rationale.nonempty
-```
+----
 
-### C.4 Reversibility
+==== C.4 Reversibility
 
-```lean
+[source,lean]
+----
 -- Prove insert-delete is identity
 theorem insertDeleteRoundTrip {α : Type} (x : Tracked α)
   : delete (insert x) = x := by
@@ -1317,20 +1429,17 @@ theorem updateReverses {α : Type} (old new : Tracked α)
   : update new old (update old new data) = data := by
   simp [update]
   -- Implementation-specific proof
-```
+----
 
----
+'''''
 
-**Document Status**: Research prototype specification.
+*Document Status*: Research prototype specification.
 
-**Implementation**: Lean 4 recommended (best IDE support).
+*Implementation*: Lean 4 recommended (best IDE support).
 
-**Timeline**: 
-- Phase 1 (Month 1-6): Refinement types
-- Phase 2 (Month 7-12): Simple dependent types
-- Phase 3 (Month 13-18): Full verification
+*Timeline*: - Phase 1 (Month 1-6): Refinement types - Phase 2 (Month
+7-12): Simple dependent types - Phase 3 (Month 13-18): Full verification
 
-**See Also**:
-- WP06: Dependently-Typed Lithoglyph (research proposal)
-- Lithoglyph arXiv paper (Section 14: Future Work)
-- My-Newsroom Me dialect (epistemic types)
+*See Also*: - WP06: Dependently-Typed Lithoglyph (research proposal) -
+Lithoglyph arXiv paper (Section 14: Future Work) - My-Newsroom Me
+dialect (epistemic types)

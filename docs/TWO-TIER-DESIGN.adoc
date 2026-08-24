@@ -1,32 +1,36 @@
-# GQL-DT Two-Tier Language Design
+== GQL-DT Two-Tier Language Design
 
-**SPDX-License-Identifier:** CC-BY-SA-4.0
-**SPDX-FileCopyrightText:** 2026 Jonathan D.A. Jewell (@hyperpolymath)
+*SPDX-License-Identifier:* CC-BY-SA-4.0 *SPDX-FileCopyrightText:* 2026
+Jonathan D.A. Jewell (@hyperpolymath)
 
-**Date:** 2026-02-01
-**Status:** Architectural Decision
+*Date:* 2026-02-01 *Status:* Architectural Decision
 
----
+'''''
 
-## The Problem: Two User Populations
+=== The Problem: Two User Populations
 
-### Population 1: Developers & Advanced Admins (GQL-DT)
-- **Who:** Formal methods experts, security auditors, senior database admins
-- **Needs:** Full type safety, proof obligations, compile-time verification
-- **Willing to:** Write proofs, understand dependent types, debug type errors
-- **Use case:** Extreme secure audit projects, critical data entry
+==== Population 1: Developers & Advanced Admins (GQL-DT)
 
-### Population 2: Regular Users & Junior Admins (GQL)
-- **Who:** Journalists, researchers, junior staff
-- **Needs:** Simple syntax, runtime checks, helpful error messages
-- **Can't:** Write Lean 4 proofs, understand type theory
-- **Use case:** Day-to-day database operations, routine queries
+* *Who:* Formal methods experts, security auditors, senior database
+admins
+* *Needs:* Full type safety, proof obligations, compile-time
+verification
+* *Willing to:* Write proofs, understand dependent types, debug type
+errors
+* *Use case:* Extreme secure audit projects, critical data entry
 
----
+==== Population 2: Regular Users & Junior Admins (GQL)
 
-## Solution: Two-Tier Architecture
+* *Who:* Journalists, researchers, junior staff
+* *Needs:* Simple syntax, runtime checks, helpful error messages
+* *Can’t:* Write Lean 4 proofs, understand type theory
+* *Use case:* Day-to-day database operations, routine queries
 
-```
+'''''
+
+=== Solution: Two-Tier Architecture
+
+....
 ┌─────────────────────────────────────────────────────────────┐
 │  GQL-DT (Type-Safe Tier)                                    │
 │  - Full dependent types                                      │
@@ -53,15 +57,16 @@
 │  - Enforces invariants at runtime                            │
 │  - Accepts queries from both tiers                           │
 └─────────────────────────────────────────────────────────────┘
-```
+....
 
----
+'''''
 
-## Tier 1: GQL-DT (Developer/Admin)
+=== Tier 1: GQL-DT (Developer/Admin)
 
-### Syntax: Explicit Types & Proofs
+==== Syntax: Explicit Types & Proofs
 
-```lean
+[source,lean]
+----
 -- GQL-DT: Full type annotations
 INSERT INTO evidence (
   title : NonEmptyString,
@@ -76,28 +81,26 @@ WITH_PROOF {
   scores_in_bounds: by lithoglyph_prompt,
   provenance_tracked: by lithoglyph_prov
 };
-```
+----
 
-**Characteristics:**
-- ✅ **Compile-time verification** - Invalid queries don't compile
-- ✅ **Proof obligations** - Must provide proofs or use auto-tactics
-- ✅ **Type safety guaranteed** - No runtime type errors possible
-- ⚠️ **Steep learning curve** - Requires Lean 4 knowledge
-- ⚠️ **Verbose** - Explicit types and proofs
+*Characteristics:* - ✅ *Compile-time verification* - Invalid queries
+don’t compile - ✅ *Proof obligations* - Must provide proofs or use
+auto-tactics - ✅ *Type safety guaranteed* - No runtime type errors
+possible - ⚠️ *Steep learning curve* - Requires Lean 4 knowledge - ⚠️
+*Verbose* - Explicit types and proofs
 
-**Who uses it:**
-- Security auditors entering sensitive data
-- Database administrators setting up schemas
-- Developers creating normalization proofs
-- Formal verification team
+*Who uses it:* - Security auditors entering sensitive data - Database
+administrators setting up schemas - Developers creating normalization
+proofs - Formal verification team
 
----
+'''''
 
-## Tier 2: GQL (Regular User)
+=== Tier 2: GQL (Regular User)
 
-### Syntax: Familiar SQL-Style
+==== Syntax: Familiar SQL-Style
 
-```sql
+[source,sql]
+----
 -- GQL: Inferred types, runtime checks
 INSERT INTO evidence (title, prompt_provenance)
 VALUES ('ONS Data', 95)
@@ -107,28 +110,25 @@ RATIONALE 'Official statistics';
 -- 1. Type inference: 'ONS Data' → NonEmptyString (inferred)
 -- 2. Bounds check: 95 ∈ [0, 100] → validated at runtime
 -- 3. Rationale check: 'Official statistics' non-empty → validated
-```
+----
 
-**Characteristics:**
-- ✅ **Familiar syntax** - Looks like standard SQL
-- ✅ **Type inference** - Types automatically inferred
-- ✅ **Helpful errors** - Runtime errors with fix suggestions
-- ✅ **No proofs needed** - Constraints checked at runtime
-- ⚠️ **Runtime overhead** - Validation happens at execution
+*Characteristics:* - ✅ *Familiar syntax* - Looks like standard SQL - ✅
+*Type inference* - Types automatically inferred - ✅ *Helpful errors* -
+Runtime errors with fix suggestions - ✅ *No proofs needed* -
+Constraints checked at runtime - ⚠️ *Runtime overhead* - Validation
+happens at execution
 
-**Who uses it:**
-- Journalists entering evidence
-- Researchers adding claims
-- Junior admins performing routine operations
-- General users querying data
+*Who uses it:* - Journalists entering evidence - Researchers adding
+claims - Junior admins performing routine operations - General users
+querying data
 
----
+'''''
 
-## How They Interact: Compilation Strategy
+=== How They Interact: Compilation Strategy
 
-### GQL → GQL-DT → Lithoglyph
+==== GQL → GQL-DT → Lithoglyph
 
-```
+....
 User writes GQL
       ↓
 Type Inference (auto-generate types)
@@ -143,17 +143,21 @@ Type Checking (validate proofs)
   │ Valid │ Invalid
   ↓       ↓
 Execute   Error (with fix suggestion)
-```
+....
 
-### Example: GQL → GQL-DT Translation
+==== Example: GQL → GQL-DT Translation
 
-**Input (GQL):**
-```sql
+*Input (GQL):*
+
+[source,sql]
+----
 INSERT INTO evidence (prompt_provenance) VALUES (95);
-```
+----
 
-**Translated to (GQL-DT):**
-```lean
+*Translated to (GQL-DT):*
+
+[source,lean]
+----
 INSERT INTO evidence (
   prompt_provenance : BoundedNat 0 100
 )
@@ -164,24 +168,27 @@ RATIONALE (inferred from context)
 WITH_PROOF {
   bounds_check: by omega  -- Auto-generated!
 };
-```
+----
 
-**If value is invalid:**
-```sql
+*If value is invalid:*
+
+[source,sql]
+----
 INSERT INTO evidence (prompt_provenance) VALUES (150);
 -- Runtime error: Value 150 out of bounds [0, 100]
 -- Suggestion: Use a value between 0 and 100
-```
+----
 
----
+'''''
 
-## Preventing User Mistakes: Safety Mechanisms
+=== Preventing User Mistakes: Safety Mechanisms
 
-### Problem: "Annoying users mess up, admins spend time fixing"
+==== Problem: "`Annoying users mess up, admins spend time fixing`"
 
-### Solution 1: Transaction-Based Validation
+==== Solution 1: Transaction-Based Validation
 
-```sql
+[source,sql]
+----
 -- User's transaction
 BEGIN TRANSACTION;
   INSERT INTO evidence (title, prompt_provenance)
@@ -199,13 +206,14 @@ ERROR: Value 150 out of bounds for prompt_provenance
 Expected: Integer between 0 and 100
 Suggestion: Change 150 to a value like 95
 Status: NOT COMMITTED (no data changed)
-```
+----
 
-**Key insight:** Invalid queries never reach the database!
+*Key insight:* Invalid queries never reach the database!
 
-### Solution 2: Permission-Based Write Access
+==== Solution 2: Permission-Based Write Access
 
-```sql
+[source,sql]
+----
 -- Schema-level permissions
 CREATE COLLECTION evidence (
   title : NonEmptyString,
@@ -221,16 +229,16 @@ CREATE COLLECTION evidence (
     -- Advanced admins can modify schema
     GRANT ALTER TO advanced_admins WITH VALIDATION LEVEL proof_required;
   );
-```
+----
 
-**Access levels:**
-- `runtime`: GQL with type inference + runtime checks
-- `compile_time`: GQL-DT with proofs auto-generated where possible
-- `proof_required`: GQL-DT with manual proofs required (no auto-admit)
+*Access levels:* - `+runtime+`: GQL with type inference + runtime checks
+- `+compile_time+`: GQL-DT with proofs auto-generated where possible -
+`+proof_required+`: GQL-DT with manual proofs required (no auto-admit)
 
-### Solution 3: Admin Review Queue
+==== Solution 3: Admin Review Queue
 
-```sql
+[source,sql]
+----
 -- User submits query
 INSERT INTO evidence (prompt_provenance) VALUES (95);
 -- Status: Pending review (if configured)
@@ -248,13 +256,14 @@ SELECT * FROM pending_queries WHERE status = 'needs_review';
 APPROVE QUERY 1;  -- Execute immediately
 REJECT QUERY 2 REASON "Invalid value";  -- Notify user
 ASSIST QUERY 3 WITH_PROOF { ... };  -- Provide proof, then execute
-```
+----
 
-### Solution 4: Template-Based Entry (Recommended!)
+==== Solution 4: Template-Based Entry (Recommended!)
 
-**Instead of letting users write raw SQL:**
+*Instead of letting users write raw SQL:*
 
-```typescript
+[source,typescript]
+----
 // Lithoglyph Studio: Web UI with type-safe form
 interface EvidenceForm {
   title: string  // Auto-validated: non-empty
@@ -279,17 +288,16 @@ function submitEvidence(form: EvidenceForm) {
   // Submit (will be validated again server-side)
   await lithoglyph.execute(query)
 }
-```
+----
 
-**Benefits:**
-- ✅ Users never write raw SQL
-- ✅ UI enforces constraints (dropdowns, sliders, validation)
-- ✅ Type-safe generation of GQL
-- ✅ Admins don't see malformed queries
+*Benefits:* - ✅ Users never write raw SQL - ✅ UI enforces constraints
+(dropdowns, sliders, validation) - ✅ Type-safe generation of GQL - ✅
+Admins don’t see malformed queries
 
-### Solution 5: Gradual Validation Levels
+==== Solution 5: Gradual Validation Levels
 
-```sql
+[source,sql]
+----
 -- Configure per-collection validation strictness
 ALTER COLLECTION evidence
   SET VALIDATION_LEVEL FOR users = 'strict';
@@ -306,103 +314,110 @@ INSERT INTO evidence (prompt_provenance) VALUES (150);
 -- Paranoid: Compile-time checks required
 INSERT INTO evidence (prompt_provenance) VALUES (150);
 -- Error: Proof obligation failed, query not executed
-```
+----
 
----
+'''''
 
-## When to Use Each Tier
+=== When to Use Each Tier
 
-### Use GQL-DT (Type-Safe) When:
-1. **Defining schemas** - Admins create collections with type constraints
-2. **Critical data entry** - Security auditors entering sensitive evidence
-3. **Normalization operations** - Database transformations need proofs
-4. **Integration code** - Programmatic access from applications
+==== Use GQL-DT (Type-Safe) When:
 
-### Use GQL (Runtime-Checked) When:
-1. **Routine queries** - Day-to-day SELECT operations
-2. **User data entry** - Journalists adding evidence
-3. **Exploratory analysis** - Researchers querying data
-4. **Learning/testing** - New users getting familiar with system
+[arabic]
+. *Defining schemas* - Admins create collections with type constraints
+. *Critical data entry* - Security auditors entering sensitive evidence
+. *Normalization operations* - Database transformations need proofs
+. *Integration code* - Programmatic access from applications
 
----
+==== Use GQL (Runtime-Checked) When:
 
-## Implementation Timeline
+[arabic]
+. *Routine queries* - Day-to-day SELECT operations
+. *User data entry* - Journalists adding evidence
+. *Exploratory analysis* - Researchers querying data
+. *Learning/testing* - New users getting familiar with system
 
-### Phase 1: GQL-DT Only (Current)
-- ✅ Milestone 1-4: Core types implemented
-- 🔧 Milestone 5-6: Parser + type checker
+'''''
 
-**Status:** Advanced users can use GQL-DT now
+=== Implementation Timeline
 
-### Phase 2: GQL with Type Inference (Next)
-- [ ] Type inference engine
-- [ ] Auto-proof generation (omega, decide tactics)
-- [ ] Runtime validation layer
-- [ ] Error messages with suggestions
+==== Phase 1: GQL-DT Only (Current)
 
-**Estimated:** 2-3 months after M6 complete
+* ✅ Milestone 1-4: Core types implemented
+* 🔧 Milestone 5-6: Parser + type checker
 
-### Phase 3: Validation Levels & Permissions (Later)
-- [ ] Permission system
-- [ ] Admin review queue
-- [ ] Gradual validation levels
-- [ ] Audit trail
+*Status:* Advanced users can use GQL-DT now
 
-**Estimated:** 4-6 months
+==== Phase 2: GQL with Type Inference (Next)
 
-### Phase 4: Lithoglyph Studio UI (Future)
-- [ ] Web-based form builder
-- [ ] Type-safe form generation
-- [ ] Visual query builder
-- [ ] No raw SQL for end users
+* [ ] Type inference engine
+* [ ] Auto-proof generation (omega, decide tactics)
+* [ ] Runtime validation layer
+* [ ] Error messages with suggestions
 
-**Estimated:** 6-9 months
+*Estimated:* 2-3 months after M6 complete
 
----
+==== Phase 3: Validation Levels & Permissions (Later)
 
-## Recommended Approach: NOW vs LATER
+* [ ] Permission system
+* [ ] Admin review queue
+* [ ] Gradual validation levels
+* [ ] Audit trail
 
-### ✅ Deal with NOW (During Parser Implementation)
+*Estimated:* 4-6 months
 
-1. **Design AST to support both tiers**
-   - Explicit types (GQL-DT) vs inferred types (GQL)
-   - Proof annotations optional
-   - Same AST, different parsing paths
+==== Phase 4: Lithoglyph Studio UI (Future)
 
-2. **Add type inference hooks**
-   - Placeholder for "infer type from value"
-   - Auto-proof generation infrastructure
-   - Graceful degradation (admit if can't prove)
+* [ ] Web-based form builder
+* [ ] Type-safe form generation
+* [ ] Visual query builder
+* [ ] No raw SQL for end users
 
-3. **Define validation levels**
-   - Schema metadata: which tier is allowed
-   - User roles: which validation level they get
-   - Default: GQL for users, GQL-DT for admins
+*Estimated:* 6-9 months
 
-### ⏳ Deal with LATER (After M6)
+'''''
 
-1. **Actual GQL parser**
-   - SQL-like syntax parser
-   - Type inference algorithm
-   - Auto-proof tactics
+=== Recommended Approach: NOW vs LATER
 
-2. **Runtime validation**
-   - Constraint checking at execution
-   - Error messages with fix suggestions
-   - Auto-fix for permissive mode
+==== ✅ Deal with NOW (During Parser Implementation)
 
-3. **UI/Forms**
-   - Lithoglyph Studio
-   - Template-based entry
-   - Zero SQL for end users
+[arabic]
+. *Design AST to support both tiers*
+* Explicit types (GQL-DT) vs inferred types (GQL)
+* Proof annotations optional
+* Same AST, different parsing paths
+. *Add type inference hooks*
+* Placeholder for "`infer type from value`"
+* Auto-proof generation infrastructure
+* Graceful degradation (admit if can’t prove)
+. *Define validation levels*
+* Schema metadata: which tier is allowed
+* User roles: which validation level they get
+* Default: GQL for users, GQL-DT for admins
 
----
+==== ⏳ Deal with LATER (After M6)
 
-## Example: Dual-Tier in Practice
+[arabic]
+. *Actual GQL parser*
+* SQL-like syntax parser
+* Type inference algorithm
+* Auto-proof tactics
+. *Runtime validation*
+* Constraint checking at execution
+* Error messages with fix suggestions
+* Auto-fix for permissive mode
+. *UI/Forms*
+* Lithoglyph Studio
+* Template-based entry
+* Zero SQL for end users
 
-### Schema Definition (Admin, GQL-DT)
+'''''
 
-```lean
+=== Example: Dual-Tier in Practice
+
+==== Schema Definition (Admin, GQL-DT)
+
+[source,lean]
+----
 CREATE COLLECTION evidence (
   id : UUID PRIMARY KEY,
   title : NonEmptyString,
@@ -415,11 +430,12 @@ CREATE COLLECTION evidence (
     GRANT INSERT TO users WITH VALIDATION runtime;
     GRANT INSERT TO admins WITH VALIDATION compile_time;
   );
-```
+----
 
-### User Insert (GQL, Type-Inferred)
+==== User Insert (GQL, Type-Inferred)
 
-```sql
+[source,sql]
+----
 -- User writes simple SQL
 INSERT INTO evidence (title, prompt_provenance)
 VALUES ('ONS Data', 95)
@@ -437,11 +453,12 @@ RATIONALE 'Official statistics';
 -- }
 
 -- Executes immediately if all proofs pass
-```
+----
 
-### Admin Insert (GQL-DT, Explicit Types)
+==== Admin Insert (GQL-DT, Explicit Types)
 
-```lean
+[source,lean]
+----
 -- Admin writes full type annotations
 INSERT INTO evidence (
   title : NonEmptyString,
@@ -464,78 +481,83 @@ WITH_PROOF {
 };
 
 -- Compile-time type checking ensures correctness
-```
+----
 
----
+'''''
 
-## Decision: Start Two-Tier Support NOW
+=== Decision: Start Two-Tier Support NOW
 
-**Recommendation:** Add two-tier support **during Milestone 6 (Parser)**
+*Recommendation:* Add two-tier support *during Milestone 6 (Parser)*
 
-**Why NOW:**
-1. Parser architecture affects both tiers
-2. AST design must support type inference
-3. Easier to build both parsers together
-4. Type inference shares infrastructure with type checker
+*Why NOW:* 1. Parser architecture affects both tiers 2. AST design must
+support type inference 3. Easier to build both parsers together 4. Type
+inference shares infrastructure with type checker
 
-**What to implement:**
+*What to implement:*
 
-### M6a: GQL-DT Parser (Full Types)
-- Parse explicit type annotations
-- Parse proof obligations
-- Generate typed AST
+==== M6a: GQL-DT Parser (Full Types)
 
-### M6b: GQL Parser (Type Inference)
-- Parse SQL-like syntax
-- Infer types from values
-- Auto-generate proofs where possible
-- Graceful degradation (admit if can't prove)
+* Parse explicit type annotations
+* Parse proof obligations
+* Generate typed AST
 
-### M6c: Unified Type Checker
-- Check both explicit and inferred types
-- Validate or auto-prove obligations
-- Helpful error messages for both tiers
+==== M6b: GQL Parser (Type Inference)
 
----
+* Parse SQL-like syntax
+* Infer types from values
+* Auto-generate proofs where possible
+* Graceful degradation (admit if can’t prove)
 
-## Summary
+==== M6c: Unified Type Checker
 
-### Two Tiers
+* Check both explicit and inferred types
+* Validate or auto-prove obligations
+* Helpful error messages for both tiers
 
-| Feature | GQL-DT (Advanced) | GQL (Users) |
-|---------|-------------------|--------------|
-| **Syntax** | Lean 4-style | SQL-style |
-| **Types** | Explicit | Inferred |
-| **Proofs** | Required | Auto-generated |
-| **Validation** | Compile-time | Runtime |
-| **Errors** | Type errors | Constraint violations |
-| **Users** | Admins, developers | Everyone else |
+'''''
 
-### Preventing User Mistakes
+=== Summary
 
-1. **Transaction validation** - Invalid queries don't commit
-2. **Permission levels** - Users get runtime validation
-3. **Admin review queue** - Optional approval workflow
-4. **Template-based UI** - Lithoglyph Studio (no raw SQL)
-5. **Gradual strictness** - Permissive/strict/paranoid modes
+==== Two Tiers
 
-### Timeline
+[cols=",,",options="header",]
+|===
+|Feature |GQL-DT (Advanced) |GQL (Users)
+|*Syntax* |Lean 4-style |SQL-style
+|*Types* |Explicit |Inferred
+|*Proofs* |Required |Auto-generated
+|*Validation* |Compile-time |Runtime
+|*Errors* |Type errors |Constraint violations
+|*Users* |Admins, developers |Everyone else
+|===
 
-- ✅ **NOW:** Design dual-tier AST, add type inference hooks
-- 🔧 **M6:** Implement both parsers together
-- ⏳ **Later:** Runtime validation, UI, permissions
+==== Preventing User Mistakes
 
----
+[arabic]
+. *Transaction validation* - Invalid queries don’t commit
+. *Permission levels* - Users get runtime validation
+. *Admin review queue* - Optional approval workflow
+. *Template-based UI* - Lithoglyph Studio (no raw SQL)
+. *Gradual strictness* - Permissive/strict/paranoid modes
 
-## Granular Permission System: Workplace-Specific Type Restrictions
+==== Timeline
 
-### The Question: "Can we restrict users to ONLY numbers, strings, dates?"
+* ✅ *NOW:* Design dual-tier AST, add type inference hooks
+* 🔧 *M6:* Implement both parsers together
+* ⏳ *Later:* Runtime validation, UI, permissions
 
-**Answer: YES - Fine-grained type-level permissions**
+'''''
 
-### Permission Architecture
+=== Granular Permission System: Workplace-Specific Type Restrictions
 
-```lean
+==== The Question: "`Can we restrict users to ONLY numbers, strings, dates?`"
+
+*Answer: YES - Fine-grained type-level permissions*
+
+==== Permission Architecture
+
+[source,lean]
+----
 -- Type whitelist per role
 structure TypeWhitelist where
   allowedTypes : List TypeExpr
@@ -552,11 +574,12 @@ structure PermissionProfile where
   canCreateSchema : Bool
   canModifySchema : Bool
   canDeleteData : Bool
-```
+----
 
-### Example: Restrict Users to Basic Types Only
+==== Example: Restrict Users to Basic Types Only
 
-```lean
+[source,lean]
+----
 -- Workplace policy: journalists can only use Nat, String, Date
 def journalistPermissions : PermissionProfile := {
   name := "journalist"
@@ -588,11 +611,12 @@ def adminPermissions : PermissionProfile := {
   canModifySchema := true,
   canDeleteData := true
 }
-```
+----
 
-### Permission Enforcement in Parser
+==== Permission Enforcement in Parser
 
-```lean
+[source,lean]
+----
 -- Parser checks permissions before accepting query
 def parseWithPermissions
   (query : String)
@@ -616,11 +640,12 @@ def parseWithPermissions
 
   -- 4. Proceed with type checking
   return typeCheck ast profile.validationLevel
-```
+----
 
-### Schema-Level Type Restrictions
+==== Schema-Level Type Restrictions
 
-```sql
+[source,sql]
+----
 -- Create schema with per-role type restrictions
 CREATE COLLECTION simple_data (
   id : Nat,
@@ -639,13 +664,14 @@ CREATE COLLECTION simple_data (
   -- Everyone: can SELECT
   GRANT SELECT TO public;
 );
-```
+----
 
-### Workplace Configuration Examples
+==== Workplace Configuration Examples
 
-#### Example 1: Journalism Organization
+===== Example 1: Journalism Organization
 
-```scheme
+[source,scheme]
+----
 ; workplace-policy.scm
 (define journalism-org
   (workplace
@@ -663,16 +689,16 @@ CREATE COLLECTION simple_data (
             (types all)
             (validation compile)
             (operations all)))))
-```
+----
 
-**Result:**
-- Journalists: Simple GQL, basic types only, can't mess up type system
-- Editors: GQL with some refined types, still runtime-checked
-- Tech admins: Full GQL-DT, compile-time verification
+*Result:* - Journalists: Simple GQL, basic types only, can’t mess up
+type system - Editors: GQL with some refined types, still
+runtime-checked - Tech admins: Full GQL-DT, compile-time verification
 
-#### Example 2: Security Audit Firm
+===== Example 2: Security Audit Firm
 
-```scheme
+[source,scheme]
+----
 ; workplace-policy.scm
 (define security-firm
   (workplace
@@ -693,16 +719,16 @@ CREATE COLLECTION simple_data (
             (validation paranoid)   ; Manual proofs required
             (operations all)
             (require-review false)))))
-```
+----
 
-**Result:**
-- Junior auditors: Limited types, all queries reviewed
-- Senior auditors: All standard types, compile-time checks
-- Principals: Full dependent types, manual proof obligations
+*Result:* - Junior auditors: Limited types, all queries reviewed -
+Senior auditors: All standard types, compile-time checks - Principals:
+Full dependent types, manual proof obligations
 
-### Implementation: Type Filter in AST
+==== Implementation: Type Filter in AST
 
-```lean
+[source,lean]
+----
 -- Check if type is allowed for user
 def isTypeAllowed (t : TypeExpr) (whitelist : TypeWhitelist) : Bool :=
   -- If allowedTypes is empty, allow all
@@ -727,12 +753,14 @@ def filterSchemaForUser (schema : Schema) (profile : PermissionProfile) : Schema
   { schema with
     columns := schema.columns.filter (fun col =>
       isTypeAllowed col.type profile.typeWhitelist) }
-```
+----
 
-### User Experience with Type Restrictions
+==== User Experience with Type Restrictions
 
-**Journalist attempts to use BoundedNat:**
-```sql
+*Journalist attempts to use BoundedNat:*
+
+[source,sql]
+----
 -- User: journalist (restricted to Nat, String, Date)
 INSERT INTO evidence (title, prompt_provenance)
 VALUES ('My Evidence', 95);
@@ -745,10 +773,12 @@ Column 'prompt_provenance' requires type 'BoundedNat 0 100'
 Suggestion: Contact your administrator to request access to this column,
 or use a different column that accepts your allowed types.
 Available columns for you: id (Nat), title (String), created_date (Date)
-```
+----
 
-**Admin uses same query:**
-```sql
+*Admin uses same query:*
+
+[source,sql]
+----
 -- User: admin (unrestricted)
 INSERT INTO evidence (title, prompt_provenance)
 VALUES ('My Evidence', 95);
@@ -757,11 +787,12 @@ VALUES ('My Evidence', 95);
 ✓ Type checking successful
 ✓ Auto-proved: prompt_provenance ∈ [0, 100]
 Executing INSERT...
-```
+----
 
-### Form-Based UI Respects Permissions
+==== Form-Based UI Respects Permissions
 
-```typescript
+[source,typescript]
+----
 // Lithoglyph Studio auto-hides fields based on permissions
 function renderEvidenceForm(user: User, profile: PermissionProfile) {
   const schema = getSchema("evidence");
@@ -781,41 +812,47 @@ function renderEvidenceForm(user: User, profile: PermissionProfile) {
     </Form>
   );
 }
-```
+----
 
----
+'''''
 
-## Summary: One Language, Layered Access Control
+=== Summary: One Language, Layered Access Control
 
-### Layer 1: Syntax Choice (User Convenience)
-- **GQL**: SQL-like, type inference, runtime checks
-- **GQL-DT**: Lean-like, explicit types, compile-time proofs
-- **Same language**, different parsers, same AST
+==== Layer 1: Syntax Choice (User Convenience)
 
-### Layer 2: Type Permissions (Organizational Policy)
-- **Whitelist-based**: Only allow specific types per role
-- **Granular**: Can restrict to `[Nat, String, Date]` only
-- **Schema-level**: Column access based on type requirements
-- **Enforced in parser**: Type checks happen before execution
+* *GQL*: SQL-like, type inference, runtime checks
+* *GQL-DT*: Lean-like, explicit types, compile-time proofs
+* *Same language*, different parsers, same AST
 
-### Layer 3: Validation Level (Risk Management)
-- **Permissive**: Runtime checks with auto-fix
-- **Strict**: Runtime checks, reject on error
-- **Compile**: Compile-time proofs (auto-generated)
-- **Paranoid**: Manual proofs required
+==== Layer 2: Type Permissions (Organizational Policy)
 
-### Layer 4: UI Forms (Maximum Safety)
-- **No syntax exposure**: Users never write SQL/GQL-DT
-- **Type-driven forms**: UI generates based on allowed types
-- **Impossible to bypass**: Restricted columns don't appear
+* *Whitelist-based*: Only allow specific types per role
+* *Granular*: Can restrict to `+[Nat, String, Date]+` only
+* *Schema-level*: Column access based on type requirements
+* *Enforced in parser*: Type checks happen before execution
 
-### Answer to "Flexibility" Question
+==== Layer 3: Validation Level (Risk Management)
 
-**Q: Can a workplace say "GQL with numbers, strings, dates BUT NOTHING ELSE"?**
+* *Permissive*: Runtime checks with auto-fix
+* *Strict*: Runtime checks, reject on error
+* *Compile*: Compile-time proofs (auto-generated)
+* *Paranoid*: Manual proofs required
 
-**A: YES, exactly this:**
+==== Layer 4: UI Forms (Maximum Safety)
 
-```lean
+* *No syntax exposure*: Users never write SQL/GQL-DT
+* *Type-driven forms*: UI generates based on allowed types
+* *Impossible to bypass*: Restricted columns don’t appear
+
+==== Answer to "`Flexibility`" Question
+
+*Q: Can a workplace say "`GQL with numbers, strings, dates BUT NOTHING
+ELSE`"?*
+
+*A: YES, exactly this:*
+
+[source,lean]
+----
 def workplacePolicy : PermissionProfile := {
   name := "basic-user"
   typeWhitelist := {
@@ -830,26 +867,23 @@ def workplacePolicy : PermissionProfile := {
   canModifySchema := false,
   canDeleteData := false
 }
-```
+----
 
-**Result:**
-- ✅ Can use: Nat, String, Date
-- ❌ Cannot use: BoundedNat, NonEmptyString, PromptScores, custom types
-- ✅ Syntax: Simple SQL (GQL)
-- ❌ Cannot access: GQL-DT syntax, proof obligations, dependent types
-- ✅ Queries: Runtime-checked, helpful error messages
-- ❌ Cannot break: Type system (restricted types can't violate invariants)
+*Result:* - ✅ Can use: Nat, String, Date - ❌ Cannot use: BoundedNat,
+NonEmptyString, PromptScores, custom types - ✅ Syntax: Simple SQL (GQL)
+- ❌ Cannot access: GQL-DT syntax, proof obligations, dependent types -
+✅ Queries: Runtime-checked, helpful error messages - ❌ Cannot break:
+Type system (restricted types can’t violate invariants)
 
----
+'''''
 
-**Document Status:** Complete architectural decision for two-tier language design with granular permission system
+*Document Status:* Complete architectural decision for two-tier language
+design with granular permission system
 
-**Recommendation:** Implement dual-tier support + permission system in Milestone 6 (Parser)
+*Recommendation:* Implement dual-tier support + permission system in
+Milestone 6 (Parser)
 
-**Next Steps:**
-1. Design AST to support both tiers
-2. Implement GQL-DT parser (explicit types)
-3. Implement GQL parser (type inference)
-4. Implement TypeWhitelist and PermissionProfile
-5. Unified type checker with permission enforcement
-6. Schema-level permission annotations
+*Next Steps:* 1. Design AST to support both tiers 2. Implement GQL-DT
+parser (explicit types) 3. Implement GQL parser (type inference) 4.
+Implement TypeWhitelist and PermissionProfile 5. Unified type checker
+with permission enforcement 6. Schema-level permission annotations

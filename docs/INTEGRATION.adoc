@@ -1,22 +1,23 @@
-# GQL-DT Integration: ReScript, WASM, ABI, FFI
+== GQL-DT Integration: ReScript, WASM, ABI, FFI
 
-**SPDX-License-Identifier:** CC-BY-SA-4.0
-**SPDX-FileCopyrightText:** 2026 Jonathan D.A. Jewell (@hyperpolymath)
+*SPDX-License-Identifier:* CC-BY-SA-4.0 *SPDX-FileCopyrightText:* 2026
+Jonathan D.A. Jewell (@hyperpolymath)
 
-**Date:** 2026-02-01
-**Status:** Integration Requirements
-**Priority:** HIGH - Required for M7+ (Post-Parser)
+*Date:* 2026-02-01 *Status:* Integration Requirements *Priority:* HIGH -
+Required for M7+ (Post-Parser)
 
----
+'''''
 
-## Integration Requirements
+=== Integration Requirements
 
-### 1. ReScript Bindings
+==== 1. ReScript Bindings
 
-**Purpose:** Seamless integration with existing hyperpolymath projects (TypeScript/JavaScript replacement)
+*Purpose:* Seamless integration with existing hyperpolymath projects
+(TypeScript/JavaScript replacement)
 
-**Architecture:**
-```
+*Architecture:*
+
+....
 GQL-DT (Lean 4)
     ↓
 Typed IR (CBOR)
@@ -28,10 +29,11 @@ C ABI (extern "C")
 ReScript Bindings (@rescript/core)
     ↓
 JavaScript/Web/Deno
-```
+....
 
-**ReScript Bindings Location:**
-```
+*ReScript Bindings Location:*
+
+....
 bindings/
 ├── rescript/
 │   ├── rescript.json
@@ -42,10 +44,12 @@ bindings/
 │   │   ├── GqlDt_IR.res           # IR bindings
 │   │   └── GqlDt_FFI.res          # Low-level FFI
 │   └── package.json                # For npm compatibility if needed
-```
+....
 
-**Example ReScript API:**
-```rescript
+*Example ReScript API:*
+
+[source,rescript]
+----
 // bindings/rescript/src/GqlDt.res
 module Insert = {
   type t
@@ -93,16 +97,18 @@ let insertEvidence = async () => {
   | Error(msg) => Console.error(msg)
   }
 }
-```
+----
 
----
+'''''
 
-### 2. WASM Compatibility
+==== 2. WASM Compatibility
 
-**Purpose:** Public-facing deployments, browser-based Lithoglyph Studio, edge computing
+*Purpose:* Public-facing deployments, browser-based Lithoglyph Studio,
+edge computing
 
-**WASM Compilation Strategy:**
-```
+*WASM Compilation Strategy:*
+
+....
 Lean 4 → C (via Lean's C backend)
     ↓
 Emscripten/wasm32-unknown-unknown
@@ -112,10 +118,11 @@ WebAssembly Module (.wasm)
 JavaScript/ReScript Glue Code
     ↓
 Browser/Deno/Cloudflare Workers
-```
+....
 
-**Alternative (Preferred): Zig WASM**
-```
+*Alternative (Preferred): Zig WASM*
+
+....
 GQL-DT Parser (Lean 4)
     ↓
 Typed IR (CBOR)
@@ -127,10 +134,12 @@ wasm32-wasi / wasm32-unknown-unknown
 WebAssembly Module
     ↓
 ReScript Bindings (Web)
-```
+....
 
-**WASM Build Configuration:**
-```zig
+*WASM Build Configuration:*
+
+[source,zig]
+----
 // bridge/zig/build.zig
 pub fn build(b: *std.Build) void {
     const target = b.standardTargetOptions(.{
@@ -153,17 +162,17 @@ pub fn build(b: *std.Build) void {
     lib.rdynamic = true;
     b.installArtifact(lib);
 }
-```
+----
 
-**WASM Features:**
-- ✅ Type checking in browser
-- ✅ Query validation before server round-trip
-- ✅ Proof verification client-side (for GQL-DT tier)
-- ✅ Offline Lithoglyph Studio (IndexedDB storage)
-- ✅ Edge computing (Cloudflare Workers, Deno Deploy)
+*WASM Features:* - ✅ Type checking in browser - ✅ Query validation
+before server round-trip - ✅ Proof verification client-side (for GQL-DT
+tier) - ✅ Offline Lithoglyph Studio (IndexedDB storage) - ✅ Edge
+computing (Cloudflare Workers, Deno Deploy)
 
-**Example WASM Usage:**
-```rescript
+*Example WASM Usage:*
+
+[source,rescript]
+----
 // Web browser or Deno
 module GqlDtWasm = {
   @module("@gqldt/wasm")
@@ -191,23 +200,23 @@ let validateQuery = async (queryString: string) => {
   | Error(parseError) => showError(parseError)
   }
 }
-```
+----
 
----
+'''''
 
-### 3. ABI in Idris2
+==== 3. ABI in Idris2
 
-**Purpose:** Formally verified Application Binary Interface with dependent type proofs
+*Purpose:* Formally verified Application Binary Interface with dependent
+type proofs
 
-**Why Idris2 for ABI:**
-- ✅ Dependent types prove interface correctness
-- ✅ Verify memory layout (alignment, padding, size)
-- ✅ Platform-specific ABIs with compile-time selection
-- ✅ Backward compatibility proofs
-- ✅ Type-level guarantees impossible in C/Zig/Rust
+*Why Idris2 for ABI:* - ✅ Dependent types prove interface correctness -
+✅ Verify memory layout (alignment, padding, size) - ✅
+Platform-specific ABIs with compile-time selection - ✅ Backward
+compatibility proofs - ✅ Type-level guarantees impossible in C/Zig/Rust
 
-**ABI Architecture:**
-```
+*ABI Architecture:*
+
+....
 src/abi/                          # Idris2 ABI definitions
 ├── Types.idr                     # Type definitions with proofs
 ├── Layout.idr                    # Memory layout verification
@@ -222,10 +231,12 @@ src/abi/                          # Idris2 ABI definitions
 
 generated/abi/                    # Auto-generated from Idris2
 └── *.h                           # C headers for Zig FFI
-```
+....
 
-**Example: Idris2 ABI with Proofs**
-```idris
+*Example: Idris2 ABI with Proofs*
+
+[source,idris]
+----
 -- src/abi/Types.idr
 module GqlDt.ABI.Types
 
@@ -271,10 +282,12 @@ export
 0 backwardCompatible : (v1 v2 : Version) -> v1 < v2 ->
   ABILayout v1 `isSubsetOf` ABILayout v2
 backwardCompatible = ?proof_backward_compat
-```
+----
 
-**Generated C Header (from Idris2):**
-```c
+*Generated C Header (from Idris2):*
+
+[source,c]
+----
 // generated/abi/gqldt.h
 // Auto-generated from src/abi/Types.idr - DO NOT EDIT
 
@@ -312,31 +325,30 @@ _Static_assert(sizeof(GqlDt_InsertStmt) == 40, "InsertStmt size");
 _Static_assert(_Alignof(GqlDt_InsertStmt) == 8, "InsertStmt alignment");
 
 #endif // GQLDT_ABI_H
-```
+----
 
-**Benefits of Idris2 ABI:**
-- ✅ **Compile-time verification** - Memory layout proven correct
-- ✅ **Platform portability** - Same ABI works Linux/macOS/Windows
-- ✅ **Backward compatibility** - Proven mathematically, not tested
-- ✅ **No undefined behavior** - Type system prevents null pointers, alignment issues
-- ✅ **Self-documenting** - Proofs explain why layout is correct
+*Benefits of Idris2 ABI:* - ✅ *Compile-time verification* - Memory
+layout proven correct - ✅ *Platform portability* - Same ABI works
+Linux/macOS/Windows - ✅ *Backward compatibility* - Proven
+mathematically, not tested - ✅ *No undefined behavior* - Type system
+prevents null pointers, alignment issues - ✅ *Self-documenting* -
+Proofs explain why layout is correct
 
----
+'''''
 
-### 4. FFI in Zig
+==== 4. FFI in Zig
 
-**Purpose:** C-compatible foreign function interface, cross-platform, memory-safe
+*Purpose:* C-compatible foreign function interface, cross-platform,
+memory-safe
 
-**Why Zig for FFI:**
-- ✅ Native C ABI compatibility without overhead
-- ✅ Memory safety by default
-- ✅ Cross-compilation built-in (any platform, any architecture)
-- ✅ No runtime dependencies
-- ✅ Simpler than Rust FFI, safer than C
-- ✅ Works with WASM (wasm32-wasi)
+*Why Zig for FFI:* - ✅ Native C ABI compatibility without overhead - ✅
+Memory safety by default - ✅ Cross-compilation built-in (any platform,
+any architecture) - ✅ No runtime dependencies - ✅ Simpler than Rust
+FFI, safer than C - ✅ Works with WASM (wasm32-wasi)
 
-**FFI Architecture:**
-```
+*FFI Architecture:*
+
+....
 ffi/zig/                          # Zig FFI implementation
 ├── build.zig                     # Build configuration
 ├── src/
@@ -350,10 +362,12 @@ ffi/zig/                          # Zig FFI implementation
 │   └── integration_test.zig     # FFI integration tests
 └── include/
     └── gqldt.h                  # Public C API (from Idris2 ABI)
-```
+....
 
-**Example: Zig FFI Implementation**
-```zig
+*Example: Zig FFI Implementation*
+
+[source,zig]
+----
 // ffi/zig/src/main.zig
 const std = @import("std");
 const c = @cImport({
@@ -446,10 +460,12 @@ extern fn lean_gqldt_typecheck(
     ok: bool,
     error_msg: [*:0]const u8,
 };
-```
+----
 
-**Cross-Compilation (Zig's Superpower):**
-```bash
+*Cross-Compilation (Zig’s Superpower):*
+
+[source,bash]
+----
 # Build for Linux x86_64
 zig build -Dtarget=x86_64-linux
 
@@ -463,13 +479,13 @@ zig build -Dtarget=x86_64-windows
 zig build -Dtarget=wasm32-wasi
 
 # All from same codebase, no Docker/VMs needed!
-```
+----
 
----
+'''''
 
-## Integration Flow: Complete Picture
+=== Integration Flow: Complete Picture
 
-```
+....
 ┌─────────────────────────────────────────────────────────┐
 │ GQL-DT/GQL Source (User Input)                         │
 └────────────────────┬────────────────────────────────────┘
@@ -507,81 +523,90 @@ zig build -Dtarget=wasm32-wasi
 ┌─────────────────────────────────────────────────────────┐
 │ JavaScript/TypeScript/Deno/Browser/WASM                 │
 └─────────────────────────────────────────────────────────┘
-```
+....
 
----
+'''''
 
-## Implementation Milestones
+=== Implementation Milestones
 
-### M7: Idris2 ABI (Post-Parser)
-- [ ] Create `src/abi/` directory structure
-- [ ] Define core types with dependent type proofs
-- [ ] Verify memory layouts (size, alignment)
-- [ ] Platform-specific ABI selection
-- [ ] Generate C headers from Idris2
-- [ ] Prove backward compatibility
-- [ ] Test on Linux/macOS/Windows
+==== M7: Idris2 ABI (Post-Parser)
 
-### M8: Zig FFI Bridge
-- [ ] Implement C-compatible FFI exports
-- [ ] Integrate with Idris2-generated headers
-- [ ] CBOR proof blob serialization
-- [ ] Type checker FFI
-- [ ] IR serialization/deserialization
-- [ ] Cross-compilation tests
-- [ ] Integration tests with Lean 4
+* [ ] Create `+src/abi/+` directory structure
+* [ ] Define core types with dependent type proofs
+* [ ] Verify memory layouts (size, alignment)
+* [ ] Platform-specific ABI selection
+* [ ] Generate C headers from Idris2
+* [ ] Prove backward compatibility
+* [ ] Test on Linux/macOS/Windows
 
-### M9: ReScript Bindings
-- [ ] Create `bindings/rescript/` directory
-- [ ] Define type-safe ReScript API
-- [ ] External bindings to Zig FFI
-- [ ] Promise-based async API
-- [ ] Error handling with Result types
-- [ ] Example projects
-- [ ] Documentation
+==== M8: Zig FFI Bridge
 
-### M10: WASM Support
-- [ ] Compile Zig FFI to wasm32-wasi
-- [ ] Browser-compatible WASM module
-- [ ] JavaScript/ReScript glue code
-- [ ] Client-side type checking
-- [ ] Offline Lithoglyph Studio (IndexedDB)
-- [ ] Edge computing examples (Cloudflare Workers)
+* [ ] Implement C-compatible FFI exports
+* [ ] Integrate with Idris2-generated headers
+* [ ] CBOR proof blob serialization
+* [ ] Type checker FFI
+* [ ] IR serialization/deserialization
+* [ ] Cross-compilation tests
+* [ ] Integration tests with Lean 4
 
----
+==== M9: ReScript Bindings
 
-## Benefits of This Architecture
+* [ ] Create `+bindings/rescript/+` directory
+* [ ] Define type-safe ReScript API
+* [ ] External bindings to Zig FFI
+* [ ] Promise-based async API
+* [ ] Error handling with Result types
+* [ ] Example projects
+* [ ] Documentation
 
-| Layer | Technology | Benefits |
-|-------|------------|----------|
-| **Parser** | Lean 4 | Dependent types, theorem proving, compile-time verification |
-| **ABI** | Idris2 | Formal interface proofs, memory layout verification, platform portability |
-| **FFI** | Zig | C ABI compat, memory safety, cross-compilation, WASM support |
-| **Bindings** | ReScript | Type-safe JS, seamless integration, modern syntax |
-| **Deployment** | WASM | Browser, edge, serverless, offline-first |
+==== M10: WASM Support
 
-**Result:**
-- ✅ Type safety from source to execution
-- ✅ Mathematically proven interface correctness
-- ✅ Memory safety without garbage collection
-- ✅ Cross-platform (Linux/macOS/Windows/Web)
-- ✅ Seamless ReScript integration
-- ✅ WASM for public deployments
-- ✅ Zero-cost abstractions (proof erasure)
+* [ ] Compile Zig FFI to wasm32-wasi
+* [ ] Browser-compatible WASM module
+* [ ] JavaScript/ReScript glue code
+* [ ] Client-side type checking
+* [ ] Offline Lithoglyph Studio (IndexedDB)
+* [ ] Edge computing examples (Cloudflare Workers)
 
----
+'''''
 
-**Document Status:** Complete integration architecture
+=== Benefits of This Architecture
 
-**Next Steps:**
-1. Complete M6 Parser (generate typed IR)
-2. Start M7: Idris2 ABI implementation
-3. Start M8: Zig FFI bridge (parallel with M7)
-4. Create ReScript bindings after FFI stable
-5. WASM compilation after ReScript bindings work
+[width="100%",cols="25%,41%,34%",options="header",]
+|===
+|Layer |Technology |Benefits
+|*Parser* |Lean 4 |Dependent types, theorem proving, compile-time
+verification
 
-**See Also:**
-- `docs/EXECUTION-STRATEGY.md` - Why native IR execution
-- `docs/TWO-TIER-DESIGN.md` - GQL-DT vs GQL architecture
-- `~/abi-migration-guide.md` - ABI/FFI universal standard (per CLAUDE.md)
-- `~/Documents/hyperpolymath-repos/rsr-template-repo/ABI-FFI-README.md` - Template
+|*ABI* |Idris2 |Formal interface proofs, memory layout verification,
+platform portability
+
+|*FFI* |Zig |C ABI compat, memory safety, cross-compilation, WASM
+support
+
+|*Bindings* |ReScript |Type-safe JS, seamless integration, modern syntax
+
+|*Deployment* |WASM |Browser, edge, serverless, offline-first
+|===
+
+*Result:* - ✅ Type safety from source to execution - ✅ Mathematically
+proven interface correctness - ✅ Memory safety without garbage
+collection - ✅ Cross-platform (Linux/macOS/Windows/Web) - ✅ Seamless
+ReScript integration - ✅ WASM for public deployments - ✅ Zero-cost
+abstractions (proof erasure)
+
+'''''
+
+*Document Status:* Complete integration architecture
+
+*Next Steps:* 1. Complete M6 Parser (generate typed IR) 2. Start M7:
+Idris2 ABI implementation 3. Start M8: Zig FFI bridge (parallel with M7)
+4. Create ReScript bindings after FFI stable 5. WASM compilation after
+ReScript bindings work
+
+*See Also:* - `+docs/EXECUTION-STRATEGY.md+` - Why native IR execution -
+`+docs/TWO-TIER-DESIGN.md+` - GQL-DT vs GQL architecture -
+`+~/abi-migration-guide.md+` - ABI/FFI universal standard (per
+CLAUDE.md) -
+`+~/Documents/hyperpolymath-repos/rsr-template-repo/ABI-FFI-README.md+`
+- Template
