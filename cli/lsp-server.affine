@@ -1,4 +1,12 @@
 // SPDX-License-Identifier: MPL-2.0
+// Ported via Harvard Engine mechanical processor
+
+module lsp-server;
+
+// TODO: Complete semantic implementation
+
+/* === ORIGINAL TYPESCRIPT CONTEXT ===
+// SPDX-License-Identifier: MPL-2.0
 // SPDX-FileCopyrightText: 2026 Jonathan D.A. Jewell (@hyperpolymath)
 //
 // GQL-DT Language Server Protocol Implementation
@@ -181,3 +189,5 @@ documents.listen(connection);
 connection.listen();
 
 console.error("[GQL-DT LSP] Language server started, listening for requests");
+
+==================================== */
