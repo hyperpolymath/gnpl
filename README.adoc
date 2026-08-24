@@ -1,145 +1,225 @@
-// SPDX-License-Identifier: CC-BY-SA-4.0
-// SPDX-FileCopyrightText: 2026 Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>
-= GNPL — a narration/projection language for Lithoglyph
-:toc: macro
-:toclevels: 2
+== GQLdt — the query layer
 
-image:https://img.shields.io/badge/License-MPL--2.0-blue.svg[License: MPL-2.0,link="https://www.mozilla.org/en-US/MPL/2.0/"]
-image:https://img.shields.io/badge/docs-CC--BY--SA--4.0-lightgrey.svg[Docs: CC-BY-SA-4.0,link="https://creativecommons.org/licenses/by-sa/4.0/"]
+https://www.mozilla.org/en-US/MPL/2.0/[image:https://img.shields.io/badge/License-MPL--2.0-blue.svg[License:
+MPL-2.0]] // SPDX-License-Identifier: CC-BY-SA-4.0 //
+SPDX-FileCopyrightText: 2025 hyperpolymath
 
-**GNPL** is Lithoglyph's narration/projection language: it turns an evidence base into an
-*account* — for forensic histories, counterfactual paths, plural meanings, and
-synchronic/diachronic evidence interpretation.
+____
+*This is not the repository README.* It documents *one of two layers*.
 
-Where a query language answers *"what is true in the store?"*, GNPL answers
-*"what account does this evidence support, told from whose stance, with what warrant —
-and what rival accounts does the same evidence also support?"*
+This repo is *GNPL*, a _narration/projection_ language — see
+*README.adoc*, which is what GitHub renders on the landing page. GNPL
+answers _"`what account does this evidence support, from whose stance,
+with what warrant`"_. It is being built *on top of* GQLdt and *lowers
+to* it:
 
-toc::[]
-
-== Read this first: why the code says `GqlDt`
-
-This repository is named `gnpl`, but every source file under `src/` is currently
-namespaced `GqlDt`. That is expected, not a mistake. **GNPL is being built as a layer on
-top of GQLdt, in this repository.**
-
-[cols="1,3,1",options=header]
-|===
-| Layer | What it is | Status
-
-| `src/GqlDt/`
-| **GQLdt** — a dependently-typed *query* language in Lean 4. Extensional: "what is".
-  Already carries the substrate GNPL needs — `Provenance/ActorId`,
-  `Provenance/Rationale`, `Types/Confidence`.
-| *Builds* ✅
-
-| `src/Gnpl/`
-| **GNPL** — the *narration* layer. Intensional: "what account". Lowers to GQLdt queries.
-| *Not yet implemented*
-|===
-
-----
+....
 GNPL  ──lowers to──▶  GQLdt  ──FFI──▶  Lithoglyph
-(what account)      (what is)        (the data store)
-----
+(what account)       (what is)        (the data store)
+....
 
-Nothing in GQLdt is being discarded: it becomes GNPL's compilation target.
+The document below describes *GQLdt only* — the extensional query core
+under `+src/GqlDt/+`, which is why the sources are namespaced `+GqlDt+`
+in a repo named `+gnpl+`. Nothing here is being discarded; GQLdt becomes
+GNPL’s compilation target. Design rationale: docs/THEORY.adoc and
+docs/LITHOGLYPH.adoc.
+____
 
-**History.** This repo was reserved for GNPL, then filled by a squash-import of the GQLdt
-sources from the `nextgen-databases/lithoglyph/` monorepo. The migration registry of the
-time defined GNPL narrowly, as simply a renamed "Glyph query language". That reading has
-since been superseded: narration/projection is the primary purpose, and practical value to
-Lithoglyph-as-a-database is the second. See the design documents below.
+GQLdt extends
+https://github.com/hyperpolymath/nextgen-databases/tree/main/lithoglyph[Lithoglyph]’s
+query language with *dependent types*, enabling compile-time
+verification of database constraints, provenance tracking, and
+reversibility proofs.
 
-== Design documents
+____
+*Note*: GQL stands for "`Lithoglyph Query Language`"—the native query
+interface for Lithoglyph. It is not related to HTML forms or form
+builders.
+____
 
-[cols="1,3",options=header]
+=== Relationship to Lithoglyph
+
+....
+┌─────────────────────────────────────────────────────────────┐
+│  GQL (Factor)                  │  GQLdt (Lean 4)            │
+│  - Runtime constraint checks   │  - Compile-time proofs     │
+│  - Dynamic, practical          │  - Static, verified        │
+│  - "Just run it"               │  - "Prove it first"        │
+└───────────────┬────────────────┴────────────────┬───────────┘
+                │                                  │
+                ▼                                  ▼
+┌─────────────────────────────────────────────────────────────┐
+│  Form.Bridge (Zig) - Bidirectional ABI                      │
+│  - No C dependency                                          │
+│  - callconv(.C) for FFI compatibility                       │
+├─────────────────────────────────────────────────────────────┤
+│  Form.Model + Form.Blocks (Forth)                           │
+│  - Single source of truth                                   │
+└─────────────────────────────────────────────────────────────┘
+....
+
+*Same database, different guarantees:*
+
+[width="100%",cols="20%,39%,41%",options="header",]
 |===
-| Document | Question it answers
+|Aspect |GQL (practical) |GQLdt (verified)
+|When constraints checked |Runtime |Compile-time
 
-| link:docs/THEORY.adoc[`docs/THEORY.adoc`]
-| What is a narration/projection language, and what gap does it fill? Positions GNPL
-  against query languages, bitemporal stores, provenance semirings, argumentation
-  frameworks, belief revision and narratology.
+|Invalid insert |Runtime error |Won’t compile
 
-| link:docs/LITHOGLYPH.adoc[`docs/LITHOGLYPH.adoc`]
-| What does GNPL concretely give *Lithoglyph*, as a database?
+|Reversibility |Runtime inverse stored |Proof that inverse exists
 
-| link:docs/STATE-OF-PLAY.adoc[`docs/STATE-OF-PLAY.adoc`]
-| Where the project actually stands, what is verified and by which command, what is known
-  missing, and which decisions are open. Machine-readable twin:
-  `.machine_readable/6a2/STATE.a2ml`.
+|PROMPT scores |`+CHECK (score BETWEEN 0 AND 100)+`
+|`+BoundedNat 0 100+` in type
 
-| link:docs/proof-debt.md[`docs/proof-debt.md`]
-| All 16 outstanding axioms with `file:line` and disposition. **Read before relying on any
-  verification claim.**
+|Provenance |Application enforces |Type system enforces
 |===
 
-== Status
+=== Features
 
-[cols="2,1,3",options=header]
-|===
-| Component | State | Notes
+* *Refinement Types*: `+BoundedNat 0 100+`, `+NonEmptyString+`,
+`+Confidence+`
+* *Dependent Types*: Length-indexed vectors, provenance-tracked values
+* *Proof Obligations*: Compile-time verification of constraints
+* *Reversibility Proofs*: Prove operations have inverses before
+execution
+* *Normalization Types*: Type-encoded functional dependencies, normal
+form predicates (1NF-BCNF), proof-carrying schema evolution
+* *Backward Compatible*: Standard GQL is valid in dependent-type mode
 
-| GQLdt core (Lean 4) | *typechecks* | `lake build` completes; 34/35 targets; Lean reports
-  no incomplete proofs — but see the trusted-base caveat below
-| Proof obligations | *16 axioms outstanding* | all stubs, none necessary; enumerated in
-  link:docs/proof-debt.md[`docs/proof-debt.md`]
-| Tests | *163 checks, green* | `lake test` runs Lexer/Parser/TypeSafety suites. The gate is
-  canary-tested: a seeded false check turns it red
-| Zig FFI bridge (`bridge/`) | *builds* | produces `zig-out/lib/liblith_bridge.a`, the
-  artifact `lakefile.lean` links; `zig build test` passes
-| GNPL narration layer | *design* | `docs/THEORY.adoc` + `docs/LITHOGLYPH.adoc`; no code yet
-|===
+=== Current Status
 
-== Build
+*Build Status*: 34/35 modules compiling (97% success) - Updated
+2026-02-01
 
-[source,console]
+*Completed Milestones*: - ✅ M1: Lean 4 project setup (v4.15.0 +
+Mathlib) - ✅ M2: Core refinement types (BoundedNat, BoundedInt,
+NonEmptyString, Confidence) - ✅ M3: PROMPT score types
+(PromptDimension, PromptScores with auto-computed overall) - ✅ M4:
+Provenance tracking (ActorId, Rationale, Tracked with proofs) - ✅ M5:
+Specifications (EBNF grammar, lexical spec, railroad diagrams) - 🟡 M6:
+GQL-DT/GQL Parser (substantially complete - see below)
+
+*M6 Parser Status* (Substantially Complete): - ✅ Lexer: Hand-rolled
+540-line implementation (80+ keywords, operators, literals, comments) —
+verified by 163 executable checks (`+lake test+`), not asserted.
+Two-character lookahead was off by one until 2026-07-27, so
+`+<=+`/`+>=+`/`+!=+`/`+<>+` never lexed as single tokens, `+:+` lexed as
+`+::+`, and block comments were skipped entirely; fixed and covered. -
+✅ Parser: Combinator-based parser for INSERT/SELECT/UPDATE/DELETE - ✅
+Type System: Refinement types, PROMPT scores, provenance tracking - ✅
+Pipeline: 6-stage compilation (tokenize → parse → type check → IR →
+validate → serialize) - ✅ Serialization: CBOR encoding/decoding (RFC
+8949), JSON support - ✅ Documentation: 8 comprehensive docs (seam
+analysis, integration, language bindings, etc.) - ✅ Infrastructure:
+Containerfile, Dockerfile, CI/CD workflow - ⚠️ AST.lean: 1 nested
+inductive type issue (requires restructuring)
+
+*Recent Updates* (2026-02-01): - Seam analysis: Fixed 76 issues,
+resolved 33 compilation blockers - Namespace consistency: Global GqlDt →
+GqlDt renaming across 24 files - Circular dependency: Created
+Serialization/Types.lean to break IR ↔ Serialization cycle - CBOR tags:
+Updated to vendor-specific range (55800-55804) to avoid IANA collisions
+- Lexer rewrite: Complete hand-rolled implementation (Parsec unavailable
+in Lean 4.15.0)
+
+*Next Steps*: - Fix AST.lean nested inductive issue (TypedValue/Tracked
+relationship) - Achieve 35/35 modules compiling (100% build success) -
+Start M7 (Idris2 ABI) + M8 (Zig FFI) in parallel - M9: ReScript bindings
+(HIGHEST PRIORITY after M7+M8)
+
+For detailed progress tracking, see .machine_readable/STATE.scm.
+
+=== Zig FFI (Bidirectional)
+
+GQLdt compiles to operations on Form.Bridge, which uses Zig’s stable
+ABI:
+
+[source,zig]
 ----
-# Lean core (first build fetches mathlib — expect a long run)
-$ lake build
+/// Bidirectional FFI: Lean 4 → Zig → Forth core
+/// and Forth core → Zig → Lean 4 callbacks
 
-# Zig FFI bridge — must exist before the Lean FFI executables link
-$ cd bridge && zig build && zig build test
+pub const LithStatus = struct {
+    code: i32,
+    error_blob: ?[*]const u8,
+    error_len: usize,
+};
+
+/// Forward: GQLdt → Form.Bridge
+pub export fn lith_insert(
+    db: *LithDb,
+    collection: [*:0]const u8,
+    document: [*]const u8,
+    doc_len: usize,
+    proof_blob: [*]const u8,  // Serialised proof from Lean 4
+    proof_len: usize,
+) callconv(.C) LithStatus;
+
+/// Reverse: Form.Bridge → GQLdt (for constraint checking)
+pub export fn lith_register_constraint_checker(
+    db: *LithDb,
+    checker: *const fn (doc: [*]const u8, len: usize) callconv(.C) bool,
+) callconv(.C) LithStatus;
 ----
 
-Toolchains: Lean is pinned by `lean-toolchain` (`v4.15.0`, read automatically by elan);
-Zig and Idris2 are pinned in `mise.toml`. Per the estate ABI/FFI standard, ABI definitions
-are Idris2 (`src/GQLdt/ABI/*.idr`) and the FFI implementation is Zig (`bridge/`).
+No C headers or libc required. Zig provides C-compatible calling
+convention for interop.
 
-=== Proof gate
+=== Specification
 
-`scripts/check-lean-proofs.sh` enforces the manifest invariant *"No sorry in Lean 4 proofs"*.
-Its authoritative mode reads Lean's own diagnostics:
+See spec/GQL_Dependent_Types_Complete_Specification.md for the full
+specification covering:
 
-[source,console]
-----
-$ lake build 2>&1 | tee lake-build.log
-$ ./scripts/check-lean-proofs.sh --build-log lake-build.log
-----
+[arabic]
+. Type System (universes, primitives, constructors)
+. Refinement Types (bounded values, non-empty strings)
+. Dependent Types (provenance tracking, reversibility)
+. DDL/DML with proofs
+. Proof obligations and tactics
+. Complete examples (BoFIG journalism use case)
 
-It deliberately does *not* use a bare `grep -r "sorry\|admit"`: this repo legitimately
-contains an `admit` constructor, a `.admit` reference, a `"sorry"` lexer keyword and a
-commented-out `sorry`, none of which are incomplete proofs.
+See spec/normalization-types.md for normalization types covering:
 
-[IMPORTANT]
-====
-*A green proof gate here means "nothing is admitted mid-proof". It does not mean "nothing
-is assumed."* Lean's `sorry` warning does not fire on `axiom`, and this repository declares
-*16 axioms* — including five in *executable* position (`parseToIR`, `deserializeIR`,
-`many`, `many1`, `sepBy`), which therefore have no implementation at all.
+[arabic]
+. Functional dependency encoding (FunDep, Armstrong’s Axioms)
+. Normal form predicates (1NF, 2NF, 3NF, BCNF, 4NF)
+. Proof-carrying schema evolution (NormalizationStep)
+. Integration with Form.Normalizer
+. GQL syntax extensions for normalization commands
 
-`link:docs/proof-debt.md[docs/proof-debt.md]` enumerates all 16 with file:line, classifies
-each, and is enforced in CI by the estate trusted-base policy. Read it before relying on
-any claim of verification here.
-====
+=== Setup
 
-== Licence
+[arabic]
+. Ensure `+just+` and `+podman+` are installed
+. Run `+just check+` to verify Lean 4 proofs
+. For non-bash shells, see `+scripts/bootstrap_all.sh+`
 
-Code is **MPL-2.0**; documentation (`.md`, `.adoc`) is **CC-BY-SA-4.0**. See `LICENSE` and
-`LICENSES/`.
+=== Implementation Timeline
 
-== ABI/FFI standard
+* *Phase 1* (Month 1-6): Refinement types
+* *Phase 2* (Month 7-12): Simple dependent types
+* *Phase 3* (Month 13-18): Full verification
+* *Phase 4* (Month 19-24): Normalization types (FunDep, normal forms,
+proof-carrying evolution)
 
-See link:ABI-FFI-README.md[`ABI-FFI-README.md`] for the estate-wide ABI (Idris2) / FFI (Zig)
-standard this repository follows.
+=== See Also
+
+* https://github.com/hyperpolymath/nextgen-databases/tree/main/lithoglyph[Lithoglyph]
+- The narrative-first database
+* https://github.com/hyperpolymath/nextgen-databases/tree/main/lithoglyph/spec/self-normalizing.adoc[Lithoglyph
+Self-Normalizing Spec] - Self-normalizing database specification
+* https://github.com/hyperpolymath/glyphbase[Glyphbase] - Lithoglyph web
+UI (Airtable-mode delivery)
+* https://github.com/hyperpolymath/lithoglyphdb[lithoglyphdb] - Reserved
+future home of the database (extraction pending)
+* https://github.com/hyperpolymath/bofig[BoFIG] - Evidence graph for
+investigative journalism
+* https://github.com/hyperpolymath/zotero-lithoglyph[Zotero-Lithoglyph]
+- Production pilot: reference manager with PROMPT scores
+* Lithoglyph Studio - Zero-friction GUI for GQLdt _(planned; not yet
+published)_
+* Lithoglyph Debugger - Proof-carrying database debugger, Lean 4 + Idris
+2 _(planned; not yet published)_
+* https://github.com/hyperpolymath/formbase[FormBase] - Open-source
+Airtable alternative with provenance

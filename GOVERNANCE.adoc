@@ -1,0 +1,78 @@
+== Governance
+
+`+hyperpolymath/gnpl+` is maintained by @hyperpolymath (see
+`+MAINTAINERS+`). Decisions are made by the maintainer; this document
+records _how_ they are made and what a change has to clear, so the bar
+is legible rather than tacit.
+
+=== Scope of decisions
+
+[width="100%",cols="34%,33%,33%",options="header",]
+|===
+|Kind |Who decides |Evidence expected
+|Bug fix, doc correction, gate repair |maintainer or contributor PR |the
+gate that now fails, or the measurement
+
+|Grammar / lexical behaviour |maintainer, against `+spec/GQL-DT-*.md+`
+|the spec clause being conformed to
+
+|ABI or FFI surface |maintainer |layout proof in `+src/GQLdt/ABI/+`,
+both sides updated together
+
+|Adding or discharging an `+axiom+` |maintainer |`+docs/proof-debt.md+`
+updated in the same change
+
+|Semantics of PROMPT scoring |maintainer |affects a proof field — see
+below
+|===
+
+=== The rules a change must clear
+
+These are not style preferences; each exists because it was violated and
+cost something.
+
+[arabic]
+. *No handwaving.* A claim in a README, a manifest or a commit message
+must be verifiable by running something. "`Verified`" without a command
+that verifies it is a defect.
+. *Gates must be able to fail.* A new or repaired gate is not accepted
+until it has been shown to go red on a deliberately seeded fault, and
+green when removed. This repository has shipped a naming gate that
+compared a string to itself, a `+lake test+` step that swallowed real
+failures, test suites whose `+main : IO Unit+` always exited 0, and a
+container build that masked both its steps with `+|| echo+`.
+. *Specs are normative.* Where `+spec/GQL-DT-Lexical.md+` and the
+implementation disagree, the implementation is wrong until the spec is
+deliberately amended.
+. *The trusted base is enumerated.* Every `+axiom+` appears in
+`+docs/proof-debt.md+` with `+file:line+` and a disposition. Nothing may
+be recorded as "`budgeted`" without a stated refutation budget —
+untested assurance is unfalsifiable.
+. *Foundation before depth.* Work that makes the codebase _verifiable_
+precedes work that deepens any one strand. The 19 lexer defects found in
+July 2026 were invisible for as long as they were because nothing could
+run and fail.
+
+=== Cross-cutting changes
+
+Two areas cannot be changed on one side only:
+
+* *The FFI boundary.* `+bridge/lith_types.zig+` and the Lean types must
+agree. A change to one without the other silently breaks the proofs that
+cross it.
+* *PROMPT scoring.* `+PromptScores+` carries a proof field,
+`+overall_correct : overall.val = (…sum…) / 6+`. The averaging rule is
+welded into the type, so changing it is a proof obligation change on
+every value, in Lean and in Zig simultaneously — not an edit to one
+function.
+
+=== Estate context
+
+This repository consumes shared workflows from
+`+hyperpolymath/standards+`. Faults in those are reported upstream
+rather than patched around locally; where a local shim is unavoidable it
+carries a comment naming the upstream issue.
+
+=== Contributing
+
+See `+CONTRIBUTING.md+`. Code is MPL-2.0, documentation is CC-BY-SA-4.0.

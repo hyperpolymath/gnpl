@@ -1,33 +1,34 @@
-# GQL-DT Railroad Diagrams
+== GQL-DT Railroad Diagrams
 
-**SPDX-License-Identifier:** CC-BY-SA-4.0
-**SPDX-FileCopyrightText:** 2026 Jonathan D.A. Jewell (@hyperpolymath)
+*SPDX-License-Identifier:* CC-BY-SA-4.0 *SPDX-FileCopyrightText:* 2026
+Jonathan D.A. Jewell (@hyperpolymath)
 
-**Version:** 1.0.0
-**Date:** 2026-02-01
+*Version:* 1.0.0 *Date:* 2026-02-01
 
-This document provides railroad diagram specifications for GQL-DT syntax. These can be used with:
-- **Online:** https://www.bottlecaps.de/rr/ui
-- **CLI:** `rr` (Railroad Diagram Generator)
-- **Graphviz:** Convert to DOT format
+This document provides railroad diagram specifications for GQL-DT
+syntax. These can be used with: - *Online:*
+https://www.bottlecaps.de/rr/ui - *CLI:* `+rr+` (Railroad Diagram
+Generator) - *Graphviz:* Convert to DOT format
 
-## Table of Contents
+=== Table of Contents
 
-1. [CREATE COLLECTION](#create-collection)
-2. [INSERT Statement](#insert-statement)
-3. [SELECT Statement](#select-statement)
-4. [Type Expressions](#type-expressions)
-5. [Proof Clauses](#proof-clauses)
-6. [UPDATE Statement](#update-statement)
-7. [Normalization Commands](#normalization-commands)
+[arabic]
+. link:#create-collection[CREATE COLLECTION]
+. link:#insert-statement[INSERT Statement]
+. link:#select-statement[SELECT Statement]
+. link:#type-expressions[Type Expressions]
+. link:#proof-clauses[Proof Clauses]
+. link:#update-statement[UPDATE Statement]
+. link:#normalization-commands[Normalization Commands]
 
----
+'''''
 
-## 1. CREATE COLLECTION
+=== 1. CREATE COLLECTION
 
-### Railroad Diagram Source (EBNF)
+==== Railroad Diagram Source (EBNF)
 
-```ebnf
+[source,ebnf]
+----
 CreateCollection ::= 'CREATE' 'COLLECTION' ('IF' 'NOT' 'EXISTS')?
                      Identifier
                      '(' ColumnList ')'
@@ -45,11 +46,11 @@ Option ::= 'DEPENDENT_TYPES'
          | 'PROVENANCE_TRACKING'
          | 'TARGET_NORMAL_FORM' NormalForm
          | 'FUNCTIONAL_DEPENDENCIES' '(' FDList ')'
-```
+----
 
-### ASCII Railroad Diagram
+==== ASCII Railroad Diagram
 
-```
+....
 CREATE COLLECTION ─┬─────────────────────┬─ Identifier ─┬─ ( ─ ColumnList ─ ) ─┬────────────────────────┬──
                    └─ IF NOT EXISTS ─────┘              └─────────────────────────┘                        └──┘
                                                                                   └─ WITH ─ OptionList ─┘
@@ -62,15 +63,16 @@ Option:
 ├─ PROVENANCE_TRACKING ───────────────────────────┤
 ├─ TARGET_NORMAL_FORM ─ NormalForm ───────────────┤
 └─ FUNCTIONAL_DEPENDENCIES ─ ( ─ FDList ─ ) ─────┘
-```
+....
 
----
+'''''
 
-## 2. INSERT Statement
+=== 2. INSERT Statement
 
-### Railroad Diagram Source (EBNF)
+==== Railroad Diagram Source (EBNF)
 
-```ebnf
+[source,ebnf]
+----
 InsertStatement ::= 'INSERT' 'INTO' Identifier
                     ('(' ColumnNames ')')?
                     'VALUES' '(' ValueList ')'
@@ -94,11 +96,11 @@ ProofTerm ::= 'by' TacticExpr
 InverseClause ::= 'WITH_INVERSE' '(' Statement ')'
                 | 'IRREVERSIBLE' 'BECAUSE' StringLiteral
                   ('WITH_JUSTIFICATION' Justification)?
-```
+----
 
-### ASCII Railroad Diagram
+==== ASCII Railroad Diagram
 
-```
+....
 INSERT INTO ─ Identifier ─┬──────────────────────────────┬─ VALUES ─ ( ─ ValueList ─ ) ─ RationaleClause ─┬────────────────────────────┬─┬─────────────────────┬─┬──────────────────┬──
                           └─ ( ─ ColumnNames ─ ) ───────┘                                                  └─ ADDED_BY ─ String ───────┘ └─ WITH_PROOF ─ {...}─┘ └─ InverseClause ─┘
 
@@ -110,15 +112,16 @@ InverseClause:
 ┌─ WITH_INVERSE ─ ( ─ Statement ─ ) ───────────────────────────────┐
 └─ IRREVERSIBLE ─ BECAUSE ─ String ─┬──────────────────────────────┤
                                     └─ WITH_JUSTIFICATION ─ {...} ─┘
-```
+....
 
----
+'''''
 
-## 3. SELECT Statement
+=== 3. SELECT Statement
 
-### Railroad Diagram Source (EBNF)
+==== Railroad Diagram Source (EBNF)
 
-```ebnf
+[source,ebnf]
+----
 SelectStatement ::= 'SELECT' SelectList
                     'FROM' FromClause
                     JoinClause?
@@ -141,11 +144,11 @@ Join ::= ('INNER' | 'LEFT' | 'RIGHT' | 'FULL')?
          'JOIN' TableRef 'ON' Condition
 
 TypeRefinement ::= '(' Identifier ':' TypeExpr ('|' Condition)? ')'
-```
+----
 
-### ASCII Railroad Diagram
+==== ASCII Railroad Diagram
 
-```
+....
 SELECT ─┬─ * ─────────────┬─ FROM ─ FromClause ─┬──────────────┬─┬──────────────────┬─┬─────────────────────┬─┬────────────────────┬─┬────────────────┬─┬────────────────────────┬─┬───────────────────┬──
         ├─ SelectExpr ... ─┤                     └─ JoinClause ─┘ └─ WHERE ─ Cond ──┘ └─ GROUP BY ─ Expr ──┘ └─ ORDER BY ─ Order ─┘ └─ LIMIT ─ Nat ─┘ └─ RETURNING ─ TypeRef ─┘ └─ [VERIFY_PROOFS] ─┘
         └─ TypeRefinement ─┘
@@ -160,15 +163,16 @@ Join:
 TypeRefinement:
 ( ─ Identifier ─ : ─ TypeExpr ─┬──────────────┬─ ) ──
                                 └─ | ─ Cond ──┘
-```
+....
 
----
+'''''
 
-## 4. Type Expressions
+=== 4. Type Expressions
 
-### Railroad Diagram Source (EBNF)
+==== Railroad Diagram Source (EBNF)
 
-```ebnf
+[source,ebnf]
+----
 TypeExpr ::= PrimitiveType
            | RefinedType
            | DependentType
@@ -200,11 +204,11 @@ ProductType ::= TypeExpr '×' TypeExpr
 
 QuantifiedType ::= '∀' '(' ParamDef ')' ',' TypeExpr
                  | '∃' '(' ParamDef ')' ',' TypeExpr
-```
+----
 
-### ASCII Railroad Diagram
+==== ASCII Railroad Diagram
 
-```
+....
 TypeExpr:
 ┌─ PrimitiveType ─────────────────┐
 ├─ RefinedType ───────────────────┤
@@ -231,15 +235,16 @@ DependentType:
 FunctionType:
 ┌─ TypeExpr ─ -> ─ TypeExpr ────────────────┐
 └─ ( ─ ParamList ─ ) ─ -> ─ TypeExpr ───────┘
-```
+....
 
----
+'''''
 
-## 5. Proof Clauses
+=== 5. Proof Clauses
 
-### Railroad Diagram Source (EBNF)
+==== Railroad Diagram Source (EBNF)
 
-```ebnf
+[source,ebnf]
+----
 ProofClause ::= 'WITH_PROOF' ProofBlock
 
 ProofBlock ::= '{' ProofList '}'
@@ -255,11 +260,11 @@ TacticExpr ::= Identifier TacticArgs?
              | TacticExpr ';' TacticExpr
              | TacticExpr '<|>' TacticExpr
              | 'first' '|' TacticExpr ('|' TacticExpr)*
-```
+----
 
-### ASCII Railroad Diagram
+==== ASCII Railroad Diagram
 
-```
+....
 WITH_PROOF ─ { ─ ProofList ─ } ──
 
 ProofList:
@@ -280,15 +285,16 @@ TacticExpr:
 ├─ TacticExpr ─ <|> ─ TacticExpr ───────────────────────────────────────┤
 └─ first ─ | ─ TacticExpr ─┬───────────────────────┬─────────────────────┘
                            └─ | ─ TacticExpr ──────┘ (loop)
-```
+....
 
----
+'''''
 
-## 6. UPDATE Statement
+=== 6. UPDATE Statement
 
-### Railroad Diagram Source (EBNF)
+==== Railroad Diagram Source (EBNF)
 
-```ebnf
+[source,ebnf]
+----
 UpdateStatement ::= 'UPDATE' Identifier
                     'SET' AssignmentList
                     'WHERE' Condition
@@ -302,11 +308,11 @@ UpdateStatement ::= 'UPDATE' Identifier
 AssignmentList ::= Assignment (',' Assignment)*
 
 Assignment ::= Identifier '=' Value
-```
+----
 
-### ASCII Railroad Diagram
+==== ASCII Railroad Diagram
 
-```
+....
 UPDATE ─ Identifier ─ SET ─ AssignmentList ─ WHERE ─ Condition ─ RationaleClause ─┬────────────────────────────┬─┬──────────────────────┬─┬───────────────────────┬─┬─────────────────────┬─┬──────────────────┬──
                                                                                    └─ CORRECTION_TYPE ─ String ─┘ └─ DISCLOSED_AT ─ ... ─┘ └─ DISCLOSED_BY ─ String ─┘ └─ WITH_PROOF ─ {...}─┘ └─ InverseClause ─┘
 
@@ -316,15 +322,16 @@ Assignment ─┬───────────────────┬─
 
 Assignment:
 Identifier ─ = ─ Value ──
-```
+....
 
----
+'''''
 
-## 7. Normalization Commands
+=== 7. Normalization Commands
 
-### Railroad Diagram Source (EBNF)
+==== Railroad Diagram Source (EBNF)
 
-```ebnf
+[source,ebnf]
+----
 DiscoverDependencies ::= 'DISCOVER' 'DEPENDENCIES'
                          'FROM' Identifier
                          ('SAMPLE' NatLiteral)?
@@ -343,11 +350,11 @@ ProposeNormalization ::= 'PROPOSE' 'NORMALIZATION' Identifier
 ApplyNormalization ::= 'APPLY' 'NORMALIZATION' Identifier
                        ProofClause
                        RationaleClause
-```
+----
 
-### ASCII Railroad Diagram
+==== ASCII Railroad Diagram
 
-```
+....
 DISCOVER DEPENDENCIES ─ FROM ─ Identifier ─┬────────────────┬─┬──────────────────────┬─┬────────────────────────┬──
                                            └─ SAMPLE ─ Nat ─┘ └─ CONFIDENCE ─ Float ─┘ └─ RETURNING ─ TypeRef ─┘
 
@@ -358,15 +365,16 @@ PROPOSE NORMALIZATION ─ Identifier ─ TO ─ NormalForm ─┬─────
                                                        └─ STRATEGY ─ Strat ──┘ └─ RETURNING ─ TypeRef ─┘
 
 APPLY NORMALIZATION ─ Identifier ─ ProofClause ─ RationaleClause ──
-```
+....
 
----
+'''''
 
-## 8. Lambda Expressions
+=== 8. Lambda Expressions
 
-### Railroad Diagram Source (EBNF)
+==== Railroad Diagram Source (EBNF)
 
-```ebnf
+[source,ebnf]
+----
 LambdaExpr ::= ('λ' | '\') ParamList '.' Expr
 
 ParamList ::= Identifier (',' Identifier)*
@@ -381,11 +389,11 @@ Expr ::= Literal
 ApplicationExpr ::= Expr Expr
 
 InfixExpr ::= Expr InfixOp Expr
-```
+----
 
-### ASCII Railroad Diagram
+==== ASCII Railroad Diagram
 
-```
+....
 ┌─ λ ─┬─ ParamList ─ . ─ Expr ──
 └─ \ ─┘
 
@@ -403,15 +411,16 @@ Expr:
 
 InfixExpr:
 Expr ─ InfixOp ─ Expr ──
-```
+....
 
----
+'''''
 
-## 9. Struct and Array Literals
+=== 9. Struct and Array Literals
 
-### Railroad Diagram Source (EBNF)
+==== Railroad Diagram Source (EBNF)
 
-```ebnf
+[source,ebnf]
+----
 StructLiteral ::= '{' FieldList '}'
 
 FieldList ::= FieldAssignment (',' FieldAssignment)*
@@ -421,11 +430,11 @@ FieldAssignment ::= Identifier ':' Value
 ArrayLiteral ::= '[' ValueList ']'
 
 ValueList ::= Value (',' Value)*
-```
+----
 
-### ASCII Railroad Diagram
+==== ASCII Railroad Diagram
 
-```
+....
 StructLiteral:
 { ─ FieldList ─ } ──
 
@@ -442,15 +451,15 @@ ArrayLiteral:
 ValueList:
 Value ─┬──────────────┬──
        └─ , ─ Value ──┘ (loop)
-```
+....
 
----
+'''''
 
-## 10. Complete Example Diagrams
+=== 10. Complete Example Diagrams
 
-### Example: INSERT with All Optional Clauses
+==== Example: INSERT with All Optional Clauses
 
-```
+....
 INSERT INTO evidence ─ ( ─ title, prompt_scores ─ ) ─
 VALUES ─ ( ─ 'ONS Data', {...} ─ ) ─
 RATIONALE ─ "Official statistics" ─
@@ -460,42 +469,45 @@ WITH_PROOF ─ {
   overall_correct: by lithoglyph_prompt
 } ─
 WITH_INVERSE ─ ( ─ DELETE FROM evidence WHERE id = $GENERATED_ID ─ ) ──
-```
+....
 
-### Example: SELECT with Type Refinement
+==== Example: SELECT with Type Refinement
 
-```
+....
 SELECT ─ ( ─ e : Evidence | e.prompt_overall > 90 ─ ) ─
 FROM ─ evidence e ─
 WHERE ─ investigation_id = 'uk_inflation_2023' ─
 RETURNING ─ ( ─ List ─ ( ─ Evidence | prompt_overall > 90 ─ ) ─ ) ──
-```
+....
 
----
+'''''
 
-## 11. Usage Instructions
+=== 11. Usage Instructions
 
-### Online Railroad Diagram Generator
+==== Online Railroad Diagram Generator
 
-1. Visit https://www.bottlecaps.de/rr/ui
-2. Paste EBNF from sections above
-3. Click "View Diagram"
-4. Export as SVG or PNG
+[arabic]
+. Visit https://www.bottlecaps.de/rr/ui
+. Paste EBNF from sections above
+. Click "`View Diagram`"
+. Export as SVG or PNG
 
-### CLI Tool
+==== CLI Tool
 
-```bash
+[source,bash]
+----
 # Install rr (Railroad Diagram Generator)
 npm install -g railroad-diagrams
 
 # Generate diagrams
 rr < GQL-DT-Grammar.ebnf > diagrams.html
-```
+----
 
-### Integration with Spec
+==== Integration with Spec
 
 Generated SVG files should be placed in:
-```
+
+....
 spec/diagrams/
 ├── create-collection.svg
 ├── insert-statement.svg
@@ -504,53 +516,52 @@ spec/diagrams/
 ├── proof-clauses.svg
 ├── update-statement.svg
 └── normalization-commands.svg
-```
+....
 
----
+'''''
 
-## 12. Diagram Conventions
+=== 12. Diagram Conventions
 
-### Notation
+==== Notation
 
-- **Railroad tracks** - Syntax flow
-- **Boxes** - Terminals (keywords, operators)
-- **Rounded boxes** - Non-terminals (rules)
-- **Arrows** - Sequence direction
-- **Splits** - Alternatives (OR)
-- **Loops** - Repetition (zero or more, one or more)
+* *Railroad tracks* - Syntax flow
+* *Boxes* - Terminals (keywords, operators)
+* *Rounded boxes* - Non-terminals (rules)
+* *Arrows* - Sequence direction
+* *Splits* - Alternatives (OR)
+* *Loops* - Repetition (zero or more, one or more)
 
-### Reading Direction
+==== Reading Direction
 
-- **Left to right** - Primary flow
-- **Top to bottom** - Alternatives
+* *Left to right* - Primary flow
+* *Top to bottom* - Alternatives
 
-### Colors (if generating colored diagrams)
+==== Colors (if generating colored diagrams)
 
-- **Blue boxes** - Keywords
-- **Green boxes** - Terminals (literals, operators)
-- **Orange boxes** - Non-terminals (references to other rules)
-- **Gray tracks** - Optional paths
+* *Blue boxes* - Keywords
+* *Green boxes* - Terminals (literals, operators)
+* *Orange boxes* - Non-terminals (references to other rules)
+* *Gray tracks* - Optional paths
 
----
+'''''
 
-## References
+=== References
 
-1. **Railroad Diagram Generator:** https://www.bottlecaps.de/rr/ui
-2. **EBNF Standard:** ISO/IEC 14977
-3. **GQL-DT Grammar:** `GQL-DT-Grammar.ebnf`
-4. **W3C EBNF Notation:** https://www.w3.org/TR/REC-xml/#sec-notation
+[arabic]
+. *Railroad Diagram Generator:* https://www.bottlecaps.de/rr/ui
+. *EBNF Standard:* ISO/IEC 14977
+. *GQL-DT Grammar:* `+GQL-DT-Grammar.ebnf+`
+. *W3C EBNF Notation:* https://www.w3.org/TR/REC-xml/#sec-notation
 
----
+'''''
 
-**Document Status:** Complete railroad diagram specifications for GQL-DT v1.0
+*Document Status:* Complete railroad diagram specifications for GQL-DT
+v1.0
 
-**Next Steps:**
-1. Generate SVG diagrams using online tool
-2. Place in `spec/diagrams/` directory
-3. Reference from main specification document
-4. Update as grammar evolves
+*Next Steps:* 1. Generate SVG diagrams using online tool 2. Place in
+`+spec/diagrams/+` directory 3. Reference from main specification
+document 4. Update as grammar evolves
 
-**See Also:**
-- `GQL-DT-Grammar.ebnf` - Formal EBNF grammar source
-- `GQL-DT-Lexical.md` - Lexical specification
-- `GQL_Dependent_Types_Complete_Specification.md` - Type system spec
+*See Also:* - `+GQL-DT-Grammar.ebnf+` - Formal EBNF grammar source -
+`+GQL-DT-Lexical.md+` - Lexical specification -
+`+GQL_Dependent_Types_Complete_Specification.md+` - Type system spec
