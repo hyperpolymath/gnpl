@@ -37,6 +37,12 @@ is executable and bounded by input consumption; a parser that consumes nothing
 is rejected. Insert typing witnesses are built by the validator against the
 caller's schema, instead of being supplied by an unconditional axiom.
 
+The private substrate's `Confidence` type preserves its distinct type tag and
+an integer admission score in `[0, 100]` through insertion, display storage and
+the typed-value JSON, CBOR and binary codecs. These bounded scores do not
+establish a probability or the truth of the supplied evidence. Empty insert
+column lists and fractional or out-of-range confidence inputs are rejected.
+
 The in-memory evaluator stores display strings. The pipeline therefore permits
 ordered predicates and sorting only for natural-number columns; string/Boolean
 predicates support equality and inequality. Other comparisons are refused until

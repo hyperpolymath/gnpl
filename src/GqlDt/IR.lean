@@ -435,6 +435,7 @@ private def valueToSQL {t : TypeExpr} (v : TypedValue t) : String :=
   match v with
   | .nat n => toString n
   | .boundedNat _ _ bn => toString bn.val  -- BOUNDS LOST!
+  | .confidence score => toString score.val
   | .nonEmptyString nes => s!"'{nes.val}'"  -- NON-EMPTY GUARANTEE LOST!
   | _ => "NULL"  -- TODO: Handle all types
 
@@ -556,6 +557,7 @@ def typedValueToString : {t : TypeExpr} → TypedValue t → String
   | _, .bool b => toString b
   | _, .float f => toString f
   | _, .boundedNat _ _ bn => toString bn.val
+  | _, .confidence score => toString score.val
   | _, .nonEmptyString nes => nes.val
   | _, .promptScores ps => toString ps.overall.val
 

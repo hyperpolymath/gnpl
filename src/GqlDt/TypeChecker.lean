@@ -214,6 +214,8 @@ def generateProofObligations {schema : Schema} (stmt : InsertStmt schema) : List
     match t, v with
     | .boundedNat min max, .boundedNat _ _ bn =>
         .boundsCheck min max bn.val ⟨bn.min_le, bn.le_max⟩ :: acc
+    | .confidence, .confidence score =>
+        .boundsCheck 0 100 score.val ⟨score.min_le, score.le_max⟩ :: acc
     | .nonEmptyString, .nonEmptyString nes =>
         .nonEmpty nes.val nes.nonempty :: acc
     | _, _ => acc

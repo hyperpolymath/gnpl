@@ -227,7 +227,7 @@ def proofKeywords : List (String × TokenType) := [
   ("WITH_PROOF", .kwWithProof), ("THEOREM", .kwTheorem),
   ("PROOF", .kwProof), ("QED", .kwQed),
   ("omega", .kwOmega), ("decide", .kwDecide),
-  ("simp", .kwSimp), ("sorry", .kwSorry)
+  ("simp", .kwSimp), ("sorry", .kwSorry) -- hypatia: allow code_safety/sorry -- Recognises the forbidden proof-hole keyword; this string is not a proof. CI checks proof positions and narration axioms.
 ]
 
 def lithoglyphKeywords : List (String × TokenType) := [

@@ -408,7 +408,7 @@ INSERT INTO evidence (prompt_provenance) VALUES (150);
 . *Add type inference hooks*
 * Placeholder for "infer type from value"
 * Auto-proof generation infrastructure
-* Graceful degradation (admit if can't prove)
+* Explicit rejection when an obligation cannot be proved
 . *Define validation levels*
 * Schema metadata: which tier is allowed
 * User roles: which validation level they get
@@ -531,7 +531,7 @@ WITH_PROOF {
 * Parse SQL-like syntax
 * Infer types from values
 * Auto-generate proofs where possible
-* Graceful degradation (admit if can't prove)
+* Explicit rejection when an obligation cannot be proved
 
 ==== M6c: Unified Type Checker
 

@@ -140,7 +140,7 @@ def inferredInsertToIR (inferred : InferredInsert) (config : PipelineConfig) : E
     | .confidence, .nat n =>
         if h1 : 0 ≤ n then
           if h2 : n ≤ 100 then
-            some ⟨.boundedNat 0 100, .boundedNat 0 100 ⟨n, h1, h2⟩⟩
+            some ⟨.confidence, .confidence ⟨n, h1, h2⟩⟩
           else none
         else none
     | _, _ => none
@@ -221,7 +221,7 @@ def generateIRFromAST (stmt : Statement) (config : PipelineConfig) : Except Stri
         let (name, op, value) := wc.predicate
         let supported := config.schema.columns.any fun col =>
           col.name == name && match col.type, value with
-          | .nat, .nat _ | .boundedNat _ _, .nat _ => true
+          | .nat, .nat _ | .boundedNat _ _, .nat _ | .confidence, .nat _ => true
           | .string, .string _ | .nonEmptyString, .string _ | .bool, .bool _ =>
               op == "=" || op == "!="
           | _, _ => false
@@ -229,7 +229,7 @@ def generateIRFromAST (stmt : Statement) (config : PipelineConfig) : Except Stri
       if let some ob := selectStmt.orderBy then
         let supportedOrder := fun name => config.schema.columns.any fun col =>
           col.name == name && match col.type with
-          | .nat | .boundedNat _ _ => true
+          | .nat | .boundedNat _ _ | .confidence => true
           | _ => false
         if ob.columns.length != 1 || !ob.columns.all (fun c => supportedOrder c.1) then
           throw "Ordering requires one natural-number column"

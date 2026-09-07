@@ -53,8 +53,8 @@ def parse (source : String) : Except String Projection := do
     if line.isEmpty || line.startsWith "--" then continue
     match tokenizeLine line with
     | .error e => throw s!"Line {index + 1}: {e}"
-    | .ok tokens => lines := lines ++ [(index + 1, tokens)]
-  match lines with
+    | .ok tokens => lines := (index + 1, tokens) :: lines
+  match lines.reverse with
   | (_, [.word "account", .quoted name]) ::
     (_, [.word "focalized", .word "by", .quoted actor]) ::
     (_, [.word "threshold", .word score]) :: rest =>

@@ -64,7 +64,7 @@ does not cover the separate FFI boundary. No FFI or remote CI result is asserted
 by this checkpoint.
 
 Repository initialisation also retains unresolved governance/security tokens in
-`REQUIRES_INITIALISATION.md`. This implementation does not invent those values.
+`REQUIRES_INITIALISATION.adoc`. This implementation does not invent those values.
 
 == Reproduce
 

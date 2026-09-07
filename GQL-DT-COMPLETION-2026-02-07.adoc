@@ -1,9 +1,11 @@
 // SPDX-License-Identifier: CC-BY-SA-4.0
 // SPDX-FileCopyrightText: 2026 Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>
-== GQL-DT Production Ready - Completion Report
+== GQL-DT Historical Completion Report (Superseded)
 
 *Date:* 2026-02-07
-*Status:* ✅ 100% COMPLETE - PRODUCTION READY
+*Status:* Superseded. The historical claims below are not the current executable contract.
+See link:docs/executable-boundary.adoc[the current execution and refusal boundaries]
+and link:docs/narration-slice.adoc[the implemented GNPL narration slice].
 *Previous Status:* 94% (Milestone 6 substantially complete)
 
 '''''

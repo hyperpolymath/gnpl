@@ -51,7 +51,7 @@ Created new module `src/GqlDt/Serialization/Types.lean` with shared types:
 [[12-inconsistent-import-paths-white_check_mark-fixed]]
 ==== 1.2 Inconsistent Import Paths ✅ FIXED
 
-*Problem:* 17 files used `import GqlDt.++*++` instead of `import GqlDt.++*++`.
+*Historical record:* This report attributed an import-namespace repair to the 17 files below. Later renaming made its recorded before/after namespaces identical, so this text no longer establishes the original spelling. Current Lean imports use `GqlDt`; the build checks their resolution.
 
 *Solution:* Global find-and-replace across all `.lean` files.
 
@@ -77,12 +77,7 @@ src/GqlDt/Query.lean
 src/Main.lean
 ....
 
-*Command Used:*
-
-[source,bash]
-----
-sed -i 's/import GqlDt\./import GqlDt./g' <files>
-----
+*Reproduction note:* The former command replaced a namespace with itself and has been removed. Consult the original revision history before attempting to reproduce that historical rename.
 
 *Impact:* All imports now use correct namespace prefix.
 

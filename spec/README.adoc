@@ -19,7 +19,7 @@ This directory contains the complete formal specification for *GQL-DT* (Lithogly
 [cols=",,,",options="header",]
 |===
 |Document |Purpose |Status |Lines
-|*GQL++_++Dependent++_++Types++_++Complete++_++Specification.md* |Type system, semantics, examples |✅ Complete |1,337
+|*GQL_Dependent_Types_Complete_Specification.adoc* |Type system, semantics, examples |✅ Complete |1,337
 |*normalization-types.adoc* |Functional dependencies, normal forms |✅ Complete |753
 |*GQL-DT-Grammar.ebnf* |Formal EBNF grammar |✅ Complete |800{plus}
 |*GQL-DT-Lexical.adoc* |Lexical specification |✅ Complete |700{plus}
@@ -32,9 +32,9 @@ This directory contains the complete formal specification for *GQL-DT* (Lithogly
 [cols=",,",options="header",]
 |===
 |Document |Purpose |Location
-|*WP06++_++Dependently++_++Typed++_++Lithoglyph.md* |Research whitepaper |`../docs/`
-|*STATE.scm* |Project state tracking |`../`
-|*ECOSYSTEM.scm* |Ecosystem positioning |`../`
+|*WP06_Dependently_Typed_Lithoglyph.adoc* |Research whitepaper |`../docs/`
+|*STATE.a2ml* |Project state tracking |`../.machine_readable/descriptiles/`
+|*ECOSYSTEM.a2ml* |Ecosystem positioning |`../.machine_readable/descriptiles/`
 |===
 
 === Quick Start
@@ -44,23 +44,23 @@ This directory contains the complete formal specification for *GQL-DT* (Lithogly
 [arabic]
 . *Start with:* `GQL-DT-Grammar.ebnf` - Complete syntax
 . *Then read:* `GQL-DT-Lexical.adoc` - Tokenization rules
-. *Reference:* `GQL++_++Dependent++_++Types++_++Complete++_++Specification.md` - Type system
+. *Reference:* `GQL_Dependent_Types_Complete_Specification.adoc` - Type system
 . *Visual aid:* `GQL-DT-Railroad-Diagrams.adoc` - Syntax diagrams
 
 ==== For Users
 
 [arabic]
-. *Start with:* `GQL++_++Dependent++_++Types++_++Complete++_++Specification.md` - Examples and usage
+. *Start with:* `GQL_Dependent_Types_Complete_Specification.adoc` - Examples and usage
 . *Deep dive:* `normalization-types.adoc` - Database normalization
 . *Visual aid:* `GQL-DT-Railroad-Diagrams.adoc` - See syntax visually
-. *Research:* `../docs/WP06++_++Dependently++_++Typed++_++Lithoglyph.md` - Motivation and theory
+. *Research:* `../docs/WP06_Dependently_Typed_Lithoglyph.adoc` - Motivation and theory
 
 ==== For Researchers
 
 [arabic]
-. *Theory:* `../docs/WP06++_++Dependently++_++Typed++_++Lithoglyph.md` - Dependent types for databases
-. *Type system:* `GQL++_++Dependent++_++Types++_++Complete++_++Specification.md` (Section 2-4)
-. *Proofs:* `GQL++_++Dependent++_++Types++_++Complete++_++Specification.md` (Section 8-9)
+. *Theory:* `../docs/WP06_Dependently_Typed_Lithoglyph.adoc` - Dependent types for databases
+. *Type system:* `GQL_Dependent_Types_Complete_Specification.adoc` (Section 2-4)
+. *Proofs:* `GQL_Dependent_Types_Complete_Specification.adoc` (Section 8-9)
 . *Normalization:* `normalization-types.adoc` - Proof-carrying evolution
 
 === Specification Status

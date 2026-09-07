@@ -9,16 +9,16 @@
 === Table of Contents
 
 [arabic]
-. link:#character-set[Character Set]
-. link:#lexical-elements[Lexical Elements]
-. link:#keywords[Keywords]
-. link:#identifiers[Identifiers]
-. link:#literals[Literals]
-. link:#operators[Operators]
-. link:#punctuation[Punctuation]
-. link:#comments[Comments]
-. link:#whitespace[Whitespace]
-. link:#operator-precedence[Operator Precedence]
+. link:#1-character-set[Character Set]
+. link:#2-lexical-elements[Lexical Elements]
+. link:#3-keywords[Keywords]
+. link:#4-identifiers[Identifiers]
+. link:#5-literals[Literals]
+. link:#6-operators[Operators]
+. link:#7-punctuation[Punctuation]
+. link:#8-comments[Comments]
+. link:#9-whitespace[Whitespace]
+. link:#10-operator-precedence[Operator Precedence]
 
 '''''
 
@@ -817,4 +817,4 @@ On lexical error:
 *See Also:*
 
 * `GQL-DT-Grammar.ebnf` - Formal EBNF grammar
-* `GQL++_++Dependent++_++Types++_++Complete++_++Specification.md` - Type system specification
+* `GQL_Dependent_Types_Complete_Specification.adoc` - Type system specification

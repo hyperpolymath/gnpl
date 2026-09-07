@@ -557,7 +557,7 @@ fn insert(db: *Database, stmt: IR.InsertStmt) !void {
 * ✅ Best of both worlds
 * ⚠️ Slightly more complex (manageable)
 
-*Decision:* Implement IR-first with native Lithoglyph execution. Add SQL compatibility layer later if needed for BI tool integration.
+*Historical design decision:* Proposed IR-first native Lithoglyph execution, with optional SQL compatibility. Native persistent execution is not implemented by the current pipeline; see link:executable-boundary.adoc[the executable boundary].
 
 '''''
 

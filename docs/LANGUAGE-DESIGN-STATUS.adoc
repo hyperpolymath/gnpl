@@ -244,9 +244,9 @@ Well-typed queries cannot produce runtime type errors.
 '''''
 
 [[white_check_mark-4-serializationdeserialization-converting-between-types-and-storage-formats]]
-==== ✅ 4. Serialization/Deserialization: Converting Between Types and Storage Formats
+==== 4. Serialization/Deserialization: Partial Private Substrate
 
-*Status:* ✅ COMPLETE
+*Status:* Partial. Selected typed-value codecs exist. The pipeline refuses complete IR interchange when it would lose clauses or require unchecked proof reconstruction. The supported public snapshot format is documented in link:narration-slice.adoc[the narration guide]; link:executable-boundary.adoc[the executable boundary] supersedes the historical codec claims below.
 
 *Files:*
 

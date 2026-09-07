@@ -224,7 +224,7 @@ let validateQuery = async (queryString: string) => {
 *ABI Architecture:*
 
 ....
-src/abi/                          # Idris2 ABI definitions
+src/GQLdt/ABI/                          # Idris2 ABI definitions
 ├── Types.idr                     # Type definitions with proofs
 ├── Layout.idr                    # Memory layout verification
 ├── Foreign.idr                   # FFI declarations
@@ -244,7 +244,7 @@ generated/abi/                    # Auto-generated from Idris2
 
 [source,idris]
 ----
--- src/abi/Types.idr
+-- src/GQLdt/ABI/Types.idr
 module GqlDt.ABI.Types
 
 import Data.So
@@ -296,7 +296,7 @@ backwardCompatible = ?proof_backward_compat
 [source,c]
 ----
 // generated/abi/gqldt.h
-// Auto-generated from src/abi/Types.idr - DO NOT EDIT
+// Auto-generated from src/GQLdt/ABI/Types.idr - DO NOT EDIT
 
 #ifndef GQLDT_ABI_H
 #define GQLDT_ABI_H
@@ -514,7 +514,7 @@ zig build -Dtarget=wasm32-wasi
 └────────────────────┬────────────────────────────────────┘
                      ↓
 ┌─────────────────────────────────────────────────────────┐
-│ Idris2 ABI (src/abi/)                                   │
+│ Idris2 ABI (src/GQLdt/ABI/)                                   │
 │ - Formal interface specification with proofs             │
 │ - Generates C headers for FFI                            │
 └────────────────────┬────────────────────────────────────┘
@@ -543,7 +543,7 @@ zig build -Dtarget=wasm32-wasi
 
 ==== M7: Idris2 ABI (Post-Parser)
 
-* [ ] Create `src/abi/` directory structure
+* [ ] Create `src/GQLdt/ABI/` directory structure
 * [ ] Define core types with dependent type proofs
 * [ ] Verify memory layouts (size, alignment)
 * [ ] Platform-specific ABI selection

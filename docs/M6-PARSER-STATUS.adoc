@@ -339,9 +339,9 @@ def inferInsert (schema : Schema) (table : String) (columns : List String) (valu
 * Complete AST → IR conversion
 * Add JSON parsing
 . *Start M7: Idris2 ABI* (parallel with M8)
-* `src/abi/Types.idr` - ABI type definitions
-* `src/abi/Layout.idr` - Memory layout proofs
-* `src/abi/Foreign.idr` - FFI declarations
+* `src/GQLdt/ABI/Types.idr` - ABI type definitions
+* `src/GQLdt/ABI/Layout.idr` - Memory layout proofs
+* `src/GQLdt/ABI/Foreign.idr` - FFI declarations
 . *Start M8: Zig FFI* (parallel with M7)
 * `ffi/zig/src/main.zig` - C-compatible implementation
 * `ffi/zig/build.zig` - Build configuration

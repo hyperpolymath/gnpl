@@ -138,6 +138,7 @@ inductive TypedValue : TypeExpr → Type where
   | bool : Bool → TypedValue .bool
   | float : Float → TypedValue .float
   | boundedNat : (min max : Nat) → BoundedNat min max → TypedValue (.boundedNat min max)
+  | confidence : BoundedNat 0 100 → TypedValue .confidence
   | nonEmptyString : NonEmptyString → TypedValue .nonEmptyString
   | promptScores : PromptScores → TypedValue .promptScores
 
@@ -243,6 +244,7 @@ instance {t : TypeExpr} : Repr (TypedValue t) where
     | .bool b, _ => "TypedValue.bool " ++ repr b
     | .float f, _ => "TypedValue.float " ++ repr f
     | .boundedNat _ _ _, _ => "TypedValue.boundedNat"
+    | .confidence score, _ => "TypedValue.confidence " ++ repr score.val
     | .nonEmptyString _, _ => "TypedValue.nonEmptyString"
     | .promptScores _, _ => "TypedValue.promptScores"
 
@@ -339,6 +341,7 @@ structure InsertProofObligation {schema : Schema} (stmt : InsertStmt schema) whe
 def satisfiesConstraints {t : TypeExpr} (v : TypedValue t) : Prop :=
   match t, v with
   | .boundedNat min max, .boundedNat _ _ bn => bn.val ≥ min ∧ bn.val ≤ max
+  | .confidence, .confidence score => score.val ≤ 100
   | .nonEmptyString, .nonEmptyString nes => nes.val.length > 0
   | _, _ => True  -- Other types checked structurally
 

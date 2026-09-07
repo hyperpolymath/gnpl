@@ -228,6 +228,7 @@ def parseColumnList : Parser (List String) := do
   let _ ← expect .leftParen
   let cols ← sepBy expectIdentifier (do let _ ← expect .comma; return ())
   let _ ← expect .rightParen
+  if cols.isEmpty then fail "INSERT needs at least one column"
   return cols
 
 /-- Parse column with optional type annotation: name or name : Type -/
@@ -255,6 +256,7 @@ def parseTypedColumnList : Parser (List (String × TypeExpr)) := do
     let ty ← parseTypeExpr
     return (name, ty)) (do let _ ← expect .comma; return ())
   let _ ← expect .rightParen
+  if cols.isEmpty then fail "INSERT needs at least one column"
   return cols
 
 /-- Parse VALUES clause -/

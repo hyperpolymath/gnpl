@@ -15,13 +15,13 @@ This document provides railroad diagram specifications for GQL-DT syntax. These 
 === Table of Contents
 
 [arabic]
-. link:#create-collection[CREATE COLLECTION]
-. link:#insert-statement[INSERT Statement]
-. link:#select-statement[SELECT Statement]
-. link:#type-expressions[Type Expressions]
-. link:#proof-clauses[Proof Clauses]
-. link:#update-statement[UPDATE Statement]
-. link:#normalization-commands[Normalization Commands]
+. link:#1-create-collection[CREATE COLLECTION]
+. link:#2-insert-statement[INSERT Statement]
+. link:#3-select-statement[SELECT Statement]
+. link:#4-type-expressions[Type Expressions]
+. link:#5-proof-clauses[Proof Clauses]
+. link:#6-update-statement[UPDATE Statement]
+. link:#7-normalization-commands[Normalization Commands]
 
 '''''
 
@@ -583,4 +583,4 @@ spec/diagrams/
 
 * `GQL-DT-Grammar.ebnf` - Formal EBNF grammar source
 * `GQL-DT-Lexical.adoc` - Lexical specification
-* `GQL++_++Dependent++_++Types++_++Complete++_++Specification.md` - Type system spec
+* `GQL_Dependent_Types_Complete_Specification.adoc` - Type system spec

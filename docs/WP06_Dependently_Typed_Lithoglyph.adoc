@@ -6,7 +6,7 @@
 *Version*: 0.1.0 +
 *Date*: 2025-01-11 +
 *Authors*: Jonathan D.A. Jewell, Claude (Anthropic) +
-*License*: MPL-2.0
+*License*: CC-BY-SA-4.0
 
 === Abstract
 
