@@ -42,7 +42,7 @@ Typed IR (ready for execution)
 -/
 
 -- Universe declaration for polymorphic Parser
-universe u
+universe u v
 
 -- ============================================================================
 -- Parser State
@@ -74,6 +74,13 @@ instance : Monad Parser where
     match p s with
     | .ok x s' => f x s'
     | .error msg s' => .error msg s'
+
+/-- Bind across universes: typed projections live in Type 1, tokens in Type.
+The ordinary Monad instance is homogeneous and cannot perform this bind. -/
+def bindAcross {α : Type u} {β : Type v} (p : Parser α) (f : α → Parser β) : Parser β := fun s =>
+  match p s with
+  | .ok x s' => f x s'
+  | .error msg s' => .error msg s'
 
 /-- Fail with error message -/
 def fail {α : Type u} (msg : String) : Parser α :=
@@ -120,43 +127,41 @@ def expectIdentifier : Parser String := fun s =>
   | none => .error "Expected identifier, got EOF" s
 
 /-- Parse optional element -/
-def optional {α : Type} (p : Parser α) : Parser (Option α) := fun s =>
+def optional {α : Type u} (p : Parser α) : Parser (Option α) := fun s =>
   match p s with
   | .ok x s' => .ok (some x) s'
-  | .error _ _ => .ok none s
+  | .error msg s' =>
+      if s'.position > s.position then .error msg s' else .ok none s
 
-/-- Parse zero or more elements -/
--- TODO: Fix infinite loop in type checker
-axiom many {α : Type} (p : Parser α) : Parser (List α)
--- partial def many {α : Type} (p : Parser α) : Parser (List α) := fun s =>
---   match p s with
---   | .ok x s' =>
---       match many p s' with
---       | .ok xs s'' => .ok (x :: xs) s''
---       | .error _ _ => .ok [x] s'  -- Should not happen
---   | .error _ _ => .ok [] s
+/-- Total repetition. Each successful step must consume input; a failure after
+consumption is committed. Fuel is bounded by the initial token count. -/
+private def manyFuel {α : Type u} (p : Parser α) : Nat → Parser (List α)
+  | 0 => fail "Repetition exceeded the token budget"
+  | fuel + 1 => fun s =>
+      match p s with
+      | .error msg s' =>
+          if s'.position > s.position then .error msg s' else .ok [] s
+      | .ok x s' =>
+          if s'.position ≤ s.position || s'.position > s.tokens.length then
+            .error "Repeated parser must consume input within the token stream" s'
+          else
+            match manyFuel p fuel s' with
+            | .ok xs s'' => .ok (x :: xs) s''
+            | .error msg s'' => .error msg s''
 
-/-- Parse one or more elements -/
--- TODO: Fix after many is fixed
-axiom many1 {α : Type} (p : Parser α) : Parser (List α)
--- def many1 {α : Type} (p : Parser α) : Parser (List α) := do
---   let x ← p
---   let xs ← many p
---   return x :: xs
+def many {α : Type u} (p : Parser α) : Parser (List α) := fun s =>
+  manyFuel p (s.tokens.length + 1) s
 
-/-- Parse elements separated by delimiter -/
--- TODO: Fix infinite loop in type checker
-axiom sepBy {α β : Type} (p : Parser α) (sep : Parser β) : Parser (List α)
--- partial def sepBy {α β : Type} (p : Parser α) (sep : Parser β) : Parser (List α) := fun s =>
---   match p s with
---   | .ok x s' =>
---       match sep s' with
---       | .ok _ s'' =>
---           match sepBy p sep s'' with
---           | .ok xs s''' => .ok (x :: xs) s'''
---           | .error _ _ => .ok [x] s'
---       | .error _ _ => .ok [x] s'
---   | .error _ _ => .ok [] s
+def many1 {α : Type u} (p : Parser α) : Parser (List α) := do
+  let xs ← many p
+  if xs.isEmpty then fail "Expected at least one element" else pure xs
+
+def sepBy {α : Type u} {β : Type v} (p : Parser α) (sep : Parser β) : Parser (List α) := do
+  match ← optional p with
+  | none => pure []
+  | some x =>
+      let xs ← many (bindAcross sep (fun _ => p))
+      pure (x :: xs)
 
 -- ============================================================================
 -- Expression Parsing
@@ -219,7 +224,7 @@ def parseTypeExpr : Parser TypeExpr := fun s =>
 -- ============================================================================
 
 /-- Parse column list: (col1, col2, col3) -/
-noncomputable def parseColumnList : Parser (List String) := do
+def parseColumnList : Parser (List String) := do
   let _ ← expect .leftParen
   let cols ← sepBy expectIdentifier (do let _ ← expect .comma; return ())
   let _ ← expect .rightParen
@@ -229,23 +234,31 @@ noncomputable def parseColumnList : Parser (List String) := do
 def parseColumnWithType : Parser (String × Option TypeExpr) := do
   let name ← expectIdentifier
   let typeAnnot ← optional (do
-    let _ ← expect .opDoubleColon
+    let tok ← peek
+    match tok with
+    | some t =>
+        if t.type == .opColon || t.type == .opDoubleColon then advance
+        else fail "Expected type annotation"
+    | none => fail "Expected type annotation"
     parseTypeExpr)
   return (name, typeAnnot)
 
 /-- Parse typed column list: (col1 : Type1, col2 : Type2) -/
-noncomputable def parseTypedColumnList : Parser (List (String × TypeExpr)) := do
+def parseTypedColumnList : Parser (List (String × TypeExpr)) := do
   let _ ← expect .leftParen
   let cols ← sepBy (do
     let name ← expectIdentifier
-    let _ ← expect .opDoubleColon
+    let tok ← next
+    match tok with
+    | some t => if t.type == .opColon || t.type == .opDoubleColon then pure () else fail "Expected type annotation"
+    | none => fail "Expected type annotation"
     let ty ← parseTypeExpr
     return (name, ty)) (do let _ ← expect .comma; return ())
   let _ ← expect .rightParen
   return cols
 
 /-- Parse VALUES clause -/
-noncomputable def parseValues : Parser (List InferredType) := do
+def parseValues : Parser (List InferredType) := do
   let _ ← expect .kwValues
   let _ ← expect .leftParen
   let vals ← sepBy parseLiteral (do let _ ← expect .comma; return ())
@@ -264,11 +277,11 @@ def parseRationale : Parser String := fun s =>
       | none => .error "Expected RATIONALE value" s'
   | .error msg s' => .error msg s'
 
-/-- Dummy schema for type inference -/
-axiom evidenceSchema : Schema
+/-- The concrete example schema; production callers supply their schema. -/
+def evidenceSchema : Schema := GqlDt.TypeSafe.evidenceSchema
 
 /-- Parse INSERT statement (GQL - no types) -/
-noncomputable def parseInsertGQL : Parser InferredInsert := do
+def parseInsertGQL (schema : Schema := evidenceSchema) : Parser InferredInsert := do
   let _ ← expect .kwInsert
   let _ ← expect .kwInto
   let table ← expectIdentifier
@@ -278,12 +291,12 @@ noncomputable def parseInsertGQL : Parser InferredInsert := do
   let _ ← optional (expect .semicolon)
 
   -- Type inference happens here
-  match inferInsert evidenceSchema table columns values rationale with
+  match inferInsert schema table columns values rationale with
   | .ok inferred => return inferred
   | .error msg => fail msg
 
 /-- Parse INSERT statement (GQL-DT - explicit types) -/
-noncomputable def parseInsertGQLdt : Parser InferredInsert := do
+def parseInsertGQLdt (schema : Schema := evidenceSchema) : Parser InferredInsert := do
   let _ ← expect .kwInsert
   let _ ← expect .kwInto
   let table ← expectIdentifier
@@ -294,12 +307,14 @@ noncomputable def parseInsertGQLdt : Parser InferredInsert := do
 
   -- Extract columns and types
   let columns := typedColumns.map (·.1)
-  let _expectedTypes := typedColumns.map (·.2)
+  let expectedTypes := typedColumns.map (·.2)
 
-  -- Type check values against expected types
-  -- TODO: Verify values match expected types
-  match inferInsert evidenceSchema table columns values rationale with
-  | .ok inferred => return inferred
+  match inferInsert schema table columns values rationale with
+  | .ok inferred =>
+      if (expectedTypes.zip (inferred.inferredValues.map (·.inferredType))).all
+          (fun (expected, actual) => expected == actual) then
+        return inferred
+      else fail "Explicit column types do not match the schema"
   | .error msg => fail msg
 
 -- ============================================================================
@@ -343,11 +358,19 @@ inductive Statement where
 -- SELECT Parsing
 -- ============================================================================
 
-/-- Parse SELECT list (axiomatized due to Type universe issues) -/
-axiom parseSelectList : Parser SelectList
+/-- Parse the supported SELECT projection; richer refinements require a checker. -/
+def parseSelectList : Parser SelectList := bindAcross peek fun tokOpt =>
+  match tokOpt with
+  | some tok =>
+      if tok.type == .opStar then
+        bindAcross next (fun _ => pure .star)
+      else
+        bindAcross (sepBy expectIdentifier (expect .comma)) fun cols =>
+        if cols.isEmpty then fail "SELECT needs a projection" else pure (.columns cols)
+  | none => fail "Expected SELECT projection"
 
 /-- Parse FROM clause -/
-noncomputable def parseFromClause : Parser FromClause := do
+def parseFromClause : Parser FromClause := do
   let _ ← expect .kwFrom
   let tables ← sepBy (do
     let name ← expectIdentifier
@@ -384,19 +407,17 @@ def parseWhereClause : Parser WhereClause := do
   }
 
 /-- Parse ORDER BY clause -/
-noncomputable def parseOrderBy : Parser OrderByClause := do
+def parseOrderBy : Parser OrderByClause := do
   let _ ← expect .kwOrder
   let _ ← expect .kwBy
   let columns ← sepBy (do
     let col ← expectIdentifier
     let direction ← optional (do
-      let tokOpt ← peek
-      match tokOpt with
-      | some tok =>
-          match tok.type with
-          | _ => return "ASC"  -- TODO: Parse ASC/DESC keywords
-      | none => return "ASC"
-    )
+      let tok ← peek
+      match tok with
+      | some { type := .identifier "ASC", .. } => advance; pure "ASC"
+      | some { type := .identifier "DESC", .. } => advance; pure "DESC"
+      | _ => fail "Expected ASC or DESC")
     return (col, direction.getD "ASC")
   ) (do let _ ← expect .comma; return ())
   return { columns := columns }
@@ -413,8 +434,16 @@ def parseLimit : Parser Nat := fun s =>
       | none => .error "Expected LIMIT value" s'
   | .error msg s' => .error msg s'
 
-/-- Parse SELECT statement (axiomatized due to Type universe issues) -/
-axiom parseSelect : Parser ParsedSelect
+def parseSelect : Parser ParsedSelect :=
+  bindAcross (expect .kwSelect) fun _ =>
+  bindAcross parseSelectList fun selectList =>
+  bindAcross parseFromClause fun from_ =>
+  if from_.tables.isEmpty then fail "FROM needs a table" else
+    bindAcross (optional parseWhereClause) fun where_ =>
+    bindAcross (optional parseOrderBy) fun orderBy =>
+    bindAcross (optional parseLimit) fun limit =>
+    bindAcross (optional (expect .semicolon)) fun _ =>
+    pure { selectList, from_, where_, orderBy, limit }
 
 -- ============================================================================
 -- Helper Functions
@@ -443,7 +472,7 @@ private def typedValueFromLiteral (lit : InferredType) : TypedValue (inferTypeFr
 -- ============================================================================
 
 /-- Parse UPDATE statement -/
-noncomputable def parseUpdate : Parser ParsedUpdate := do
+def parseUpdate : Parser ParsedUpdate := do
   let _ ← expect .kwUpdate
   let table ← expectIdentifier
   let _ ← expect .kwSet
@@ -477,7 +506,7 @@ noncomputable def parseUpdate : Parser ParsedUpdate := do
 -- ============================================================================
 
 /-- Parse DELETE statement -/
-noncomputable def parseDelete : Parser ParsedDelete := do
+def parseDelete : Parser ParsedDelete := do
   let _ ← expect .kwDelete
   let _ ← expect .kwFrom
   let table ← expectIdentifier
@@ -500,69 +529,49 @@ noncomputable def parseDelete : Parser ParsedDelete := do
 -- Top-Level Statement Parsing
 -- ============================================================================
 
-/-- Parse any statement (axiomatized due to Type universe issues) -/
-axiom parseStatement : Parser Statement
+def parseStatement (schema : Schema := evidenceSchema) : Parser Statement := fun s =>
+  match s.tokens.get? s.position with
+  | none => .error "Expected statement" s
+  | some tok =>
+      match tok.type with
+      | .kwSelect => (bindAcross parseSelect (fun x => pure (Statement.select x))) s
+      | .kwUpdate => (bindAcross parseUpdate (fun x => pure (Statement.update x))) s
+      | .kwDelete => (bindAcross parseDelete (fun x => pure (Statement.delete x))) s
+      | .kwInsert =>
+          let columns := (s.tokens.drop s.position).takeWhile (·.type != .rightParen)
+          if columns.any (fun t => t.type == .opColon || t.type == .opDoubleColon) then
+            (bindAcross (parseInsertGQLdt schema) (fun x => pure (Statement.insertGQLdt x))) s
+          else (bindAcross (parseInsertGQL schema) (fun x => pure (Statement.insertGQL x))) s
+      | _ => .error "Unsupported statement" s
+
+/-- Consume exactly one statement and EOF. Never discard a trailing clause or
+second statement. Callers that need batches must handle each statement explicitly. -/
+def parseTokensComplete (tokens : List Token) (schema : Schema := evidenceSchema)
+    : Except String (List Statement) :=
+  match parseStatement schema { tokens, position := 0 } with
+  | .error msg _ => .error msg
+  | .ok stmt s =>
+      match s.tokens.drop s.position with
+      | [] => .ok [stmt]
+      | [tok] => if tok.type == .eof then .ok [stmt] else .error "Unexpected trailing input"
+      | _ => .error "Unexpected trailing input or multiple statements"
 
 -- ============================================================================
 -- Public API
 -- ============================================================================
 
 /-- Parse source string to statements -/
-noncomputable unsafe def parse (source : String) : Except String (List Statement) := do
-  -- Tokenize
+def parse (source : String) (schema : Schema := evidenceSchema) : Except String (List Statement) :=
   match tokenize source with
-  | .ok tokens =>
-      -- Parse
-      let initialState : ParserState := {
-        tokens := tokens,
-        position := 0
-      }
+  | .error msg => .error msg
+  | .ok tokens => parseTokensComplete tokens schema
 
-      match parseStatement initialState with
-      | .ok stmt _ => pure [stmt]
-      | .error msg _ => throw msg
-  | .error msg => throw msg
-
-/-- Parse and generate IR -/
--- TODO: Fix type inference issues
--- def parseToIR (source : String) (permissions : PermissionMetadata) : Except String IR := do
---   let stmts ← parse source
---
---   match stmts.head? with
---   | some (.insertGQL inferred) =>
---       -- Convert InferredInsert to IR.Insert
---       -- TODO: Complete this conversion (needs schema)
---       .error "InferredInsert → IR conversion not yet implemented"
---
---   | some (.select selectStmt) =>
---       .ok (generateIR_Select selectStmt permissions)
---
---   | some (.update updateStmt) =>
---       -- TODO: Generate IR.Update (needs schema)
---       .error "UPDATE → IR conversion not yet implemented"
---
---   | some (.delete deleteStmt) =>
---       -- TODO: Generate IR.Delete (needs schema)
---       .error "DELETE → IR conversion not yet implemented"
---
---   | _ => .error "No statement parsed"
-axiom parseToIR (source : String) (permissions : PermissionMetadata) : Except String IR
-
--- ============================================================================
--- Examples
--- ============================================================================
-
--- TODO: Fix type inference for Statement in examples
--- /-- Example: Parse simple INSERT -/
--- def exampleParseInsert : Except String (List Statement) :=
---   parse "INSERT INTO evidence (title, score) VALUES ('ONS Data', 95) RATIONALE 'Official statistics';"
---
--- #eval exampleParseInsert
---
--- /-- Example: Parse SELECT -/
--- def exampleParseSelect : Except String (List Statement) :=
---   parse "SELECT * FROM evidence;"
---
--- #eval exampleParseSelect
+/-- Parse a selection into the private IR. Mutation lowering needs a schema. -/
+def parseToIR (source : String) (permissions : PermissionMetadata) : Except String IR := do
+  match ← parse source with
+  | [.select stmt] => pure (.select {
+      selectList := stmt.selectList, from_ := stmt.from_, where_ := stmt.where_,
+      orderBy := stmt.orderBy, limit := stmt.limit, returning := none, permissions })
+  | _ => .error "Mutation lowering requires a schema: use Pipeline.runPipeline"
 
 end GqlDt.Parser

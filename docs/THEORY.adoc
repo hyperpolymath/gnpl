@@ -4,7 +4,9 @@
 :toc: macro
 :toclevels: 3
 
-*Status:* design document. No implementation yet; see `README.adoc` for what does exist.
+*Status:* broader design, with a restricted direct-evidence fragment implemented.
+See link:narration-slice.adoc[the executable slice] for its exact semantics and
+proof scope. Constructs below that exceed that fragment remain design work.
 
 toc::[]
 
@@ -42,29 +44,31 @@ different account to hold instead?**
 
 That is a narration problem, and it has structure worth typing.
 
-=== Four properties conventional query languages have
+=== Four commitments GNPL makes explicit
 
-SQL, Cypher, SPARQL and GraphQL share four assumptions. Each is reasonable; together they
-make narration inexpressible.
+Retrieval languages and database schemas can encode accounts, temporal records,
+conflicts and access rules. GNPL's case does not depend on those things being
+inexpressible elsewhere. Its purpose is to give the following objects shared
+language semantics and constructor obligations, so applications can rely on the
+same rules rather than recreate them independently.
 
 [cols="1,3",options=header]
 |===
-| Property | Consequence
+| Commitment | Language obligation
 
-| *Extensional*
-| A query denotes a set of tuples/nodes. There is no object denoting *an account*, so
-  accounts cannot be compared, diffed, or reasoned about.
+| *Accounts as values*
+| Preserve the declared telling order and carry warrant for every assertion.
 
-| *Presentist*
-| The current state is privileged. History is an add-on (audit tables, triggers), and the
-  *history of the interpretation* is not represented at all.
+| *Explicit evidence state*
+| Index an account by its evidence snapshot; future temporal semantics must also
+  distinguish event time, recording time and interpretation history.
 
-| *Univocal*
-| One query, one answer. Plurality is an error condition, not a result.
+| *Plurality*
+| Retain warranted rival accounts and express their relation without silently
+  choosing a winner.
 
-| *Stance-free*
-| No notion of who is telling, to whom, with what access or what interest. Every answer is
-  narrated from nowhere.
+| *Declared stance*
+| State whose access and admission policy constrain the projection.
 |===
 
 == Prior art, and what each already does
@@ -212,9 +216,11 @@ whether the synthesis is usable, not on novelty of parts.
 
 === The governing invariant
 
-GQLdt already enforces an analogous rule at the data layer: `Provenance/Rationale.lean`
-states that *"you cannot construct a `Tracked` value without providing a non-empty
-rationale"*. GNPL's rule is the narrative counterpart:
+The private provenance types require a nonempty rationale, which is a useful
+data constraint. GNPL needs a stronger constructor obligation: the cited evidence
+must actually license the requested assertion under the declared stance. In the
+first fragment, licensing means exact claim match, visibility, active evidence
+and an explicit threshold; a nonempty rationale alone is insufficient.
 
 [IMPORTANT]
 ====
@@ -260,7 +266,8 @@ with entrenchment read from recorded `Confidence` rather than stipulated.
 * **Not a summariser.** Selection is declared by a `Projection`, not inferred by a model.
 * **Not a truth oracle.** It never adjudicates which rival account is correct; it
   characterises the accounts the evidence supports and their relations.
-* **Not a replacement for GQLdt.** It lowers to it.
+* **No prescribed private lowering target.** Storage selection and validation are
+  supporting implementation choices, not additional public language identities.
 
 That third point is a design commitment, not a limitation: a system that silently picked a
 winner would reintroduce exactly the reconciliation loss described at the top.
@@ -272,7 +279,9 @@ winner would reintroduce exactly the reconciliation loss described at the top.
   the choice a language parameter?
 . **Where does `Confidence` composition come from?** The current `Confidence.avg` and
   `.mul` are placeholders and are not probabilistically principled. Dempster–Shafer? A
-  provenance semiring? This must be decided before any number is shown to a user.
+  provenance semiring? This must be decided before computed confidence is claimed.
+  The first slice exposes only declared integer scores and a chosen threshold;
+  it does not combine scores or give them probabilistic meaning.
 . **Is `Focalization` a restriction, or a full epistemic modality?** Restriction is simpler;
   a modality is needed for "A believes that B knows X", which forensic work does want.
 . **How much of narratological *duration* and *frequency* is worth mechanising?** Order and
@@ -281,9 +290,10 @@ winner would reintroduce exactly the reconciliation loss described at the top.
   if discharging it is not so painful that users route around it.
 . **Does the partial order need to be a lattice** for projection to be well-behaved, or is
   a DAG enough?
-. **Confidence is currently `Float`** with runtime-only validation (see the note in
-  `Types/Confidence.lean`). Proof-level guarantees over floats are hard in Lean 4; does the
-  narration layer need an exact rational or interval representation instead?
+. **The private substrate's confidence type uses `Float`** with runtime-only
+  validation. The initial narration kernel uses a bounded integer admission
+  score independently of it. Future composition still needs a justified
+  representation and semantics, potentially exact rationals or intervals.
 
 == References
 

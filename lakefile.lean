@@ -22,6 +22,27 @@ lean_lib GqlDt where
   srcDir := "src"
   roots := #[`GqlDt]
 
+-- Public narration kernel, independent of the experimental storage substrate.
+@[default_target]
+lean_lib Gnpl where
+  srcDir := "src"
+  roots := #[`Gnpl]
+
+@[default_target]
+lean_exe gnpl where
+  srcDir := "src"
+  root := `GnplMain
+
+@[default_target]
+lean_exe narration_test where
+  srcDir := "test"
+  root := `NarrationTest
+
+@[default_target]
+lean_lib NarrationProofAudit where
+  srcDir := "test"
+  roots := #[`NarrationProofAudit]
+
 -- Shared test support (failure counter + exit-code summary).
 -- Declared as a library so the individual test executables can `import TestHarness`;
 -- a bare file under a target's srcDir is not otherwise resolvable as a module.
@@ -65,6 +86,12 @@ lean_exe type_safety_test where
   srcDir := "test"
   root := `TypeSafetyTests
 
+-- Exercises the executable private substrate, including rejection paths.
+@[default_target]
+lean_exe substrate_test where
+  srcDir := "test"
+  root := `SubstrateTest
+
 -- Test driver: `lake test`.
 --
 -- Without this, `lake test` reported "no test driver configured" and exited non-zero,
@@ -77,7 +104,7 @@ lean_exe type_safety_test where
 -- fail on a clean checkout for a reason unrelated to Lean.
 @[test_driver]
 script test do
-  let suites := #["lexer_test", "parser_test", "type_safety_test"]
+  let suites := #["lexer_test", "parser_test", "type_safety_test", "substrate_test", "narration_test"]
   let mut failed : Array String := #[]
   for suite in suites do
     let bin := System.mkFilePath [".lake", "build", "bin", suite]

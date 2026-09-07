@@ -247,8 +247,8 @@ def generateIR_Select
 -- CBOR Serialization
 -- ============================================================================
 
-/-- Serialize typed value to CBOR (stub) -/
-private axiom serializeTypedValueCBOR : (Σ t : TypeExpr, TypedValue t) → CBORValue
+/-- Use the implemented value codec; no separate axiomatic encoder. -/
+private def serializeTypedValueCBOR := Serialization.serializeTypedValueCBOR
 
 /-- Serialize PermissionMetadata to CBOR -/
 private def serializePermissions (perms : PermissionMetadata) : CBORValue :=
@@ -260,7 +260,7 @@ private def serializePermissions (perms : PermissionMetadata) : CBORValue :=
   ]
 
 /-- Serialize INSERT to CBOR -/
-private noncomputable def serializeInsert {schema : Schema} (stmt : IR.Insert schema) : ByteArray :=
+private def serializeInsert {schema : Schema} (stmt : IR.Insert schema) : ByteArray :=
   let values := stmt.values.map (fun tv => serializeTypedValueCBOR tv)
   let cbor := CBORValue.map [
     (.textString "type", .textString "insert"),
@@ -297,7 +297,7 @@ private def serializeSelect (stmt : IR.Select Unit) : ByteArray :=
   Serialization.encodeCBOR cbor
 
 /-- Serialize UPDATE to CBOR -/
-private noncomputable def serializeUpdate {schema : Schema} (stmt : IR.Update schema) : ByteArray :=
+private def serializeUpdate {schema : Schema} (stmt : IR.Update schema) : ByteArray :=
   let assignmentsCBOR := .array (stmt.assignments.map fun a =>
     .map [
       (.textString "column", .textString a.column),
@@ -335,7 +335,7 @@ private def serializeNormalize {schema : Schema} (stmt : IR.Normalize schema) : 
   Serialization.encodeCBOR cbor
 
 /-- Serialize IR to CBOR bytes for network transport -/
-noncomputable def serializeIR (ir : IR) : ByteArray :=
+def serializeIR (ir : IR) : ByteArray :=
   match ir with
   | .insert stmt => serializeInsert stmt
   | .select stmt => serializeSelect stmt
@@ -345,7 +345,8 @@ noncomputable def serializeIR (ir : IR) : ByteArray :=
 
 /-- Deserialize CBOR bytes to IR (stub) -/
 -- TODO: Implement full CBOR deserialization with schema reconstruction
-axiom deserializeIR (bytes : ByteArray) : Except String IR
+def deserializeIR (_bytes : ByteArray) : Except String IR :=
+  .error "IR decoding requires schema reconstruction and proof validation; not implemented"
 
 -- ============================================================================
 -- Permission Validation

@@ -1,14 +1,16 @@
 == GQL-DT Railroad Diagrams
 
-*SPDX-License-Identifier:* CC-BY-SA-4.0 *SPDX-FileCopyrightText:* 2026
-Jonathan D.A. Jewell (@hyperpolymath)
+*SPDX-License-Identifier:* CC-BY-SA-4.0
+*SPDX-FileCopyrightText:* 2026 Jonathan D.A. Jewell (@hyperpolymath)
 
-*Version:* 1.0.0 *Date:* 2026-02-01
+*Version:* 1.0.0
+*Date:* 2026-02-01
 
-This document provides railroad diagram specifications for GQL-DT
-syntax. These can be used with: - *Online:*
-https://www.bottlecaps.de/rr/ui - *CLI:* `+rr+` (Railroad Diagram
-Generator) - *Graphviz:* Convert to DOT format
+This document provides railroad diagram specifications for GQL-DT syntax. These can be used with:
+
+* *Online:* https://www.bottlecaps.de/rr/ui
+* *CLI:* `rr` (Railroad Diagram Generator)
+* *Graphviz:* Convert to DOT format
 
 === Table of Contents
 
@@ -23,6 +25,7 @@ Generator) - *Graphviz:* Convert to DOT format
 
 '''''
 
+[[1-create-collection]]
 === 1. CREATE COLLECTION
 
 ==== Railroad Diagram Source (EBNF)
@@ -67,6 +70,7 @@ Option:
 
 '''''
 
+[[2-insert-statement]]
 === 2. INSERT Statement
 
 ==== Railroad Diagram Source (EBNF)
@@ -116,6 +120,7 @@ InverseClause:
 
 '''''
 
+[[3-select-statement]]
 === 3. SELECT Statement
 
 ==== Railroad Diagram Source (EBNF)
@@ -167,6 +172,7 @@ TypeRefinement:
 
 '''''
 
+[[4-type-expressions]]
 === 4. Type Expressions
 
 ==== Railroad Diagram Source (EBNF)
@@ -192,7 +198,7 @@ RefinedType ::= 'BoundedNat' NatLiteral NatLiteral
 
 DependentType ::= 'Vector' TypeExpr NatLiteral
                 | 'Tracked' TypeExpr
-                | 'PromptScores'
+                | 'Prompores'
                 | 'NavigationPath' LambdaExpr
                 | 'Claim' ConfidenceExpr
 
@@ -228,7 +234,7 @@ RefinedType:
 DependentType:
 ┌─ Vector ─ TypeExpr ─ Nat ──────────┐
 ├─ Tracked ─ TypeExpr ───────────────┤
-├─ PromptScores ─────────────────────┤
+├─ Prompores ─────────────────────┤
 ├─ NavigationPath ─ LambdaExpr ──────┤
 └─ Claim ─ ConfidenceExpr ───────────┘
 
@@ -239,6 +245,7 @@ FunctionType:
 
 '''''
 
+[[5-proof-clauses]]
 === 5. Proof Clauses
 
 ==== Railroad Diagram Source (EBNF)
@@ -289,6 +296,7 @@ TacticExpr:
 
 '''''
 
+[[6-update-statement]]
 === 6. UPDATE Statement
 
 ==== Railroad Diagram Source (EBNF)
@@ -326,6 +334,7 @@ Identifier ─ = ─ Value ──
 
 '''''
 
+[[7-normalization-commands]]
 === 7. Normalization Commands
 
 ==== Railroad Diagram Source (EBNF)
@@ -369,6 +378,7 @@ APPLY NORMALIZATION ─ Identifier ─ ProofClause ─ RationaleClause ──
 
 '''''
 
+[[8-lambda-expressions]]
 === 8. Lambda Expressions
 
 ==== Railroad Diagram Source (EBNF)
@@ -415,6 +425,7 @@ Expr ─ InfixOp ─ Expr ──
 
 '''''
 
+[[9-struct-and-array-literals]]
 === 9. Struct and Array Literals
 
 ==== Railroad Diagram Source (EBNF)
@@ -455,6 +466,7 @@ Value ─┬──────────────┬──
 
 '''''
 
+[[10-complete-example-diagrams]]
 === 10. Complete Example Diagrams
 
 ==== Example: INSERT with All Optional Clauses
@@ -482,6 +494,7 @@ RETURNING ─ ( ─ List ─ ( ─ Evidence | prompt_overall > 90 ─ ) ─ ) �
 
 '''''
 
+[[11-usage-instructions]]
 === 11. Usage Instructions
 
 ==== Online Railroad Diagram Generator
@@ -489,7 +502,7 @@ RETURNING ─ ( ─ List ─ ( ─ Evidence | prompt_overall > 90 ─ ) ─ ) �
 [arabic]
 . Visit https://www.bottlecaps.de/rr/ui
 . Paste EBNF from sections above
-. Click "`View Diagram`"
+. Click "View Diagram"
 . Export as SVG or PNG
 
 ==== CLI Tool
@@ -520,6 +533,7 @@ spec/diagrams/
 
 '''''
 
+[[12-diagram-conventions]]
 === 12. Diagram Conventions
 
 ==== Notation
@@ -550,18 +564,23 @@ spec/diagrams/
 [arabic]
 . *Railroad Diagram Generator:* https://www.bottlecaps.de/rr/ui
 . *EBNF Standard:* ISO/IEC 14977
-. *GQL-DT Grammar:* `+GQL-DT-Grammar.ebnf+`
+. *GQL-DT Grammar:* `GQL-DT-Grammar.ebnf`
 . *W3C EBNF Notation:* https://www.w3.org/TR/REC-xml/#sec-notation
 
 '''''
 
-*Document Status:* Complete railroad diagram specifications for GQL-DT
-v1.0
+*Document Status:* Complete railroad diagram specifications for GQL-DT v1.0
 
-*Next Steps:* 1. Generate SVG diagrams using online tool 2. Place in
-`+spec/diagrams/+` directory 3. Reference from main specification
-document 4. Update as grammar evolves
+*Next Steps:*
 
-*See Also:* - `+GQL-DT-Grammar.ebnf+` - Formal EBNF grammar source -
-`+GQL-DT-Lexical.md+` - Lexical specification -
-`+GQL_Dependent_Types_Complete_Specification.md+` - Type system spec
+[arabic]
+. Generate SVG diagrams using online tool
+. Place in `spec/diagrams/` directory
+. Reference from main specification document
+. Update as grammar evolves
+
+*See Also:*
+
+* `GQL-DT-Grammar.ebnf` - Formal EBNF grammar source
+* `GQL-DT-Lexical.adoc` - Lexical specification
+* `GQL++_++Dependent++_++Types++_++Complete++_++Specification.md` - Type system spec

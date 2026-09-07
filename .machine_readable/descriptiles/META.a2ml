@@ -1,10 +1,10 @@
 # SPDX-License-Identifier: MPL-2.0
 # Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <j.d.a.jewell@open.ac.uk>
 #
-# META.a2ml — Gql Dt meta-level information
+# META.a2ml — GNPL meta-level information
 [metadata]
 version = "1.0.0"
-last-updated = "2026-04-11"
+last-updated = "2026-09-07"
 
 [project-info]
 license = "MPL-2.0"
@@ -12,13 +12,15 @@ author = "Jonathan D.A. Jewell (hyperpolymath)"
 
 [architecture-decisions]
 decisions = [
-  # No ADRs recorded
+  "Narration semantics are public; selection and storage machinery is private, with no fixed lowering target.",
+  "The initial narration kernel imports Lean/Std independently of the legacy substrate.",
+  "Direct-evidence support checks declared inputs; it does not establish external truth."
 ]
 
 [development-practices]
 versioning = "SemVer"
 documentation = "AsciiDoc"
-build-tool = "just"
+build-tool = "lake"
 
 [maintenance-axes]
 scoping-first = true

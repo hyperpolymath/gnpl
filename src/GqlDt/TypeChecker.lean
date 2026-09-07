@@ -103,7 +103,7 @@ inductive ValidateResult (P : Prop) where
 -- Helper: validate all column/value pairs against the schema, building a proof
 -- witness one index at a time. Uses an accumulator that carries the proof for
 -- all indices already validated.
-private def validateInsert
+def validateInsert
   (schema : Schema)
   (columns : List String)
   (values : List (Σ t : TypeExpr, TypedValue t))

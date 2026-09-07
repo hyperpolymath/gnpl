@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: CC-BY-SA-4.0
+// SPDX-FileCopyrightText: 2026 Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>
 == GQL with Dependent Types: Complete Specification
 
 *Version*: 0.2.0 (Dependent Types Extension) +
@@ -22,19 +24,20 @@
 
 '''''
 
+[[1-introduction]]
 === 1. Introduction
 
+[[11-what-this-document-covers]]
 ==== 1.1 What This Document Covers
 
-This specification extends GQL with *dependent types*—types that can
-depend on values. This enables:
+This specification extends GQL with *dependent types*—types that can depend on values. This enables:
 
-* *Compile-time verification* of constraints (e.g., PROMPT scores in [0,
-100])
-* *Provenance in types* (can’t create data without provenance)
+* *Compile-time verification* of constraints (e.g., PROMPT scores in ++[++0, 100++]++)
+* *Provenance in types* (can't create data without provenance)
 * *Reversibility proofs* (prove operations have inverses)
 * *Machine-checkable correctness* (types ARE proofs)
 
+[[12-relationship-to-standard-gql]]
 ==== 1.2 Relationship to Standard GQL
 
 ....
@@ -49,29 +52,31 @@ GQL with Dependent Types (compile-time proofs):
   ) WITH DEPENDENT_TYPES;
 ....
 
-*Backward Compatibility*: Standard GQL is valid in dependent-type mode
-(types are inferred).
+*Backward Compatibility*: Standard GQL is valid in dependent-type mode (types are inferred).
 
+[[13-implementation-languages]]
 ==== 1.3 Implementation Languages
 
-GQL with dependent types can be implemented in: - *Idris 2*: Good
-balance of practicality and power - *Lean 4*: Excellent IDE support,
-strong automation - *Agda*: Most expressive, research-oriented - *F** /
-Dafny**: Refinement types, SMT-based
+GQL with dependent types can be implemented in:
+
+* *Idris 2*: Good balance of practicality and power
+* *Lean 4*: Excellent IDE support, strong automation
+* *Agda*: Most expressive, research-oriented
+* *F*++*++ / Dafny++**++: Refinement types, SMT-based
 
 *Recommendation*: Lean 4 (best LSP support, large proof library).
 
+[[14-related-specifications]]
 ==== 1.4 Related Specifications
 
-* *link:normalization-types.md[Normalization Types]*: Extends this
-specification with type-encoded functional dependencies, normal form
-predicates (1NF through BCNF), and proof-carrying schema evolution.
-Integrates with Lithoglyph’s self-normalizing database feature.
+* *link:normalization-types.adoc[Normalization Types]*: Extends this specification with type-encoded functional dependencies, normal form predicates (1NF through BCNF), and proof-carrying schema evolution. Integrates with Lithoglyph's self-normalizing database feature.
 
 '''''
 
+[[2-type-system]]
 === 2. Type System
 
+[[21-type-universe]]
 ==== 2.1 Type Universe
 
 ....
@@ -84,6 +89,7 @@ Type 2 (Sort 2):  Type 1         -- Types of types
 Type ω (Sort ω):  Type ω-1       -- Infinite hierarchy
 ....
 
+[[22-primitive-types]]
 ==== 2.2 Primitive Types
 
 [source,lean]
@@ -98,6 +104,7 @@ Char      : Type      -- Unicode characters
 Unit      : Type      -- Single value: ()
 ----
 
+[[23-type-constructors]]
 ==== 2.3 Type Constructors
 
 [source,lean]
@@ -111,6 +118,7 @@ Unit      : Type      -- Single value: ()
 Option α              -- Some a | None
 ----
 
+[[24-dependent-function-types]]
 ==== 2.4 Dependent Function Types
 
 [source,lean]
@@ -125,6 +133,7 @@ Option α              -- Some a | None
 ∀ (x : α), P x        -- For all x of type α, P x holds
 ----
 
+[[25-dependent-pair-types]]
 ==== 2.5 Dependent Pair Types
 
 [source,lean]
@@ -138,8 +147,10 @@ Option α              -- Some a | None
 
 '''''
 
+[[3-refinement-types]]
 === 3. Refinement Types
 
+[[31-bounded-natural-numbers]]
 ==== 3.1 Bounded Natural Numbers
 
 [source,lean]
@@ -166,6 +177,7 @@ CREATE COLLECTION evidence (
 );
 ----
 
+[[32-bounded-floats]]
 ==== 3.2 Bounded Floats
 
 [source,lean]
@@ -186,6 +198,7 @@ CREATE COLLECTION claims (
 );
 ----
 
+[[33-non-empty-strings]]
 ==== 3.3 Non-Empty Strings
 
 [source,lean]
@@ -205,6 +218,7 @@ VALUES ('Some claim')
 RATIONALE (r : Rationale);  -- Must be non-empty!
 ----
 
+[[34-email-addresses]]
 ==== 3.4 Email Addresses
 
 [source,lean]
@@ -220,6 +234,7 @@ CREATE COLLECTION users (
 );
 ----
 
+[[35-validated-uuids]]
 ==== 3.5 Validated UUIDs
 
 [source,lean]
@@ -238,8 +253,10 @@ CREATE COLLECTION entities (
 
 '''''
 
+[[4-dependent-types]]
 === 4. Dependent Types
 
+[[41-length-indexed-vectors]]
 ==== 4.1 Length-Indexed Vectors
 
 [source,lean]
@@ -267,6 +284,7 @@ CREATE COLLECTION survey_responses (
 );
 ----
 
+[[42-provenance-tracked-values]]
 ==== 4.2 Provenance-Tracked Values
 
 [source,lean]
@@ -279,7 +297,7 @@ structure Tracked (α : Type) where
   rationale : Rationale
 
 -- Constructor enforces provenance
-def mkTracked (a : α) (actor : ActorId) (ts : Timestamp) (rat : Rationale) 
+def mkTracked (a : α) (actor : ActorId) (ts : Timestamp) (rat : Rationale)
   : Tracked α :=
   ⟨a, actor, ts, rat⟩
 
@@ -304,12 +322,13 @@ RATIONALE "Based on ONS data";
 -- Automatically wrapped in Tracked
 ----
 
+[[43-prompt-scores-with-proof]]
 ==== 4.3 PROMPT Scores with Proof
 
 [source,lean]
 ----
 -- Definition
-structure PromptScores where
+structure Prompores where
   provenance : PromptDimension
   replicability : PromptDimension
   objective : PromptDimension
@@ -317,12 +336,12 @@ structure PromptScores where
   publication : PromptDimension
   transparency : PromptDimension
   overall : PromptDimension
-  overall_correct : overall.val = 
+  overall_correct : overall.val =
     (provenance.val + replicability.val + objective.val +
      methodology.val + publication.val + transparency.val) / 6
 
 -- Smart constructor
-def mkPromptScores (p r o m pub t : PromptDimension) : PromptScores :=
+def mkPrompores (p r o m pub t : PromptDimension) : Prompores :=
   let avg := (p.val + r.val + o.val + m.val + pub.val + t.val) / 6
   ⟨p, r, o, m, pub, t, ⟨avg, by omega, by omega⟩, by simp [avg]⟩
 ----
@@ -344,14 +363,15 @@ VALUES ({
 RATIONALE "Official statistics";
 ----
 
+[[44-reversible-operations]]
 ==== 4.4 Reversible Operations
 
 [source,lean]
 ----
 -- Definition
 inductive ReversibleOp (α : Type) : Type where
-  | insert : (data : Tracked α) → 
-             (inverse : DeleteOp α) → 
+  | insert : (data : Tracked α) →
+             (inverse : DeleteOp α) →
              (prf : roundTrip data inverse = data) →
              ReversibleOp α
   | update : (old new : Tracked α) →
@@ -369,7 +389,7 @@ inductive ReversibleOp (α : Type) : Type where
 
 -- Round-trip property
 axiom roundTrip {α : Type} : α → (α → α) → α
-axiom roundTripPreservesIdentity {α : Type} (x : α) (f : α → α) 
+axiom roundTripPreservesIdentity {α : Type} (x : α) (f : α → α)
   : roundTrip x f = x
 ----
 
@@ -397,6 +417,7 @@ JUSTIFICATION {
 };
 ----
 
+[[45-confidence-indexed-claims]]
 ==== 4.5 Confidence-Indexed Claims
 
 [source,lean]
@@ -412,9 +433,9 @@ structure Claim (c : Confidence) where
 axiom confidenceJustified : String → List Evidence → Confidence → Prop
 
 -- Type-safe combination
-def combineClaims {c1 c2 : Confidence} 
+def combineClaims {c1 c2 : Confidence}
   (claim1 : Claim c1) (claim2 : Claim c2)
-  (prf : compatible c1 c2) 
+  (prf : compatible c1 c2)
   : Claim (fuseConfidence c1 c2) := sorry
 ----
 
@@ -436,6 +457,7 @@ WHERE compatible(claim1.confidence, claim2.confidence);
 -- Type error if not compatible!
 ----
 
+[[46-ordered-navigation-paths]]
 ==== 4.6 Ordered Navigation Paths
 
 [source,lean]
@@ -453,7 +475,7 @@ inductive IsSorted {α : Type} (r : α → α → Bool) : List α → Prop where
 
 -- Smart constructor (automatically proves sorted)
 def createPath {ordering : Evidence → Evidence → Bool}
-  (evs : List Evidence) 
+  (evs : List Evidence)
   : NavigationPath ordering :=
   let sorted := List.insertionSort ordering evs
   ⟨sorted, insertionSortIsSorted ordering evs⟩
@@ -477,8 +499,10 @@ END;
 
 '''''
 
+[[5-ddl-with-types]]
 === 5. DDL with Types
 
+[[51-create-collection-with-dependent-types]]
 ==== 5.1 CREATE COLLECTION (With Dependent Types)
 
 *Syntax*:
@@ -528,7 +552,7 @@ CREATE COLLECTION claims (
 CREATE COLLECTION evidence (
   id : UUID,
   title : NonEmptyString,
-  prompt_scores : PromptScores  -- Proof of correct computation!
+  prompt_scores : Prompores  -- Proof of correct computation!
 ) WITH DEPENDENT_TYPES;
 ----
 
@@ -542,7 +566,8 @@ CREATE COLLECTION survey (
 ) WITH DEPENDENT_TYPES;
 ----
 
-==== 5.2 CREATE EDGE_COLLECTION (With Types)
+[[52-create-edge_collection-with-types]]
+==== 5.2 CREATE EDGE++_++COLLECTION (With Types)
 
 [source,gql]
 ----
@@ -554,6 +579,7 @@ CREATE EDGE_COLLECTION relationships (
 ) WITH DEPENDENT_TYPES;
 ----
 
+[[53-create-constraint-with-proofs]]
 ==== 5.3 CREATE CONSTRAINT (With Proofs)
 
 [source,gql]
@@ -568,8 +594,10 @@ APPROVERS "legal_team";
 
 '''''
 
+[[6-dml-with-proofs]]
 === 6. DML with Proofs
 
+[[61-insert-with-proof-obligations]]
 ==== 6.1 INSERT (With Proof Obligations)
 
 *Syntax*:
@@ -642,6 +670,7 @@ WITH_PROOF {
 };
 ----
 
+[[62-update-with-correction-proof]]
 ==== 6.2 UPDATE (With Correction Proof)
 
 *Syntax*:
@@ -702,6 +731,7 @@ WITH_PROOF {
 };
 ----
 
+[[63-delete-with-justification]]
 ==== 6.3 DELETE (With Justification)
 
 *Reversible Delete*:
@@ -738,8 +768,10 @@ WITH_JUSTIFICATION {
 
 '''''
 
+[[7-queries-with-refinements]]
 === 7. Queries with Refinements
 
+[[71-select-with-type-refinements]]
 ==== 7.1 SELECT with Type Refinements
 
 *Syntax*:
@@ -797,6 +829,7 @@ WHERE EXISTS (
 -- Returns pairs (claim, evidence) with proof that e supports c
 ----
 
+[[72-aggregates-with-proofs]]
 ==== 7.2 Aggregates with Proofs
 
 [source,gql]
@@ -813,6 +846,7 @@ GROUP BY investigation_id;
 -- Type proves average is in [0, 100]
 ----
 
+[[73-join-with-type-safety]]
 ==== 7.3 JOIN with Type Safety
 
 [source,gql]
@@ -826,8 +860,10 @@ FROM claims c
 
 '''''
 
+[[8-proof-obligations]]
 === 8. Proof Obligations
 
+[[81-automatic-proof-search]]
 ==== 8.1 Automatic Proof Search
 
 *Simple Arithmetic*:
@@ -853,6 +889,7 @@ VALUES ({provenance: 100, ...});
 -- overall_correct: by simp [computeOverall]; omega
 ----
 
+[[82-manual-proofs]]
 ==== 8.2 Manual Proofs
 
 *When Auto-Proof Fails*:
@@ -863,7 +900,7 @@ INSERT INTO claims (text, confidence, evidence_list)
 VALUES ('Complex claim', 0.92, [e1, e2, e3])
 RATIONALE "Multi-source synthesis"
 WITH_PROOF {
-  confidence_justified: 
+  confidence_justified:
     -- Manual Lean 4 proof
     by
       intro text evidence conf
@@ -871,6 +908,7 @@ WITH_PROOF {
 };
 ----
 
+[[83-proof-tactics]]
 ==== 8.3 Proof Tactics
 
 *Available Tactics*:
@@ -909,6 +947,7 @@ WITH_PROOF {
 }
 ----
 
+[[84-proof-libraries]]
 ==== 8.4 Proof Libraries
 
 *Pre-Proved Theorems*:
@@ -940,8 +979,10 @@ end Lithoglyph.Proofs
 
 '''''
 
+[[9-tactics-and-automation]]
 === 9. Tactics and Automation
 
+[[91-lithoglyph-specific-tactics]]
 ==== 9.1 Lithoglyph-Specific Tactics
 
 [source,lean]
@@ -957,15 +998,15 @@ macro_rules
 -- Auto-solve provenance proofs
 syntax "lithoglyph_prov" : tactic
 macro_rules
-  | `(tactic| lithoglyph_prov) => `(tactic| 
-      simp only [Tracked, NonEmptyString]; 
+  | `(tactic| lithoglyph_prov) => `(tactic|
+      simp only [Tracked, NonEmptyString];
       constructor <;> decide)
 
 -- Auto-solve PROMPT score proofs
 syntax "lithoglyph_prompt" : tactic
 macro_rules
   | `(tactic| lithoglyph_prompt) => `(tactic|
-      simp [PromptScores, computeOverall];
+      simp [Prompores, computeOverall];
       lithoglyph_bounds)
 
 end Lithoglyph.Tactics
@@ -982,6 +1023,7 @@ WITH_PROOF {
 }
 ----
 
+[[92-ide-integration]]
 ==== 9.2 IDE Integration
 
 *Lean 4 VSCode Extension*:
@@ -995,11 +1037,17 @@ Features:
 • Proof search (find relevant lemmas)
 ....
 
-*Example IDE Workflow*: 1. Write GQL with `+VALUES (...)+` 2. IDE shows:
-"`Missing proof of X`" 3. User writes `+WITH_PROOF { x: by }+` 4. IDE
-suggests tactics: `+omega, simp, decide+` 5. User selects tactic, proof
-completes 6. IDE shows: ✓ Type checked successfully
+*Example IDE Workflow*:
 
+[arabic]
+. Write GQL with `VALUES (...)`
+. IDE shows: "Missing proof of X"
+. User writes `WITH++_++PROOF ++{++ x: by }`
+. IDE suggests tactics: `omega, simp, decide`
+. User selects tactic, proof completes
+. IDE shows: ✓ Type checked successfully
+
+[[93-proof-caching]]
 ==== 9.3 Proof Caching
 
 *Incremental Type Checking*:
@@ -1026,8 +1074,10 @@ theorem cached_proof_12345 : P := by <...compiled proof...>
 
 '''''
 
+[[10-complete-examples]]
 === 10. Complete Examples
 
+[[101-bofig-uk-inflation-2023-fully-typed]]
 ==== 10.1 BoFIG UK Inflation 2023 (Fully Typed)
 
 [source,gql]
@@ -1039,7 +1089,7 @@ CREATE COLLECTION bofig_evidence (
   title : NonEmptyString,
   evidence_type : EvidenceType,
   url : Option String,
-  prompt_scores : PromptScores
+  prompt_scores : Prompores
 ) WITH DEPENDENT_TYPES, PROVENANCE_TRACKING;
 
 -- Step 2: Insert evidence (type-checked)
@@ -1126,11 +1176,12 @@ FROM bofig_claims c
   JOIN bofig_evidence e ON r.to_id = e.id
 WHERE c.investigation_id = 'uk_inflation_2023'
   AND r.relationship_type = 'SUPPORTS'
-RETURNING (List (Claim × Evidence × Relationship) | 
+RETURNING (List (Claim × Evidence × Relationship) |
            ∀ (c, e, r) ∈ result, c.confidence > 0.85 ∧ e.prompt_overall > 90);
 -- Return type PROVES all results satisfy conditions!
 ----
 
+[[102-correction-workflow-with-reversiibility-proof]]
 ==== 10.2 Correction Workflow (With Reversiibility Proof)
 
 [source,gql]
@@ -1171,11 +1222,12 @@ WITH_PROOF {
 
 -- Query correction history with proofs
 INTROSPECT bofig_claims.claim_123 CORRECTION_HISTORY
-RETURNING (List CorrectionEntry | 
+RETURNING (List CorrectionEntry |
            ∀ e ∈ result, e.inverse_correct ∧ e.reason.length > 0);
 -- Type proves all corrections have valid inverses!
 ----
 
+[[103-my-newsroom-belief-fusion-type-safe]]
 ==== 10.3 My-Newsroom Belief Fusion (Type-Safe)
 
 [source,gql]
@@ -1219,7 +1271,7 @@ WITH_PROOF {
 
 -- Fuse beliefs (type-safe)
 INSERT INTO belief_fusions (claim_text, fused_belief)
-SELECT 
+SELECT
   claim_text,
   fuseBeliefsDS(b1.belief, b2.belief)  -- Type-safe fusion!
 FROM agent_beliefs b1, agent_beliefs b2
@@ -1235,6 +1287,7 @@ WITH_PROOF {
 -- Type checker proves fusion result is in [0.0, 1.0]!
 ----
 
+[[104-navigation-path-with-ordering-proof]]
 ==== 10.4 Navigation Path (With Ordering Proof)
 
 [source,gql]
@@ -1266,6 +1319,7 @@ RETURNING (NavigationPath (λ e₁ e₂. e₁.prompt_objective < e₂.prompt_obj
 
 === Appendix A: Type Notation Reference
 
+[[a1-lean-4-notation]]
 ==== A.1 Lean 4 Notation
 
 [source,lean]
@@ -1292,31 +1346,25 @@ a < b                 -- Less than
 a = b                 -- Equality
 ----
 
+[[a2-gql-notation-mapping]]
 ==== A.2 GQL Notation Mapping
 
-[width="100%",cols="36%,38%,26%",options="header",]
+[cols=",,",options="header",]
 |===
 |GQL Syntax |Lean 4 Type |Meaning
-|`+BoundedNat 0 100+` |`+{n : Nat // 0 ≤ n ∧ n ≤ 100}+` |Nat in [0, 100]
-
-|`+NonEmptyString+` |`+{s : String // s.length > 0}+` |Non-empty string
-
-|`+Confidence+` |`+BoundedFloat 0.0 1.0+` |Float in [0.0, 1.0]
-
-|`+Tracked α+` |`+(α × ActorId × Timestamp × Rationale)+`
-|Provenance-tracked value
-
-|`+Vector α n+` |Dependent array of exactly n elements |Fixed-length
-array
-
-|`+Claim c+` |Claim indexed by confidence level c |Confidence-indexed
-claim
+|`BoundedNat 0 100` |`++{++n : Nat // 0 ≤ n ∧ n ≤ 100}` |Nat in ++[++0, 100++]++
+|`NonEmptyString` |`++{++s : String // s.length ++>++ 0}` |Non-empty string
+|`Confidence` |`BoundedFloat 0.0 1.0` |Float in ++[++0.0, 1.0++]++
+|`Tracked α` |`(α × ActorId × Timestamp × Rationale)` |Provenance-tracked value
+|`Vector α n` |Dependent array of exactly n elements |Fixed-length array
+|`Claim c` |Claim indexed by confidence level c |Confidence-indexed claim
 |===
 
 '''''
 
 === Appendix B: Error Messages
 
+[[b1-bound-violation]]
 ==== B.1 Bound Violation
 
 ....
@@ -1336,6 +1384,7 @@ Suggestions:
 • Check if you meant 15 (typo)?
 ....
 
+[[b2-missing-proof]]
 ==== B.2 Missing Proof
 
 ....
@@ -1354,6 +1403,7 @@ Suggestions:
 • Lower confidence to match evidence quality
 ....
 
+[[b3-type-mismatch]]
 ==== B.3 Type Mismatch
 
 ....
@@ -1374,6 +1424,7 @@ Suggestion: Filter claims WHERE confidence BETWEEN 0.8 AND 1.0
 
 === Appendix C: Proof Cookbook
 
+[[c1-bounded-integers]]
 ==== C.1 Bounded Integers
 
 [source,lean]
@@ -1386,6 +1437,7 @@ example (a b : BoundedNat 0 100) : let avg := (a.val + b.val) / 2; avg ≤ 100 :
   omega
 ----
 
+[[c2-non-empty-strings]]
 ==== C.2 Non-Empty Strings
 
 [source,lean]
@@ -1400,12 +1452,13 @@ example (s1 s2 : NonEmptyString) : (s1.val ++ s2.val).length > 0 := by
   omega
 ----
 
+[[c3-provenance-tracking]]
 ==== C.3 Provenance Tracking
 
 [source,lean]
 ----
 -- Prove tracked value has provenance
-example (t : Tracked α) : t.rationale.val.length > 0 := 
+example (t : Tracked α) : t.rationale.val.length > 0 :=
   t.rationale.nonempty
 
 -- Prove all tracked values in list have provenance
@@ -1414,6 +1467,7 @@ example (ts : List (Tracked α)) : ∀ t ∈ ts, t.rationale.val.length > 0 := b
   exact t.rationale.nonempty
 ----
 
+[[c4-reversibility]]
 ==== C.4 Reversibility
 
 [source,lean]
@@ -1437,9 +1491,14 @@ theorem updateReverses {α : Type} (old new : Tracked α)
 
 *Implementation*: Lean 4 recommended (best IDE support).
 
-*Timeline*: - Phase 1 (Month 1-6): Refinement types - Phase 2 (Month
-7-12): Simple dependent types - Phase 3 (Month 13-18): Full verification
+*Timeline*:
 
-*See Also*: - WP06: Dependently-Typed Lithoglyph (research proposal) -
-Lithoglyph arXiv paper (Section 14: Future Work) - My-Newsroom Me
-dialect (epistemic types)
+* Phase 1 (Month 1-6): Refinement types
+* Phase 2 (Month 7-12): Simple dependent types
+* Phase 3 (Month 13-18): Full verification
+
+*See Also*:
+
+* WP06: Dependently-Typed Lithoglyph (research proposal)
+* Lithoglyph arXiv paper (Section 14: Future Work)
+* My-Newsroom Me dialect (epistemic types)

@@ -1,30 +1,30 @@
+// SPDX-License-Identifier: CC-BY-SA-4.0
+// SPDX-FileCopyrightText: 2026 Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>
 == M6 Parser Implementation - Status Report
 
-*Date:* 2026-02-01 *Status:* ✅ *Substantially Complete* (85%) *Next
-Milestone:* M7 (Idris2 ABI) + M8 (Zig FFI)
+*Date:* 2026-02-01
+*Status:* ✅ *Substantially Complete* (85%)
+*Next Milestone:* M7 (Idris2 ABI) {plus} M8 (Zig FFI)
 
 '''''
 
 === Overview
 
-Milestone 6 (GQL-DT/GQL Parser) has been substantially completed. The
-parser infrastructure is feature-complete for basic queries (INSERT,
-SELECT, UPDATE, DELETE), with full CBOR encoding/decoding, type
-inference, and IR generation.
+Milestone 6 (GQL-DT/GQL Parser) has been substantially completed. The parser infrastructure is feature-complete for basic queries (INSERT, SELECT, UPDATE, DELETE), with full CBOR encoding/decoding, type inference, and IR generation.
 
 === Completed Components
 
-==== 1. Lexer (`+src/GqlDt/Lexer.lean+`) ✅
+[[1-lexer-srcgqldtlexerlean-white_check_mark]]
+==== 1. Lexer (`src/GqlDt/Lexer.lean`) ✅
 
 *Status:* 100% Complete
 
-* *Token Types:* 80+ keywords (SQL, type, proof, Lithoglyph)
+* *Token Types:* 80{plus} keywords (SQL, type, proof, Lithoglyph)
 * *Operators:* 11 precedence levels
 * *Literals:* Nat, Int, Float, String, Bool
-* *Identifiers:* Unicode support (XID_Start, XID_Continue)
-* *Case Sensitivity:* SQL keywords case-insensitive, type keywords
-case-sensitive
-* *Comments:* Single-line (`+--+`) and multi-line (`+/* */+`)
+* *Identifiers:* Unicode support (XID++_++Start, XID++_++Continue)
+* *Case Sensitivity:* SQL keywords case-insensitive, type keywords case-sensitive
+* *Comments:* Single-line (`--`) and multi-line (`/++*++ ++*++/`)
 * *Whitespace Handling:* Complete
 
 *Key Functions:*
@@ -38,50 +38,61 @@ def lookupKeyword (s : String) : Option TokenType
 
 '''''
 
-==== 2. Parser Combinators (`+src/GqlDt/Parser.lean+`) ✅
+[[2-parser-combinators-srcgqldtparserlean-white_check_mark]]
+==== 2. Parser Combinators (`src/GqlDt/Parser.lean`) ✅
 
 *Status:* 95% Complete
 
-*Basic Combinators:* ✅ - `+peek+`, `+advance+`, `+next+` - Token
-navigation - `+expect+`, `+expectIdentifier+` - Specific token matching
-- `+optional+`, `+many+`, `+many1+`, `+sepBy+` - Standard combinators
+*Basic Combinators:* ✅
 
-*Expression Parsing:* ✅ - `+parseLiteral+` - All literal types -
-`+parseTypeExpr+` - Type expressions including `+BoundedNat min max+`
+* `peek`, `advance`, `next` - Token navigation
+* `expect`, `expectIdentifier` - Specific token matching
+* `optional`, `many`, `many1`, `sepBy` - Standard combinators
+
+*Expression Parsing:* ✅
+
+* `parseLiteral` - All literal types
+* `parseTypeExpr` - Type expressions including `BoundedNat min max`
 
 *Statement Parsing:* ✅
 
-[width="100%",cols="39%,27%,34%",options="header",]
+[cols=",,",options="header",]
 |===
 |Statement |Status |Features
 |*INSERT* |✅ Complete |Both GQL (inferred) and GQL-DT (explicit types)
-
 |*SELECT* |✅ Complete |SELECT list, FROM clause, WHERE, ORDER BY, LIMIT
-
-|*UPDATE* |✅ Complete |SET assignments, optional WHERE, mandatory
-RATIONALE
-
+|*UPDATE* |✅ Complete |SET assignments, optional WHERE, mandatory RATIONALE
 |*DELETE* |✅ Complete |Mandatory WHERE (safety), mandatory RATIONALE
 |===
 
-*WHERE Clause:* ✅ - Column comparison predicates (`+column op value+`)
-- All comparison operators: `+=+`, `+<+`, `+>+`, `+<=+`, `+>=+`, `+!=+`
-- *TODO:* Complex expressions (AND, OR, NOT, nested predicates)
+*WHERE Clause:* ✅
 
-*ORDER BY Clause:* ✅ - Multiple columns - ASC/DESC direction (partially
-implemented)
+* Column comparison predicates (`column op value`)
+* All comparison operators: `=`, `++<++`, `++>++`, `++<++=`, `++>++=`, `!=`
+* *TODO:* Complex expressions (AND, OR, NOT, nested predicates)
 
-*LIMIT Clause:* ✅ - Natural number literals
+*ORDER BY Clause:* ✅
+
+* Multiple columns
+* ASC/DESC direction (partially implemented)
+
+*LIMIT Clause:* ✅
+
+* Natural number literals
 
 '''''
 
-==== 3. Type Inference (`+src/GqlDt/TypeInference.lean+`) ✅
+[[3-type-inference-srcgqldttypeinferencelean-white_check_mark]]
+==== 3. Type Inference (`src/GqlDt/TypeInference.lean`) ✅
 
 *Status:* 100% Complete
 
-*Features:* - Infer types from literals - Schema-guided type inference -
-Auto-proof generation (decide, omega, simp tactics) - Runtime validation
-fallback
+*Features:*
+
+* Infer types from literals
+* Schema-guided type inference
+* Auto-proof generation (decide, omega, simp tactics)
+* Runtime validation fallback
 
 *Key Functions:*
 
@@ -93,97 +104,138 @@ def inferInsert (schema : Schema) (table : String) (columns : List String) (valu
 
 '''''
 
-==== 4. Serialization (`+src/GqlDt/Serialization.lean+`) ✅
+[[4-serialization-srcgqldtserializationlean-white_check_mark]]
+==== 4. Serialization (`src/GqlDt/Serialization.lean`) ✅
 
 *Status:* 95% Complete
 
-*CBOR Encoding (RFC 8949):* ✅ Complete - All 8 major types: unsigned,
-negative, byteString, textString, array, map, tag, simple/float -
-Multi-byte encoding: 1-byte, 2-byte, 4-byte, 8-byte - Semantic tags: -
-`+1000+` - BoundedNat - `+1001+` - NonEmptyString - `+1002+` -
-Confidence - `+1003+` - PromptScores - `+1004+` - ProofBlob
+*CBOR Encoding (RFC 8949):* ✅ Complete
 
-*CBOR Decoding:* ✅ Complete - Recursive decoder with state monad -
-`+CBORDecoder+` with `+readByte+`, `+readBytes+`, `+decodeUnsignedCBOR+`
-- `+decodeCBORValue+` handles all major types
+* All 8 major types: unsigned, negative, byteString, textString, array, map, tag, simple/float
+* Multi-byte encoding: 1-byte, 2-byte, 4-byte, 8-byte
+* Semantic tags:
+** `1000` - BoundedNat
+** `1001` - NonEmptyString
+** `1002` - Confidence
+** `1003` - Prompores
+** `1004` - ProofBlob
 
-*JSON Serialization:* ✅ - `+serializeTypedValueJSON+` - TypedValue →
-JSON - `+jsonToBytes+` - JSON → UTF-8 bytes -
-`+deserializeTypedValueJSON+` - JSON → TypedValue
+*CBOR Decoding:* ✅ Complete
 
-*JSON Parsing:* ⚠️ Stub (10% remaining) - `+bytesToJson+` - Currently
-returns error - *TODO:* Full JSON parser
+* Recursive decoder with state monad
+* `CBORDecoder` with `readByte`, `readBytes`, `decodeUnsignedCBOR`
+* `decodeCBORValue` handles all major types
 
-*Binary Format:* ✅ - High-performance Lithoglyph native storage - Type
-tags with little-endian encoding - Proof blob support
+*JSON Serialization:* ✅
 
-*SQL Compatibility:* ✅ - `+toSQLValue+`, `+fromSQLValue+` - *WARNING:*
-Type information lost (compatibility layer only)
+* `serializeTypedValueJSON` - TypedValue → JSON
+* `jsonToBytes` - JSON → UTF-8 bytes
+* `deserializeTypedValueJSON` - JSON → TypedValue
+
+*JSON Parsing:* ⚠️ Stub (10% remaining)
+
+* `bytesToJson` - Currently returns error
+* *TODO:* Full JSON parser
+
+*Binary Format:* ✅
+
+* High-performance Lithoglyph native storage
+* Type tags with little-endian encoding
+* Proof blob support
+
+*SQL Compatibility:* ✅
+
+* `toSQLValue`, `fromSQLValue`
+* *WARNING:* Type information lost (compatibility layer only)
 
 '''''
 
-==== 5. Intermediate Representation (`+src/GqlDt/IR.lean+`) ✅
+[[5-intermediate-representation-srcgqldtirlean-white_check_mark]]
+==== 5. Intermediate Representation (`src/GqlDt/IR.lean`) ✅
 
 *Status:* 90% Complete
 
-*IR Data Structures:* ✅ - `+IR.Insert+`, `+IR.Select+`, `+IR.Update+`,
-`+IR.Delete+`, `+IR.Normalize+` - `+ProofBlob+` - CBOR-serialized proof
-terms - `+PermissionMetadata+` - userId, roleId, validationLevel,
-allowedTypes, timestamp - `+ValidationLevel+` - none, runtime, compile,
-paranoid
+*IR Data Structures:* ✅
 
-*IR Serialization:* ✅ - `+serializeInsert+`, `+serializeSelect+`,
-`+serializeUpdate+`, `+serializeDelete+`, `+serializeNormalize+` - CBOR
-maps with type tags - `+serializePermissions+` - Permission metadata -
-`+serializeProof+` - Proof metadata for audit
+* `IR.Insert`, `IR.Select`, `IR.Update`, `IR.Delete`, `IR.Normalize`
+* `ProofBlob` - CBOR-serialized proof terms
+* `PermissionMetadata` - userId, roleId, validationLevel, allowedTypes, timestamp
+* `ValidationLevel` - none, runtime, compile, paranoid
 
-*IR Deserialization:* ⚠️ Stub (10% remaining) - `+deserializeIR+` -
-Stub, needs schema reconstruction - *TODO:* Reconstruct typed IR from
-CBOR
+*IR Serialization:* ✅
 
-*SQL Lowering:* ✅ - `+lowerToSQL+` - IR → SQL (compatibility layer) -
-`+lowerInsertToSQL+`, `+lowerSelectToSQL+`, `+lowerUpdateToSQL+`,
-`+lowerDeleteToSQL+` - *WARNING:* Type information erased
+* `serializeInsert`, `serializeSelect`, `serializeUpdate`, `serializeDelete`, `serializeNormalize`
+* CBOR maps with type tags
+* `serializePermissions` - Permission metadata
+* `serializeProof` - Proof metadata for audit
 
-*Permission Validation:* ✅ - `+isTypeAllowed+` - Check type against
-whitelist - `+validatePermissions+` - Validate IR against permission
-profile
+*IR Deserialization:* ⚠️ Stub (10% remaining)
 
-*Proof Serialization:* ✅ - `+serializeProof+` - Extract proof metadata
-- `+generateIR_Insert+` - Proof blobs for BoundedNat, NonEmptyString,
-Confidence, PromptScores
+* `deserializeIR` - Stub, needs schema reconstruction
+* *TODO:* Reconstruct typed IR from CBOR
+
+*SQL Lowering:* ✅
+
+* `lowerToSQL` - IR → SQL (compatibility layer)
+* `lowerInsertToSQL`, `lowerSelectToSQL`, `lowerUpdateToSQL`, `lowerDeleteToSQL`
+* *WARNING:* Type information erased
+
+*Permission Validation:* ✅
+
+* `isTypeAllowed` - Check type against whitelist
+* `validatePermissions` - Validate IR against permission profile
+
+*Proof Serialization:* ✅
+
+* `serializeProof` - Extract proof metadata
+* `generateIR++_++Insert` - Proof blobs for BoundedNat, NonEmptyString, Confidence, Prompores
 
 '''''
 
-==== 6. Pipeline (`+src/GqlDt/Pipeline.lean+`) ✅
+[[6-pipeline-srcgqldtpipelinelean-white_check_mark]]
+==== 6. Pipeline (`src/GqlDt/Pipeline.lean`) ✅
 
 *Status:* 85% Complete
 
-*6-Stage Pipeline:* ✅ 1. *Tokenize* - Source → Tokens 2. *Parse* -
-Tokens → AST 3. *Type Check* - Validate AST (GQL-DT mode) 4. *Generate
-IR* - AST → Typed IR 5. *Validate Permissions* - Check type whitelists
-6. *Serialize* - IR → CBOR/JSON/Binary
+*6-Stage Pipeline:* ✅
 
-*Pipeline Configuration:* ✅ - `+ParsingMode+` - gqld (explicit types),
-gql (inferred types) - `+ValidationLevel+` - none, runtime, compile,
-paranoid - `+SerializationFormat+` - json, cbor, binary, sql
+[arabic]
+. *Tokenize* - Source → Tokens
+. *Parse* - Tokens → AST
+. *Type Check* - Validate AST (GQL-DT mode)
+. *Generate IR* - AST → Typed IR
+. *Validate Permissions* - Check type whitelists
+. *Serialize* - IR → CBOR/JSON/Binary
 
-*Convenience Functions:* ✅ - `+parseGQL+` - User tier (type inference)
-- `+parseGQL-DT+` - Admin tier (explicit types) - `+parseAndExecute+` -
-Parse + execute on Lithoglyph
+*Pipeline Configuration:* ✅
 
-*Error Reporting:* ✅ - `+PipelineError+` with line, column, source
-context - `+formatError+` - Human-readable error messages
+* `ParsingMode` - gqld (explicit types), gql (inferred types)
+* `ValidationLevel` - none, runtime, compile, paranoid
+* `SerializationFormat` - json, cbor, binary, sql
 
-*Examples & Tests:* ✅ - `+exampleParseGQL+` - INSERT with type
-inference - `+exampleParseGQL-DT+` - INSERT with explicit types -
-`+exampleParseSelect+` - SELECT query - `+testValidGQL+`,
-`+testInvalidQuery+` - Validation tests
+*Convenience Functions:* ✅
 
-*AST → IR Conversion:* ⚠️ Partial (15% remaining) -
-`+generateIRFromAST+` - Handles SELECT, stubs for INSERT/UPDATE/DELETE -
-*TODO:* Complete InferredInsert → IR.Insert (needs schema registry) -
-*TODO:* Complete UPDATE/DELETE → IR (needs schema lookup)
+* `parseGQL` - User tier (type inference)
+* `parseGQL-DT` - Admin tier (explicit types)
+* `parseAndExecute` - Parse {plus} execute on Lithoglyph
+
+*Error Reporting:* ✅
+
+* `PipelineError` with line, column, source context
+* `formatError` - Human-readable error messages
+
+*Examples & Tests:* ✅
+
+* `exampleParseGQL` - INSERT with type inference
+* `exampleParseGQL-DT` - INSERT with explicit types
+* `exampleParseSelect` - SELECT query
+* `testValidGQL`, `testInvalidQuery` - Validation tests
+
+*AST → IR Conversion:* ⚠️ Partial (15% remaining)
+
+* `generateIRFromAST` - Handles SELECT, stubs for INSERT/UPDATE/DELETE
+* *TODO:* Complete InferredInsert → IR.Insert (needs schema registry)
+* *TODO:* Complete UPDATE/DELETE → IR (needs schema lookup)
 
 '''''
 
@@ -197,14 +249,14 @@ inference - `+exampleParseGQL-DT+` - INSERT with explicit types -
 * Required for AST → IR conversion
 * Coordinate with Lithoglyph team
 . *AST → IR Conversion* (5%)
-* `+InferredInsert → IR.Insert+` (needs schema)
-* `+UpdateStmt → IR.Update+` (needs schema)
-* `+DeleteStmt → IR.Delete+` (needs schema)
+* `InferredInsert → IR.Insert` (needs schema)
+* `UpdateStmt → IR.Update` (needs schema)
+* `DeleteStmt → IR.Delete` (needs schema)
 . *JSON Parsing* (3%)
-* `+bytesToJson+` - UTF-8 → JsonValue
+* `bytesToJson` - UTF-8 → JsonValue
 * Required for JSON deserialization roundtrip
 . *IR Deserialization* (2%)
-* `+deserializeIR+` - CBOR → IR with schema reconstruction
+* `deserializeIR` - CBOR → IR with schema reconstruction
 * Required for network transport
 
 ==== Nice-to-Have (Not Blocking)
@@ -218,28 +270,18 @@ inference - `+exampleParseGQL-DT+` - INSERT with explicit types -
 
 === Architecture Decisions Made
 
+[[white_check_mark-decisions-implemented]]
 ==== ✅ Decisions Implemented
 
-[width="100%",cols="34%,30%,36%",options="header",]
+[cols=",,",options="header",]
 |===
 |Decision |Outcome |Rationale
-|*Parser Technology* |Lean 4 parser combinators |Dependent types require
-proof execution
-
-|*Execution Strategy* |Native IR execution |Preserves type safety,
-faster than SQL (170ms vs 270ms)
-
-|*Serialization* |CBOR primary, JSON/Binary/SQL secondary |RFC 8949
-deterministic, proof blob transport
-
-|*Two-Tier Architecture* |One language, two syntaxes + permissions
-|GQL-DT (advanced) + GQL (users) + granular permissions
-
-|*ABI/FFI Standard* |Idris2 ABI + Zig FFI |Per hyperpolymath universal
-standard
-
-|*Integration Priority* |ReScript → Rust → Julia/Deno → Others |Aligned
-with existing ecosystem
+|*Parser Technology* |Lean 4 parser combinators |Dependent types require proof execution
+|*Execution Strategy* |Native IR execution |Preserves type safety, faster than SQL (170ms vs 270ms)
+|*Serialization* |CBOR primary, JSON/Binary/SQL secondary |RFC 8949 deterministic, proof blob transport
+|*Two-Tier Architecture* |One language, two syntaxes {plus} permissions |GQL-DT (advanced) {plus} GQL (users) {plus} granular permissions
+|*ABI/FFI Standard* |Idris2 ABI {plus} Zig FFI |Per hyperpolymath universal standard
+|*Integration Priority* |ReScript → Rust → Julia/Deno → Others |Aligned with existing ecosystem
 |===
 
 '''''
@@ -248,29 +290,22 @@ with existing ecosystem
 
 ==== Source Files (6 new files)
 
-[width="100%",cols="21%,23%,26%,30%",options="header",]
+[cols=",,,",options="header",]
 |===
 |File |Lines |Status |Purpose
-|`+src/GqlDt/Lexer.lean+` |407 |✅ Complete |Tokenization
-
-|`+src/GqlDt/Parser.lean+` |550+ |✅ Complete |Parser combinators,
-statements
-
-|`+src/GqlDt/TypeInference.lean+` |~200 |✅ Complete |Type inference for
-GQL
-
-|`+src/GqlDt/IR.lean+` |410 |🟡 90% |Typed IR, serialization
-
-|`+src/GqlDt/Serialization.lean+` |530+ |🟡 95% |CBOR, JSON, Binary, SQL
-
-|`+src/GqlDt/Pipeline.lean+` |290 |🟡 85% |End-to-end orchestration
+|`src/GqlDt/Lexer.lean` |407 |✅ Complete |Tokenization
+|`src/GqlDt/Parser.lean` |550{plus} |✅ Complete |Parser combinators, statements
+|`src/GqlDt/TypeInference.lean` |~200 |✅ Complete |Type inference for GQL
+|`src/GqlDt/IR.lean` |410 |🟡 90% |Typed IR, serialization
+|`src/GqlDt/Serialization.lean` |530{plus} |🟡 95% |CBOR, JSON, Binary, SQL
+|`src/GqlDt/Pipeline.lean` |290 |🟡 85% |End-to-end orchestration
 |===
 
 ==== Updated Files
 
-* `+src/GqlDt.lean+` - Import all M6 modules
-* `+STATE.scm+` - Updated completion (65% → 75%), added M6 snapshot
-* `+docs/M6-PARSER-STATUS.md+` - This file
+* `src/GqlDt.lean` - Import all M6 modules
+* `STATE.scm` - Updated completion (65% → 75%), added M6 snapshot
+* `docs/M6-PARSER-STATUS.adoc` - This file
 
 '''''
 
@@ -282,11 +317,11 @@ GQL
 . *Schema Registry*
 * Lithoglyph must expose schema lookup API
 * GQL-DT parser needs runtime schema access
-* Format: `+getSchema (tableName : String) : IO (Option Schema)+`
+* Format: `gehema (tableName : String) : IO (Option Schema)`
 . *Native IR Execution*
 * Lithoglyph must implement IR executor
 * Input: CBOR-serialized IR
-* Output: Query results + proof verification status
+* Output: Query results {plus} proof verification status
 . *Permission Enforcement*
 * Lithoglyph must store user permission profiles
 * PermissionMetadata validated on IR submission
@@ -304,18 +339,18 @@ GQL
 * Complete AST → IR conversion
 * Add JSON parsing
 . *Start M7: Idris2 ABI* (parallel with M8)
-* `+src/abi/Types.idr+` - ABI type definitions
-* `+src/abi/Layout.idr+` - Memory layout proofs
-* `+src/abi/Foreign.idr+` - FFI declarations
+* `src/abi/Types.idr` - ABI type definitions
+* `src/abi/Layout.idr` - Memory layout proofs
+* `src/abi/Foreign.idr` - FFI declarations
 . *Start M8: Zig FFI* (parallel with M7)
-* `+ffi/zig/src/main.zig+` - C-compatible implementation
-* `+ffi/zig/build.zig+` - Build configuration
-* `+ffi/zig/test/integration_test.zig+` - FFI tests
+* `ffi/zig/src/main.zig` - C-compatible implementation
+* `ffi/zig/build.zig` - Build configuration
+* `ffi/zig/test/integration++_++test.zig` - FFI tests
 
 ==== Short-Term (This Month)
 
 [arabic, start=4]
-. *Complete M7+M8*
+. *Complete M7{plus}M8*
 * Idris2 ABI ↔ Zig FFI integration
 * C header generation
 * Proof verification across FFI boundary
@@ -342,7 +377,7 @@ GQL
 
 === Success Metrics
 
-[width="100%",cols="25%,24%,27%,24%",options="header",]
+[cols=",,,",options="header",]
 |===
 |Metric |Target |Current |Status
 |*Lexer Coverage* |100% tokens |100% |✅
@@ -358,17 +393,12 @@ GQL
 
 === Conclusion
 
-*M6 Parser is substantially complete (85%).* The core parsing
-infrastructure is feature-complete, with full CBOR encoding/decoding,
-type inference, and IR generation. The remaining 15% consists of schema
-registry integration and AST→IR conversion stubs, which require
-coordination with the Lithoglyph team.
+*M6 Parser is substantially complete (85%).* The core parsing infrastructure is feature-complete, with full CBOR encoding/decoding, type inference, and IR generation. The remaining 15% consists of schema registry integration and AST→IR conversion stubs, which require coordination with the Lithoglyph team.
 
-*Recommended Next Action:* Proceed with M7 (Idris2 ABI) + M8 (Zig FFI)
-in parallel while coordinating with Lithoglyph team on schema registry
-requirements.
+*Recommended Next Action:* Proceed with M7 (Idris2 ABI) {plus} M8 (Zig FFI) in parallel while coordinating with Lithoglyph team on schema registry requirements.
 
 '''''
 
-*Document Version:* 1.0 *Author:* Jonathan D.A. Jewell (@hyperpolymath)
+*Document Version:* 1.0
+*Author:* Jonathan D.A. Jewell (@hyperpolymath)
 *License:* CC-BY-SA-4.0

@@ -200,8 +200,7 @@ def inferInsert
   : Except String InferredInsert := do
 
   -- 1. Find schema
-  let schemaTable? := schema.columns.isEmpty  -- TODO: Real schema lookup
-  if schemaTable? then
+  if schema.name != table || schema.columns.isEmpty then
     throw s!"Table {table} not found in schema"
 
   -- 2. Check column count matches

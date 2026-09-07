@@ -13,37 +13,21 @@ import GqlDt.Serialization
 
 namespace GqlDt.Pipeline
 
--- Mark entire namespace as noncomputable due to axiomatized parser functions
-noncomputable section
+section
 
 open Lexer Parser TypeChecker TypeInference IR Serialization Serialization.Types AST Provenance
 
 /-!
-# GQL-DT/GQL Complete Parsing Pipeline
+GNPL's private typed evidence substrate.
 
-Provides end-to-end processing from source text to executable IR.
+This module parses a limited storage notation, checks inserts against the supplied
+schema, and builds IR for in-memory evaluation. It does not implement GNPL's
+accounts, stances or warrants. Historical identifiers in this namespace are
+compatibility details, not names of public languages.
 
-**Pipeline Stages:**
-
-```
-Source Text (GQL or GQL-DT)
-    ↓ 1. Lexer
-Tokens
-    ↓ 2. Parser
-Typed AST (with or without explicit types)
-    ↓ 3. Type Checker
-Validated AST (proofs verified)
-    ↓ 4. IR Generation
-Typed IR (with proof blobs, permissions)
-    ↓ 5. Serialization (optional)
-CBOR bytes / JSON
-    ↓ 6. Execution
-Lithoglyph Native or SQL Backend
-```
-
-**Two Modes:**
-- **GQL-DT**: Explicit types + proofs → Compile-time verification
-- **GQL**: Type inference + auto-proofs → Runtime validation fallback
+Attached-proof verification, persistent execution and a complete IR wire codec
+are unavailable and return errors. Local dependent witnesses are not transferable
+proof certificates. See docs/executable-boundary.adoc.
 -/
 
 -- ============================================================================
@@ -104,25 +88,17 @@ def tokenizeSource (source : String) : Except String (List Token) :=
   tokenize source
 
 /-- Stage 2: Parse tokens to AST -/
-noncomputable def parseTokens (tokens : List Token) (_config : PipelineConfig) : Except String (List Statement) := do
-  let initialState : ParserState := {
-    tokens := tokens,
-    position := 0
-  }
-
-  match parseStatement initialState with
-  | .ok stmt _ => .ok [stmt]
-  | .error msg _ => .error msg
+def parseTokens (tokens : List Token) (config : PipelineConfig) : Except String (List Statement) :=
+  parseTokensComplete tokens config.schema
 
 /-- Stage 3: Type check AST -/
 def typeCheckAST (stmt : Statement) (config : PipelineConfig) : Except String Statement :=
-  -- For GQL, type inference already happened in parser
-  -- For GQL-DT, verify explicit types and proofs
+  -- Runtime type validation does not check an attached proof. The latter
+  -- needs an implemented verifier and is refused until one is connected.
   match config.mode with
   | .gql => .ok stmt  -- Type inference done, runtime validation will catch errors
   | .gqld =>
-      -- TODO: Verify proofs
-      .ok stmt
+      .error "Attached-proof validation is not implemented"
 
 /-- Convert parser-level ParsedSelect to IR.Select Unit -/
 def parsedSelectToIR (ps : ParsedSelect) (permissions : PermissionMetadata) : IR :=
@@ -135,21 +111,6 @@ def parsedSelectToIR (ps : ParsedSelect) (permissions : PermissionMetadata) : IR
     returning := none,
     permissions := permissions
   }
-
-/-- Proof obligation for inferred INSERT types matching schema columns.
-
-    At this point, the TypeInference module has already validated that every
-    value matches its schema column type. We encode this as an axiom because
-    the dynamic schema lookup in inferInsert already performed the check, but
-    recreating that proof structurally at compile-time from the dynamic data
-    would require reflecting the schema into the type system (future work).
--/
-axiom inferredInsertTypesMatch (schema : Schema) (columns : List String)
-    (values : List (Σ t : TypeExpr, TypedValue t))
-    : ∀ i, i < values.length →
-        ∃ col ∈ schema.columns,
-          col.name = columns.get! i ∧
-          (values.get! i).1 = col.type
 
 /-- Convert an InferredInsert to IR.Insert using the pipeline schema.
 
@@ -200,19 +161,17 @@ def inferredInsertToIR (inferred : InferredInsert) (config : PipelineConfig) : E
         | .confidence =>
             some (serializeProof "Confidence" "value ∈ [0, 100]")
         | _ => none
-      -- Build IR.Select-style for now: use the select IR path with an insert wrapper
-      -- We construct an IR.Insert with a proof obligation discharged by the schema.
-      -- Since we validated types above, we use a schema-independent construction
-      -- via axiom (the type checker already validated at parse time).
-      .ok (.insert {
-        table := inferred.table,
-        columns := inferred.columns,
-        values := values,
-        rationale := rationale,
-        proofs := proofs,
-        permissions := config.permissions,
-        typesMatch := inferredInsertTypesMatch config.schema inferred.columns values
-      })
+      match TypeChecker.validateInsert config.schema inferred.columns values with
+      | .error msg => .error msg
+      | .ok ⟨witness⟩ => .ok (@IR.insert config.schema {
+          table := inferred.table,
+          columns := inferred.columns,
+          values := values,
+          rationale := rationale,
+          proofs := proofs,
+          permissions := config.permissions,
+          typesMatch := witness
+        })
     else
       .error "RATIONALE must be a non-empty string"
 
@@ -249,19 +208,43 @@ def generateIRFromAST (stmt : Statement) (config : PipelineConfig) : Except Stri
       inferredInsertToIR inferred config
   | .insertGQLdt inferred =>
       inferredInsertToIR inferred config
-  | .select selectStmt =>
-      .ok (parsedSelectToIR selectStmt config.permissions)
-  | .update updateStmt =>
-      .ok (parsedUpdateToIR updateStmt config)
-  | .delete deleteStmt =>
-      .ok (parsedDeleteToIR deleteStmt config)
+  | .select selectStmt => do
+      if selectStmt.from_.tables.length != 1 ||
+          selectStmt.from_.tables.any (fun t => t.name != config.schema.name || t.alias.isSome) then
+        throw "Selection requires exactly the configured table, without aliases"
+      let known := fun name => config.schema.columns.any (·.name == name)
+      match selectStmt.selectList with
+      | .columns cols => if !cols.all known then throw "Unknown projection column"
+      | .star => pure PUnit.unit
+      | .typed _ _ => throw "Refined selection validation is not implemented"
+      if let some wc := selectStmt.where_ then
+        let (name, op, value) := wc.predicate
+        let supported := config.schema.columns.any fun col =>
+          col.name == name && match col.type, value with
+          | .nat, .nat _ | .boundedNat _ _, .nat _ => true
+          | .string, .string _ | .nonEmptyString, .string _ | .bool, .bool _ =>
+              op == "=" || op == "!="
+          | _, _ => false
+        if !supported then throw "Predicate type or comparison is unsupported by the in-memory evaluator"
+      if let some ob := selectStmt.orderBy then
+        let supportedOrder := fun name => config.schema.columns.any fun col =>
+          col.name == name && match col.type with
+          | .nat | .boundedNat _ _ => true
+          | _ => false
+        if ob.columns.length != 1 || !ob.columns.all (fun c => supportedOrder c.1) then
+          throw "Ordering requires one natural-number column"
+      pure (parsedSelectToIR selectStmt config.permissions)
+  | .update _ =>
+      .error "UPDATE schema validation is not implemented in this pipeline"
+  | .delete _ =>
+      .error "DELETE schema validation is not implemented in this pipeline"
 
 /-- Stage 5: Validate permissions -/
 def validateIRPermissions (ir : IR) (_config : PipelineConfig) : Except String Unit :=
   validatePermissions ir
 
 /-- Stage 6: Serialize IR -/
-noncomputable def serializeIRToBytes (ir : IR) (_config : PipelineConfig) : ByteArray :=
+def serializeIRToBytes (ir : IR) (_config : PipelineConfig) : ByteArray :=
   serializeIR ir  -- TODO: Use config.serializationFormat
 
 -- ============================================================================
@@ -269,7 +252,7 @@ noncomputable def serializeIRToBytes (ir : IR) (_config : PipelineConfig) : Byte
 -- ============================================================================
 
 /-- Run complete pipeline: Source → IR -/
-noncomputable def runPipeline (source : String) (config : PipelineConfig) : Except String IR :=
+def runPipeline (source : String) (config : PipelineConfig) : Except String IR :=
   -- Stage 1: Tokenize
   match tokenizeSource source with
   | .error msg => .error msg
@@ -296,30 +279,28 @@ noncomputable def runPipeline (source : String) (config : PipelineConfig) : Exce
   | .ok () => .ok ir
 
 /-- Run pipeline and serialize to bytes -/
-noncomputable def runPipelineAndSerialize (source : String) (config : PipelineConfig) : Except String ByteArray :=
+def runPipelineAndSerialize (source : String) (config : PipelineConfig) : Except String ByteArray :=
   match runPipeline source config with
   | .error msg => .error msg
-  | .ok ir => .ok (serializeIRToBytes ir config)
+  | .ok _ => .error "Complete IR serialization is not implemented; clauses would be lost"
 
 -- ============================================================================
 -- Convenience Functions
 -- ============================================================================
 
 /-- Parse GQL query (user tier) -/
-noncomputable def parseGQL (source : String) (userId roleId : String) : Except String IR :=
+def parseGQL (source : String) (userId roleId : String) : Except String IR :=
   runPipeline source (defaultGQLConfig userId roleId)
 
 /-- Parse GQL-DT query (admin tier) -/
-noncomputable def parseGQLdt (source : String) (userId roleId : String) : Except String IR :=
+def parseGQLdt (source : String) (userId roleId : String) : Except String IR :=
   runPipeline source (defaultGQLdtConfig userId roleId)
 
 /-- Parse and execute query -/
 def parseAndExecute (source : String) (config : PipelineConfig) : IO (Except String Unit) := do
   match runPipeline source config with
-  | .ok ir =>
-      -- TODO: Execute IR on Lithoglyph
-      IO.println s!"✓ Parsed successfully: {describeIR ir}"
-      .ok (.ok ())
+  | .ok _ =>
+      return .error "Persistent execution is not implemented in this pipeline"
   | .error msg =>
       IO.println s!"✗ Parse error: {msg}"
       .ok (.error msg)
@@ -341,240 +322,9 @@ structure PipelineError where
 def formatError (err : PipelineError) : String :=
   s!"{err.stage} error at line {err.line}, column {err.column}:\n{err.message}\n\nSource:\n{err.source}"
 
--- ============================================================================
--- Examples
--- ============================================================================
+-- Executable positive and negative controls live in test/SubstrateTest.lean.
+-- They exercise source parsing as well as IR evaluation.
 
-/-- Example: Parse GQL INSERT -/
-def exampleParseGQL : Except String IR :=
-  parseGQL
-    "INSERT INTO evidence (title, score) VALUES ('ONS Data', 95) RATIONALE 'Official statistics';"
-    "user123" "journalist"
-
--- #eval! exampleParseGQL
-
-/-- Example: Parse GQL-DT INSERT -/
-def exampleParseGQLdt : Except String IR :=
-  parseGQLdt
-    "INSERT INTO evidence (title : NonEmptyString, score : BoundedNat 0 100) VALUES ('ONS Data', 95) RATIONALE 'Official statistics';"
-    "admin456" "admin"
-
--- #eval! exampleParseGQLdt
-
-/-- Example: Parse SELECT -/
-def exampleParseSelect : Except String IR :=
-  parseGQL
-    "SELECT * FROM evidence;"
-    "user123" "journalist"
-
--- #eval! exampleParseSelect
-
-/-- Example: Complete pipeline with serialization -/
-noncomputable def examplePipelineWithSerialization : IO Unit := do
-  let config := defaultGQLConfig "user123" "journalist"
-
-  match runPipelineAndSerialize
-    "INSERT INTO evidence (title, score) VALUES ('ONS Data', 95) RATIONALE 'Official statistics';"
-    config with
-  | .ok bytes =>
-      IO.println s!"✓ Parsed and serialized: {bytes.size} bytes (CBOR)"
-  | .error msg =>
-      IO.println s!"✗ Error: {msg}"
-
--- ============================================================================
--- Testing & Validation
--- ============================================================================
-
-/-- Test: Valid GQL query should parse -/
-def testValidGQL : IO Bool := do
-  match parseGQL "INSERT INTO evidence (title) VALUES ('Test') RATIONALE 'Test';" "test" "user" with
-  | .ok _ =>
-      IO.println "✓ Valid GQL query parsed"
-      return true
-  | .error msg =>
-      IO.println s!"✗ Valid GQL query failed: {msg}"
-      return false
-
-/-- Test: Invalid query should error -/
-def testInvalidQuery : IO Bool := do
-  match parseGQL "INVALID SYNTAX HERE" "test" "user" with
-  | .ok _ =>
-      IO.println "✗ Invalid query should not parse"
-      return false
-  | .error _ =>
-      IO.println "✓ Invalid query correctly rejected"
-      return true
-
-/-- Run all tests -/
-def runTests : IO Unit := do
-  IO.println "=== GQL-DT Pipeline Tests ==="
-  let _ ← testValidGQL
-  let _ ← testInvalidQuery
-  IO.println "=== Tests Complete ==="
-
-end -- noncomputable section
-
--- ============================================================================
--- Computable End-to-End Tests (IR Evaluation)
--- ============================================================================
--- These tests bypass the axiomatized parser and directly construct IR,
--- then evaluate it through the evalIR engine. This demonstrates the
--- INSERT → SELECT round-trip working end-to-end.
-
-section EvalTests
-
-open IR AST Types Provenance TypeSafe
-
-/-- Test permissions for eval examples -/
-private def testPerms : PermissionMetadata := {
-  userId := "test-user",
-  roleId := "admin",
-  validationLevel := .runtime,
-  allowedTypes := [],
-  timestamp := 0
-}
-
-/-- Test: INSERT a row then SELECT it back -/
-def testInsertSelectRoundTrip : String :=
-  -- 1. Build an INSERT IR
-  let title := NonEmptyString.mk' "ONS CPI Data"
-  let score : BoundedNat 0 100 := ⟨95, by omega, by omega⟩
-  let rationale := Rationale.fromString "Official statistics"
-  let insertIR : IR := @IR.insert evidenceSchema {
-    table := "evidence",
-    columns := ["title", "prompt_provenance"],
-    values := [
-      ⟨.nonEmptyString, .nonEmptyString title⟩,
-      ⟨.boundedNat 0 100, .boundedNat 0 100 score⟩
-    ],
-    rationale := rationale,
-    proofs := [
-      serializeProof "NonEmptyString" "length > 0",
-      serializeProof "BoundedNat" "value ∈ [0, 100]"
-    ],
-    permissions := testPerms,
-    typesMatch := by
-      intro i hi
-      cases i with
-      | zero =>
-        exists { name := "title", type := .nonEmptyString, isPrimaryKey := false, isUnique := false }
-        constructor
-        · simp [evidenceSchema]
-        · simp
-      | succ i =>
-        cases i with
-        | zero =>
-          exists { name := "prompt_provenance", type := .boundedNat 0 100, isPrimaryKey := false, isUnique := false }
-          constructor
-          · simp [evidenceSchema]
-          · simp
-        | succ n =>
-          have hlen : List.length
-            [Sigma.mk TypeExpr.nonEmptyString (TypedValue.nonEmptyString title),
-             Sigma.mk (TypeExpr.boundedNat 0 100) (TypedValue.boundedNat 0 100 score)] = 2 := by
-            simp [List.length]
-          omega
-  }
-
-  -- 2. Evaluate INSERT on empty database
-  let db := EvalDatabase.empty
-  let (db2, insertResult) := evalIR db insertIR
-
-  -- 3. Build a SELECT IR
-  let selectIR : IR := .select {
-    selectList := .star,
-    from_ := { tables := [{ name := "evidence", alias := none }] },
-    where_ := none,
-    orderBy := none,
-    limit := none,
-    returning := none,
-    permissions := testPerms
-  }
-
-  -- 4. Evaluate SELECT
-  let (_, selectResult) := evalIR db2 selectIR
-
-  -- 5. Format results
-  s!"INSERT result: {insertResult.toString}\nSELECT result:\n{selectResult.toString}"
-
-#eval testInsertSelectRoundTrip
-
-/-- Test: INSERT two rows, then SELECT with WHERE filter -/
-def testInsertAndFilter : String :=
-  let rationale := Rationale.fromString "Test data"
-  -- Insert row 1
-  let insert1 : IR := @IR.insert evidenceSchema {
-    table := "data",
-    columns := ["name", "score"],
-    values := [
-      ⟨.string, .string "Alice"⟩,
-      ⟨.nat, .nat 90⟩
-    ],
-    rationale := rationale,
-    proofs := [],
-    permissions := testPerms,
-    typesMatch := inferredInsertTypesMatch evidenceSchema ["name", "score"]
-      [⟨.string, .string "Alice"⟩, ⟨.nat, .nat 90⟩]
-  }
-  -- Insert row 2
-  let insert2 : IR := @IR.insert evidenceSchema {
-    table := "data",
-    columns := ["name", "score"],
-    values := [
-      ⟨.string, .string "Bob"⟩,
-      ⟨.nat, .nat 75⟩
-    ],
-    rationale := rationale,
-    proofs := [],
-    permissions := testPerms,
-    typesMatch := inferredInsertTypesMatch evidenceSchema ["name", "score"]
-      [⟨.string, .string "Bob"⟩, ⟨.nat, .nat 75⟩]
-  }
-
-  let db := EvalDatabase.empty
-  let (db2, _) := evalIR db insert1
-  let (db3, _) := evalIR db2 insert2
-
-  -- SELECT with WHERE name = "Alice"
-  let selectFiltered : IR := .select {
-    selectList := .star,
-    from_ := { tables := [{ name := "data", alias := none }] },
-    where_ := some { predicate := ("name", "=", .string "Alice"), proof := fun _ => trivial },
-    orderBy := none,
-    limit := none,
-    returning := none,
-    permissions := testPerms
-  }
-  let (_, filteredResult) := evalIR db3 selectFiltered
-
-  -- SELECT all with LIMIT 1
-  let selectLimited : IR := .select {
-    selectList := .star,
-    from_ := { tables := [{ name := "data", alias := none }] },
-    where_ := none,
-    orderBy := none,
-    limit := some 1,
-    returning := none,
-    permissions := testPerms
-  }
-  let (_, limitedResult) := evalIR db3 selectLimited
-
-  s!"WHERE name='Alice': {filteredResult.toString}\nLIMIT 1: {limitedResult.toString}"
-
-#eval testInsertAndFilter
-
-/-- Test: Binary serialization round-trip for BoundedNat -/
-def testBinaryRoundTrip : String :=
-  let score : BoundedNat 0 100 := ⟨95, by omega, by omega⟩
-  let tv : Σ t : TypeExpr, TypedValue t := ⟨.boundedNat 0 100, .boundedNat 0 100 score⟩
-
-  let bytes := Serialization.serializeTypedValueBinary tv
-  match Serialization.deserializeTypedValueBinary bytes with
-  | .ok ⟨t, _v⟩ => s!"Round-trip OK: {bytes.size} bytes, type={t}"
-  | .error msg => s!"Round-trip FAILED: {msg}"
-
-#eval testBinaryRoundTrip
-
-end EvalTests
+end
 
 end GqlDt.Pipeline

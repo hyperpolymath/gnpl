@@ -1,9 +1,10 @@
 == GQL-DT Lexical Specification
 
-*SPDX-License-Identifier:* CC-BY-SA-4.0 *SPDX-FileCopyrightText:* 2026
-Jonathan D.A. Jewell (@hyperpolymath)
+*SPDX-License-Identifier:* CC-BY-SA-4.0
+*SPDX-FileCopyrightText:* 2026 Jonathan D.A. Jewell (@hyperpolymath)
 
-*Version:* 1.0.0 *Date:* 2026-02-01
+*Version:* 1.0.0
+*Date:* 2026-02-01
 
 === Table of Contents
 
@@ -21,35 +22,43 @@ Jonathan D.A. Jewell (@hyperpolymath)
 
 '''''
 
+[[1-character-set]]
 === 1. Character Set
 
 GQL-DT source files are encoded in *UTF-8*.
 
-*Character Classes:* - *ASCII:* U+0000 to U+007F - *Unicode:* Full
-Unicode 15.0 support (U+0000 to U+10FFFF) - *Line terminators:* LF
-(U+000A), CR (U+000D), CRLF (U+000D U+000A)
+*Character Classes:*
+
+* *ASCII:* U{plus}0000 to U{plus}007F
+* *Unicode:* Full Unicode 15.0 support (U{plus}0000 to U{plus}10FFFF)
+* *Line terminators:* LF (U{plus}000A), CR (U{plus}000D), CRLF (U{plus}000D U{plus}000A)
 
 '''''
 
+[[2-lexical-elements]]
 === 2. Lexical Elements
 
-GQL-DT source text is a sequence of *tokens* separated by *whitespace*
-and *comments*.
+GQL-DT source text is a sequence of *tokens* separated by *whitespace* and *comments*.
 
-*Token Types:* 1. *Keywords* - Reserved words 2. *Identifiers* - Names
-(variables, tables, columns) 3. *Literals* - Constants (numbers,
-strings, booleans) 4. *Operators* - Symbols for operations 5.
-*Punctuation* - Delimiters and separators 6. *Comments* - Ignored by
-lexer
+*Token Types:*
+
+[arabic]
+. *Keywords* - Reserved words
+. *Identifiers* - Names (variables, tables, columns)
+. *Literals* - Constants (numbers, strings, booleans)
+. *Operators* - Symbols for operations
+. *Punctuation* - Delimiters and separators
+. *Comments* - Ignored by lexer
 
 '''''
 
+[[3-keywords]]
 === 3. Keywords
 
+[[31-sql-style-keywords]]
 ==== 3.1 SQL-Style Keywords
 
-Keywords are *case-insensitive* (accepted in any case, but
-conventionally UPPERCASE).
+Keywords are *case-insensitive* (accepted in any case, but conventionally UPPERCASE).
 
 ....
 AND, APPLY, AS, ASC, AUDIENCE, BECAUSE, BETWEEN, BY
@@ -73,6 +82,7 @@ VALUES, VERIFY_PROOFS
 WHERE, WITH, WITH_INVERSE, WITH_JUSTIFICATION, WITH_PROOF
 ....
 
+[[32-type-keywords]]
 ==== 3.2 Type Keywords
 
 Type keywords are *case-sensitive* (must match exactly as shown).
@@ -94,7 +104,7 @@ Confidence, PromptDimension, Percentage, Rationale, ActorId
 *Dependent Types:*
 
 ....
-Vector, Tracked, PromptScores, NavigationPath, Claim, Belief
+Vector, Tracked, Prompores, NavigationPath, Claim, Belief
 Collection, Edge, ReversibleOp
 ....
 
@@ -104,18 +114,21 @@ Collection, Edge, ReversibleOp
 Option, Either
 ....
 
+[[33-normal-form-keywords]]
 ==== 3.3 Normal Form Keywords
 
 ....
 1NF, 2NF, 3NF, BCNF, 4NF, 5NF
 ....
 
+[[34-strategy-keywords]]
 ==== 3.4 Strategy Keywords
 
 ....
 PreferPreserving, to3NF, toBCNF, toBCNFPreferPreserving
 ....
 
+[[35-proof-tactic-keywords]]
 ==== 3.5 Proof Tactic Keywords
 
 ....
@@ -126,8 +139,10 @@ fd_tactic, nf_tactic, lossless_tactic
 
 '''''
 
+[[4-identifiers]]
 === 4. Identifiers
 
+[[41-syntax]]
 ==== 4.1 Syntax
 
 *ASCII Identifiers:*
@@ -140,17 +155,16 @@ fd_tactic, nf_tactic, lossless_tactic
 *Examples:*
 
 ....
-user_id, evidence, PromptScore, _internal, table123
+user_id, evidence, Prompore, _internal, table123
 ....
 
+[[42-unicode-identifiers]]
 ==== 4.2 Unicode Identifiers
 
-GQL-DT supports *Unicode identifiers* following Unicode Standard Annex
-#31:
+GQL-DT supports *Unicode identifiers* following Unicode Standard Annex ++#++31:
 
-* *First character:* `+XID_Start+` category (letters, ideographs, etc.)
-* *Subsequent characters:* `+XID_Continue+` category (letters, digits,
-underscore, etc.)
+* *First character:* `XID++_++Start` category (letters, ideographs, etc.)
+* *Subsequent characters:* `XID++_++Continue` category (letters, digits, underscore, etc.)
 
 *Examples:*
 
@@ -158,26 +172,28 @@ underscore, etc.)
 café, 用户, données, Σ, α, λ_expr
 ....
 
+[[43-reserved-identifiers]]
 ==== 4.3 Reserved Identifiers
 
-The following identifiers are *reserved* and cannot be used as user
-identifiers:
+The following identifiers are *reserved* and cannot be used as user identifiers:
 
 * All keywords (see section 3)
-* Built-in function names: `+NOW+`, `+INTERVAL+`
-* Special identifiers: `+$GENERATED_ID+`
+* Built-in function names: `NOW`, `INTERVAL`
+* Special identifiers: `$GENERATED++_++ID`
 
+[[44-case-sensitivity]]
 ==== 4.4 Case Sensitivity
 
-* *SQL keywords:* Case-insensitive (`+SELECT+` = `+select+` =
-`+SeLeCt+`)
-* *Type keywords:* Case-sensitive (`+BoundedNat+` ≠ `+boundednat+`)
-* *User identifiers:* Case-sensitive (`+userId+` ≠ `+UserId+`)
+* *SQL keywords:* Case-insensitive (`SELECT` = `select` = `SeLeCt`)
+* *Type keywords:* Case-sensitive (`BoundedNat` ≠ `boundednat`)
+* *User identifiers:* Case-sensitive (`userId` ≠ `UserId`)
 
 '''''
 
+[[5-literals]]
 === 5. Literals
 
+[[51-natural-number-literals]]
 ==== 5.1 Natural Number Literals
 
 *Syntax:*
@@ -193,8 +209,9 @@ identifiers:
 0, 42, 100, 9999
 ....
 
-*Type:* `+Nat+`
+*Type:* `Nat`
 
+[[52-integer-literals]]
 ==== 5.2 Integer Literals
 
 *Syntax:*
@@ -210,8 +227,9 @@ identifiers:
 -42, 0, 42, -9999
 ....
 
-*Type:* `+Int+`
+*Type:* `Int`
 
+[[53-float-literals]]
 ==== 5.3 Float Literals
 
 *Syntax:*
@@ -227,8 +245,9 @@ identifiers:
 0.0, 3.14, -2.718, 1.23e10, 6.022e-23
 ....
 
-*Type:* `+Float+`
+*Type:* `Float`
 
+[[54-string-literals]]
 ==== 5.4 String Literals
 
 *Single-quoted:*
@@ -245,31 +264,40 @@ identifiers:
 "She said \"hi\""  -- Escaped quote
 ....
 
-*Escape Sequences:* - `+\\+` - Backslash - `+\'+` - Single quote -
-`+\"+` - Double quote - `+\n+` - Newline - `+\r+` - Carriage return -
-`+\t+` - Tab - `+\uXXXX+` - Unicode code point (4 hex digits) -
-`+\UXXXXXXXX+` - Unicode code point (8 hex digits)
+*Escape Sequences:*
 
-*Type:* `+String+`
+* `++\\++` - Backslash
+* `++\++'` - Single quote
+* `++\++"` - Double quote
+* `++\++n` - Newline
+* `++\++r` - Carriage return
+* `++\++t` - Tab
+* `++\++uXXXX` - Unicode code point (4 hex digits)
+* `++\++UXXXXXXXX` - Unicode code point (8 hex digits)
 
+*Type:* `String`
+
+[[55-boolean-literals]]
 ==== 5.5 Boolean Literals
 
 ....
 true, false
 ....
 
-*Type:* `+Bool+`
+*Type:* `Bool`
 
-*Note:* Case-insensitive (`+TRUE+` = `+true+`)
+*Note:* Case-insensitive (`TRUE` = `true`)
 
+[[56-unit-literal]]
 ==== 5.6 Unit Literal
 
 ....
 ()
 ....
 
-*Type:* `+Unit+`
+*Type:* `Unit`
 
+[[57-timestamp-literals]]
 ==== 5.7 Timestamp Literals
 
 *Syntax:* ISO 8601 format as string literal
@@ -279,143 +307,157 @@ true, false
 '2026-02-01T12:34:56.123+00:00'
 ....
 
-*Type:* `+Timestamp+`
+*Type:* `Timestamp`
 
 '''''
 
+[[6-operators]]
 === 6. Operators
 
+[[61-arithmetic-operators]]
 ==== 6.1 Arithmetic Operators
 
 [cols=",,,",options="header",]
 |===
 |Operator |Name |Precedence |Associativity
-|`+^+` |Exponentiation |9 |Right
-|`+*+` |Multiplication |8 |Left
-|`+/+` |Division |8 |Left
-|`+div+` |Integer division |8 |Left
-|`+mod+` |Modulo |8 |Left
-|`+++` |Addition |7 |Left
-|`+-+` |Subtraction (binary) |7 |Left
-|`+-+` |Negation (unary) |10 |Right
+|`^` |Exponentiation |9 |Right
+|`++*++` |Multiplication |8 |Left
+|`/` |Division |8 |Left
+|`div` |Integer division |8 |Left
+|`mod` |Modulo |8 |Left
+|`{plus}` |Addition |7 |Left
+|`-` |Subtraction (binary) |7 |Left
+|`-` |Negation (unary) |10 |Right
 |===
 
+[[62-comparison-operators]]
 ==== 6.2 Comparison Operators
 
 [cols=",,,",options="header",]
 |===
 |Operator |Name |Precedence |Associativity
-|`+=+` |Equality |5 |Non-assoc
-|`+<>+` |Inequality (SQL) |5 |Non-assoc
-|`+!=+` |Inequality |5 |Non-assoc
-|`+<+` |Less than |5 |Non-assoc
-|`+>+` |Greater than |5 |Non-assoc
-|`+<=+` |Less or equal |5 |Non-assoc
-|`+>=+` |Greater or equal |5 |Non-assoc
+|`=` |Equality |5 |Non-assoc
+|`++<>++` |Inequality (SQL) |5 |Non-assoc
+|`!=` |Inequality |5 |Non-assoc
+|`++<++` |Less than |5 |Non-assoc
+|`++>++` |Greater than |5 |Non-assoc
+|`++<++=` |Less or equal |5 |Non-assoc
+|`++>++=` |Greater or equal |5 |Non-assoc
 |===
 
+[[63-set-operators]]
 ==== 6.3 Set Operators
 
 [cols=",,,",options="header",]
 |===
 |Operator |Name |Precedence |Associativity
-|`+∈+` |Element of |5 |Non-assoc
-|`+∉+` |Not element of |5 |Non-assoc
-|`+⊆+` |Subset |5 |Non-assoc
-|`+⊇+` |Superset |5 |Non-assoc
+|`∈` |Element of |5 |Non-assoc
+|`∉` |Not element of |5 |Non-assoc
+|`⊆` |Subset |5 |Non-assoc
+|`⊇` |Superset |5 |Non-assoc
 |===
 
+[[64-logical-operators]]
 ==== 6.4 Logical Operators
 
 [cols=",,,,",options="header",]
 |===
 |Operator |ASCII Alt |Name |Precedence |Associativity
-|`+¬+` |`+NOT+` |Negation |4 |Right
-|`+∧+` |`+AND+`, `+&&+` |Conjunction |3 |Left
-|`+∨+` |`+OR+`, `+\|\|+` |Disjunction |2 |Left
-|`+→+` |`+=>+` |Implication |1 |Right
-|`+⇒+` |`+==>+` |Implication |1 |Right
-|`+↔+` |`+<=>+` |Biconditional |1 |Right
-|`+⇔+` |`+<==>+` |Biconditional |1 |Right
+|`¬` |`NOT` |Negation |4 |Right
+|`∧` |`AND`, `&&` |Conjunction |3 |Left
+|`∨` |`OR`, `{vbar}{vbar}` |Disjunction |2 |Left
+|`→` |`=++>++` |Implication |1 |Right
+|`⇒` |`==++>++` |Implication |1 |Right
+|`↔` |`++<++=++>++` |Biconditional |1 |Right
+|`⇔` |`++<++==++>++` |Biconditional |1 |Right
 |===
 
+[[65-type-operators]]
 ==== 6.5 Type Operators
 
 [cols=",,,",options="header",]
 |===
 |Operator |Name |Precedence |Associativity
-|`+->+` |Function type |1 |Right
-|`+×+` |Product type |6 |Left
-|`+⊕+` |Sum type |6 |Left
+|`-++>++` |Function type |1 |Right
+|`×` |Product type |6 |Left
+|`⊕` |Sum type |6 |Left
 |===
 
+[[66-special-operators]]
 ==== 6.6 Special Operators
 
 [cols=",,,",options="header",]
 |===
 |Operator |Name |Precedence |Associativity
-|`+.+` |Field access |11 |Left
-|`+::+` |Cons (list prepend) |6 |Right
-|`+,+` |Comma (tuple/list sep) |0 |Left
-|`+:+` |Type annotation |N/A |N/A
-|`+\|+` |Type refinement |N/A |N/A
+|`.` |Field access |11 |Left
+|`::` |Cons (list prepend) |6 |Right
+|`,` |Comma (tuple/list sep) |0 |Left
+|`:` |Type annotation |N/A |N/A
+|`{vbar}` |Type refinement |N/A |N/A
 |===
 
+[[67-lambda-operators]]
 ==== 6.7 Lambda Operators
 
 [cols=",,",options="header",]
 |===
 |Operator |ASCII Alt |Name
-|`+λ+` |`+\+` |Lambda abstraction
+|`λ` |`++\++` |Lambda abstraction
 |===
 
 '''''
 
+[[7-punctuation]]
 === 7. Punctuation
 
+[[71-delimiters]]
 ==== 7.1 Delimiters
 
 [cols=",",options="header",]
 |===
 |Symbol |Name
-|`+(+` |Left parenthesis
-|`+)+` |Right parenthesis
-|`+[+` |Left bracket
-|`+]+` |Right bracket
-|`+{+` |Left brace
-|`+}+` |Right brace
-|`+⟨+` |Left angle (Lean proof)
-|`+⟩+` |Right angle (Lean proof)
+|`(` |Left parenthesis
+|`)` |Right parenthesis
+|`++[++` |Left bracket
+|`++]++` |Right bracket
+|`++{++` |Left brace
+|`}` |Right brace
+|`⟨` |Left angle (Lean proof)
+|`⟩` |Right angle (Lean proof)
 |===
 
+[[72-separators]]
 ==== 7.2 Separators
 
 [cols=",",options="header",]
 |===
 |Symbol |Name
-|`+,+` |Comma
-|`+;+` |Semicolon
-|`+.+` |Period/dot
-|`+:+` |Colon
-|`+\|+` |Pipe/bar
+|`,` |Comma
+|`;` |Semicolon
+|`.` |Period/dot
+|`:` |Colon
+|`{vbar}` |Pipe/bar
 |===
 
+[[73-special]]
 ==== 7.3 Special
 
 [cols=",",options="header",]
 |===
 |Symbol |Name
-|`+--+` |Line comment start
-|`+/*+` |Block comment start
-|`+*/+` |Block comment end
-|`+{-+` |Haskell-style comment start
-|`+-}+` |Haskell-style comment end
+|`--` |Line comment start
+|`/++*++` |Block comment start
+|`++*++/` |Block comment end
+|`++{++-` |Haskell-style comment start
+|`-}` |Haskell-style comment end
 |===
 
 '''''
 
+[[8-comments]]
 === 8. Comments
 
+[[81-line-comments]]
 ==== 8.1 Line Comments
 
 *Syntax:*
@@ -424,7 +466,7 @@ true, false
 -- This is a line comment
 ....
 
-* Start with `+--+`
+* Start with `--`
 * Extend to end of line
 * Can appear anywhere whitespace is allowed
 
@@ -436,6 +478,7 @@ SELECT * FROM evidence  -- Get all evidence
 WHERE prompt_overall > 90  -- High quality only
 ----
 
+[[82-block-comments]]
 ==== 8.2 Block Comments
 
 *Syntax (C-style):*
@@ -464,8 +507,10 @@ WHERE prompt_overall > 90  -- High quality only
 
 '''''
 
+[[9-whitespace]]
 === 9. Whitespace
 
+[[91-whitespace-characters]]
 ==== 9.1 Whitespace Characters
 
 GQL-DT treats the following as *whitespace*:
@@ -473,14 +518,15 @@ GQL-DT treats the following as *whitespace*:
 [cols=",,",options="header",]
 |===
 |Character |Unicode |Name
-|Space |U+0020 |SPACE
-|Tab |U+0009 |CHARACTER TABULATION
-|LF |U+000A |LINE FEED
-|CR |U+000D |CARRIAGE RETURN
-|VT |U+000B |LINE TABULATION
-|FF |U+000C |FORM FEED
+|Space |U{plus}0020 |SPACE
+|Tab |U{plus}0009 |CHARACTER TABULATION
+|LF |U{plus}000A |LINE FEED
+|CR |U{plus}000D |CARRIAGE RETURN
+|VT |U{plus}000B |LINE TABULATION
+|FF |U{plus}000C |FORM FEED
 |===
 
+[[92-significance]]
 ==== 9.2 Significance
 
 * *Required:* Between adjacent keywords/identifiers
@@ -501,13 +547,18 @@ SELECT*FROMevidence
 SELECT  *    FROM     evidence
 ----
 
+[[93-line-terminators]]
 ==== 9.3 Line Terminators
 
-Accepted line terminators: - *LF* (Unix/Linux/macOS): `+\n+` - *CRLF*
-(Windows): `+\r\n+` - *CR* (old Mac): `+\r+`
+Accepted line terminators:
+
+* *LF* (Unix/Linux/macOS): `++\++n`
+* *CRLF* (Windows): `++\++r++\++n`
+* *CR* (old Mac): `++\++r`
 
 '''''
 
+[[10-operator-precedence]]
 === 10. Operator Precedence
 
 *Complete precedence table (highest to lowest):*
@@ -515,34 +566,22 @@ Accepted line terminators: - *LF* (Unix/Linux/macOS): `+\n+` - *CRLF*
 [cols=",,,",options="header",]
 |===
 |Level |Operators |Associativity |Description
-|11 |`+.+` |Left |Field access
-
-|10 |Function application |Left |`+f x+`
-
-|9 |`+^+` |Right |Exponentiation
-
-|8 |`+*+`, `+/+`, `+div+`, `+mod+` |Left |Multiplicative
-
-|7 |`+++`, `+-+` (binary) |Left |Additive
-
-|6 |`+::+`, `+×+`, `+⊕+` |Right/Left |List cons, type product/sum
-
-|5 |`+=+`, `+<>+`, `+!=+`, `+<+`, `+>+`, `+<=+`, `+>=+` |Non-assoc
-|Comparison
-
-|5 |`+∈+`, `+∉+`, `+⊆+`, `+⊇+` |Non-assoc |Set membership
-
-|4 |`+¬+`, `+NOT+` |Right |Logical negation
-
-|3 |`+∧+`, `+AND+`, `+&&+` |Left |Logical conjunction
-
-|2 |`+∨+`, `+OR+`, `+\|\|+` |Left |Logical disjunction
-
-|1 |`+→+`, `+⇒+`, `+↔+`, `+⇔+`, `+->+` |Right |Implication, type arrow
-
-|0 |`+,+` |Left |Comma (separator)
+|11 |`.` |Left |Field access
+|10 |Function application |Left |`f x`
+|9 |`^` |Right |Exponentiation
+|8 |`++*++`, `/`, `div`, `mod` |Left |Multiplicative
+|7 |`{plus}`, `-` (binary) |Left |Additive
+|6 |`::`, `×`, `⊕` |Right/Left |List cons, type product/sum
+|5 |`=`, `++<>++`, `!=`, `++<++`, `++>++`, `++<++=`, `++>++=` |Non-assoc |Comparison
+|5 |`∈`, `∉`, `⊆`, `⊇` |Non-assoc |Set membership
+|4 |`¬`, `NOT` |Right |Logical negation
+|3 |`∧`, `AND`, `&&` |Left |Logical conjunction
+|2 |`∨`, `OR`, `{vbar}{vbar}` |Left |Logical disjunction
+|1 |`→`, `⇒`, `↔`, `⇔`, `-++>++` |Right |Implication, type arrow
+|0 |`,` |Left |Comma (separator)
 |===
 
+[[101-associativity-rules]]
 ==== 10.1 Associativity Rules
 
 *Left-associative:*
@@ -565,6 +604,7 @@ a -> b -> c  =  a -> (b -> c)
 a < b < c  =  (SYNTAX ERROR - use a < b AND b < c)
 ....
 
+[[102-parentheses]]
 ==== 10.2 Parentheses
 
 Use parentheses to override precedence:
@@ -577,8 +617,10 @@ a + (b * c)  -- Multiplication first (default)
 
 '''''
 
+[[11-lexical-analysis-algorithm]]
 === 11. Lexical Analysis Algorithm
 
+[[111-maximal-munch-rule]]
 ==== 11.1 Maximal Munch Rule
 
 The lexer uses *maximal munch* (longest match):
@@ -589,6 +631,7 @@ The lexer uses *maximal munch* (longest match):
 123.45  →  Token: 123.45  (float, not 123 . 45)
 ....
 
+[[112-token-recognition-priority]]
 ==== 11.2 Token Recognition Priority
 
 [arabic]
@@ -596,22 +639,25 @@ The lexer uses *maximal munch* (longest match):
 . *Keywords* - Matched before identifiers
 . *Multi-character operators* - Matched before single-char
 . *Literals* - Numbers, strings, booleans
-. *Identifiers* - Alphanumeric + underscore
+. *Identifiers* - Alphanumeric {plus} underscore
 . *Single-character operators/punctuation*
 
+[[113-ambiguity-resolution]]
 ==== 11.3 Ambiguity Resolution
 
-*Example:* `+SELECT*FROM+`
+*Example:* `SELECT++*++FROM`
 
-* Greedy matching: `+SELECT+`, `+*+`, `+FROM+` (correct)
-* Not: `+SELECT*F+`, `+ROM+` (incorrect)
+* Greedy matching: `SELECT`, `++*++`, `FROM` (correct)
+* Not: `SELECT++*++F`, `ROM` (incorrect)
 
 *Rule:* Always prefer keyword matches over identifiers.
 
 '''''
 
+[[12-lexical-extensions]]
 === 12. Lexical Extensions
 
+[[121-unicode-mathematical-symbols]]
 ==== 12.1 Unicode Mathematical Symbols
 
 GQL-DT accepts Unicode mathematical symbols with ASCII alternatives:
@@ -619,24 +665,25 @@ GQL-DT accepts Unicode mathematical symbols with ASCII alternatives:
 [cols=",,",options="header",]
 |===
 |Unicode |ASCII |Meaning
-|`+λ+` |`+\+` |Lambda
-|`+∀+` |`+forall+` |Universal quantifier
-|`+∃+` |`+exists+` |Existential quantifier
-|`+∧+` |`+AND+`, `+&&+` |Logical AND
-|`+∨+` |`+OR+`, `+\|\|+` |Logical OR
-|`+¬+` |`+NOT+` |Logical NOT
-|`+→+` |`+->+`, `+=>+` |Implication, function arrow
-|`+⇒+` |`+==>+` |Double implication
-|`+↔+` |`+<=>+` |Biconditional
-|`+⇔+` |`+<==>+` |Double biconditional
-|`+×+` |`+*+` (in type context) |Product type
-|`+⊕+` |`+++` (in type context) |Sum type
-|`+∈+` |`+IN+` |Set membership
-|`+∉+` |`+NOT IN+` |Not in set
-|`+⊆+` |`+SUBSET+` |Subset
-|`+⊇+` |`+SUPERSET+` |Superset
+|`λ` |`++\++` |Lambda
+|`∀` |`forall` |Universal quantifier
+|`∃` |`exists` |Existential quantifier
+|`∧` |`AND`, `&&` |Logical AND
+|`∨` |`OR`, `{vbar}{vbar}` |Logical OR
+|`¬` |`NOT` |Logical NOT
+|`→` |`-++>++`, `=++>++` |Implication, function arrow
+|`⇒` |`==++>++` |Double implication
+|`↔` |`++<++=++>++` |Biconditional
+|`⇔` |`++<++==++>++` |Double biconditional
+|`×` |`++*++` (in type context) |Product type
+|`⊕` |`{plus}` (in type context) |Sum type
+|`∈` |`IN` |Set membership
+|`∉` |`NOT IN` |Not in set
+|`⊆` |`SUBSET` |Subset
+|`⊇` |`SUPERSET` |Superset
 |===
 
+[[122-proof-literals]]
 ==== 12.2 Proof Literals
 
 *Lean 4 proof terms:*
@@ -663,8 +710,10 @@ by simp [rule1, rule2]; omega
 
 '''''
 
+[[13-compatibility-notes]]
 === 13. Compatibility Notes
 
+[[131-standard-gql-compatibility]]
 ==== 13.1 Standard GQL Compatibility
 
 GQL-DT is a *superset* of standard Lithoglyph GQL:
@@ -673,26 +722,29 @@ GQL-DT is a *superset* of standard Lithoglyph GQL:
 * *Type annotations* are optional (inferred if omitted)
 * *Proof clauses* are optional (auto-generated or admitted)
 
+[[132-sql-compatibility]]
 ==== 13.2 SQL Compatibility
 
 GQL-DT follows SQL conventions:
 
 * *Keywords are case-insensitive* (SELECT = select)
-* *String literals* use single quotes (standard) or double quotes
-(PostgreSQL-style)
-* *Comments* use `+--+` (SQL standard) or `+/* */+` (C-style)
+* *String literals* use single quotes (standard) or double quotes (PostgreSQL-style)
+* *Comments* use `--` (SQL standard) or `/++*++ ++*++/` (C-style)
 
+[[133-lean-4--idris-2-compatibility]]
 ==== 13.3 Lean 4 / Idris 2 Compatibility
 
 Type expressions and proof terms can embed:
 
 * *Lean 4 syntax* - Full Lean 4 type expressions in type annotations
-* *Idris 2 syntax* - Full Idris 2 proof terms in WITH_PROOF clauses
+* *Idris 2 syntax* - Full Idris 2 proof terms in WITH++_++PROOF clauses
 
 '''''
 
+[[14-error-recovery]]
 === 14. Error Recovery
 
+[[141-lexical-errors]]
 ==== 14.1 Lexical Errors
 
 *Unterminated string:*
@@ -719,26 +771,33 @@ SELECT 1.2.3 FROM t
 -- ERROR: Invalid float literal '1.2.3' at line 1, column 8
 ----
 
+[[142-recovery-strategy]]
 ==== 14.2 Recovery Strategy
 
-On lexical error: 1. *Report error* with line and column number 2. *Skip
-to next whitespace* or punctuation 3. *Continue tokenization* (collect
-all errors)
+On lexical error:
+
+[arabic]
+. *Report error* with line and column number
+. *Skip to next whitespace* or punctuation
+. *Continue tokenization* (collect all errors)
 
 '''''
 
+[[15-implementation-notes]]
 === 15. Implementation Notes
 
+[[151-recommended-tools]]
 ==== 15.1 Recommended Tools
 
-* *Lexer generator:* Alex (Haskell), ocamllex (OCaml), Flex (C/C++)
+* *Lexer generator:* Alex (Haskell), ocamllex (OCaml), Flex (C/C{plus}{plus})
 * *Hand-rolled:* Lean 4 Parsec, Rust nom, ReScript combinators
 
+[[152-performance-considerations]]
 ==== 15.2 Performance Considerations
 
 * *Unicode normalization:* Normalize identifiers to NFC form
 * *Keyword lookup:* Use hash table for O(1) keyword recognition
-* *Number parsing:* Use fast float parsing (e.g., `+from_str_radix+`)
+* *Number parsing:* Use fast float parsing (e.g., `from++_++str++_++radix`)
 
 '''''
 
@@ -746,7 +805,7 @@ all errors)
 
 [arabic]
 . *ISO/IEC 14977* - EBNF Syntax Notation
-. *Unicode Standard Annex #31* - Unicode Identifier and Pattern Syntax
+. *Unicode Standard Annex ++#++31* - Unicode Identifier and Pattern Syntax
 . *SQL:2023 Standard* - ISO/IEC 9075
 . *Lean 4 Reference* - https://lean-lang.org/
 . *Idris 2 Tutorial* - https://idris2.readthedocs.io/
@@ -755,6 +814,7 @@ all errors)
 
 *Document Status:* Complete lexical specification for GQL-DT v1.0
 
-*See Also:* - `+GQL-DT-Grammar.ebnf+` - Formal EBNF grammar -
-`+GQL_Dependent_Types_Complete_Specification.md+` - Type system
-specification
+*See Also:*
+
+* `GQL-DT-Grammar.ebnf` - Formal EBNF grammar
+* `GQL++_++Dependent++_++Types++_++Complete++_++Specification.md` - Type system specification
