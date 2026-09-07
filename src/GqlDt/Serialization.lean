@@ -63,6 +63,9 @@ def serializeTypedValueJSON (tv : Σ t : TypeExpr, TypedValue t) : JsonValue :=
         ("proof", .string "<base64-proof>")  -- TODO: Actual proof serialization
       ]
 
+  | ⟨.confidence, .confidence score⟩ =>
+      .object [("type", .string "Confidence"), ("value", .number score.val.toFloat)]
+
   | ⟨.nonEmptyString, .nonEmptyString nes⟩ =>
       .object [
         ("type", .string "NonEmptyString"),
@@ -120,6 +123,16 @@ def deserializeTypedValueJSON (json : JsonValue) : Except String (Σ t : TypeExp
                 .error s!"Value {val} out of bounds [{min}, {max}]"
           | _, _, _ => .error "Invalid BoundedNat fields"
 
+      | some (_, .string "Confidence") =>
+          match fields.find? (·.1 = "value") with
+          | some (_, .number value) =>
+              let n := value.toUInt64.toNat
+              if value != n.toFloat then .error "Confidence must be an integer"
+              else if h : n ≤ 100 then
+                .ok ⟨.confidence, .confidence ⟨n, Nat.zero_le n, h⟩⟩
+              else .error "Confidence must be in [0, 100]"
+          | _ => .error "Invalid 'value' for Confidence"
+
       | some (_, .string "NonEmptyString") =>
           let value? := fields.find? (·.1 = "value")
           match value? with
@@ -143,6 +156,8 @@ def deserializeTypedValueJSON (json : JsonValue) : Except String (Σ t : TypeExp
 /-- Serialize TypedValue to CBOR -/
 def serializeTypedValueCBOR (tv : Σ t : TypeExpr, TypedValue t) : CBORValue :=
   match tv with
+  | ⟨.confidence, .confidence score⟩ =>
+      .tag cborTagConfidence (.map [(.textString "value", .unsigned score.val)])
   | ⟨.nat, .nat n⟩ =>
       .unsigned n
 
@@ -327,9 +342,8 @@ def decodeUnsignedCBOR (d : CBORDecoder) (addInfo : UInt8) : Except String (Nat 
   else if addInfo == 27 then
     -- 8-byte follows (big-endian)
     do
-      let (_bytes, d') ← d.readBytes 8
-      -- TODO: Implement UInt64.fromBigEndian for Lean 4.15.0
-      let val := 0  -- Stub
+      let (bytes, d') ← d.readBytes 8
+      let val := bytes.data.foldl (fun acc byte => acc * 256 + byte.toNat) 0
       .ok (val, d')
   else
     .error s!"Invalid CBOR additional info: {addInfo}"
@@ -356,8 +370,9 @@ partial def decodeCBORValue (d : CBORDecoder) : Except String (CBORValue × CBOR
 
   | 3 =>  -- Text string
       let (len, d2) ← decodeUnsignedCBOR d1 addInfo
-      let (_bytes, d3) ← d2.readBytes len
-      let str := "" -- TODO: Implement String.fromUTF8 for Lean 4.15.0
+      let (bytes, d3) ← d2.readBytes len
+      let some str := String.fromUTF8? bytes
+        | .error "Invalid UTF-8 in CBOR text string"
       .ok (.textString str, d3)
 
   | 4 =>  -- Array
@@ -496,6 +511,9 @@ def serializeTypedValueBinary (tv : Σ t : TypeExpr, TypedValue t) : ByteArray :
       -- Tag (0x02) + min (8 bytes) + max (8 bytes) + value (8 bytes)
       ByteArray.mk #[0x02] ++ natToLE8 min ++ natToLE8 max ++ natToLE8 bn.val
 
+  | ⟨.confidence, .confidence score⟩ =>
+      ByteArray.mk #[0x09] ++ natToLE8 score.val
+
   | ⟨.nonEmptyString, .nonEmptyString nes⟩ =>
       -- Tag (0x03) + length (4 bytes) + UTF-8 bytes
       let utf8 := nes.val.toUTF8
@@ -519,6 +537,13 @@ def deserializeTypedValueBinary (bytes : ByteArray) : Except String (Σ t : Type
   else
     let tag := bytes.get! 0
     match tag with
+    | 0x09 =>  -- Confidence: an integer admission score in [0, 100]
+        if bytes.size != 9 then .error "Confidence requires exactly 9 bytes"
+        else
+          let n := le8ToNat bytes 1
+          if h : n ≤ 100 then
+            .ok ⟨.confidence, .confidence ⟨n, Nat.zero_le n, h⟩⟩
+          else .error "Confidence must be in [0, 100]"
     | 0x01 =>  -- Nat
         if bytes.size < 9 then
           .error "Insufficient bytes for Nat"
@@ -599,6 +624,7 @@ def toSQLValue (tv : Σ t : TypeExpr, TypedValue t) : String :=
   match tv with
   | ⟨_, .nat n⟩ => toString n
   | ⟨_, .boundedNat _ _ bn⟩ => toString bn.val  -- BOUNDS LOST!
+  | ⟨_, .confidence score⟩ => toString score.val
   | ⟨_, .nonEmptyString nes⟩ => s!"'{nes.val}'"  -- PROOF LOST!
   | ⟨_, .promptScores scores⟩ => toString scores.overall.val  -- SCORES AGGREGATED!
   | _ => "NULL"
@@ -606,6 +632,13 @@ def toSQLValue (tv : Σ t : TypeExpr, TypedValue t) : String :=
 /-- Convert from SQL value to TypedValue (requires type hint) -/
 def fromSQLValue (sqlValue : String) (expectedType : TypeExpr) : Except String (Σ t : TypeExpr, TypedValue t) :=
   match expectedType with
+  | .confidence =>
+      match sqlValue.toNat? with
+      | some n =>
+          if h : n ≤ 100 then
+            .ok ⟨.confidence, .confidence ⟨n, Nat.zero_le n, h⟩⟩
+          else .error "Confidence must be in [0, 100]"
+      | none => .error "Confidence must be an integer in [0, 100]"
   | .nat =>
       match sqlValue.toNat? with
       | some n => .ok ⟨.nat, .nat n⟩
@@ -697,7 +730,17 @@ def deserializeTypedValueFromCBOR (cbor : CBORValue) : Except String (Σ t : Typ
       .ok ⟨.nat, .nat n⟩
 
   | .tag tag value =>
-      if tag == cborTagBoundedNat then
+      if tag == cborTagConfidence then
+        match value with
+        | .map fields =>
+            match fields.find? (fun (k, _) => k == .textString "value") with
+            | some (_, .unsigned n) =>
+                if h : n ≤ 100 then
+                  .ok ⟨.confidence, .confidence ⟨n, Nat.zero_le n, h⟩⟩
+                else .error "Confidence must be in [0, 100]"
+            | _ => .error "Invalid Confidence CBOR structure"
+        | _ => .error "Confidence tag expects map value"
+      else if tag == cborTagBoundedNat then
         match value with
         | .map fields =>
             -- Extract min, max, value

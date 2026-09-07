@@ -1,0 +1,8 @@
+-- SPDX-License-Identifier: MPL-2.0
+-- SPDX-FileCopyrightText: 2026 Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>
+-- Declared telling order; it does not assert a temporal ordering of events.
+account "inspection account"
+focalized by "analyst"
+threshold 70
+assert "bridge" "status" "closed" citing "inspection-17"
+assert "site" "weather" "rain" citing "weather-3"

@@ -170,13 +170,13 @@ def selectProofStrategy (result : InferenceResult) : ProofStrategy :=
   | .confidence => .omega       -- 0 ≤ n ∧ n ≤ 100 uses linear arithmetic
   | _ => .admit  -- No proof needed
 
-/-- Generate proof term (as string for now, actual Expr later) -/
-def generateProofTerm (strategy : ProofStrategy) : String :=
+/-- Suggest a tactic; an unavailable strategy cannot manufacture proof text. -/
+def generateProofTerm (strategy : ProofStrategy) : Except String String :=
   match strategy with
-  | .decide => "by decide"
-  | .omega => "by omega"
-  | .simp => "by simp"
-  | .admit => "sorry"  -- Represents fallback to runtime validation (not a proof-position sorry)
+  | .decide => .ok "by decide"
+  | .omega => .ok "by omega"
+  | .simp => .ok "by simp"
+  | .admit => .error "No proof strategy is available; an explicit proof is required"
 
 -- ============================================================================
 -- Full INSERT Inference
@@ -200,8 +200,7 @@ def inferInsert
   : Except String InferredInsert := do
 
   -- 1. Find schema
-  let schemaTable? := schema.columns.isEmpty  -- TODO: Real schema lookup
-  if schemaTable? then
+  if schema.name != table || schema.columns.isEmpty then
     throw s!"Table {table} not found in schema"
 
   -- 2. Check column count matches

@@ -1,0 +1,18 @@
+= Outstanding Repository Initialisation
+
+The current policy documents still contain four distinct substitution tokens.
+Their values require the repository owner's decision; the language and CI work
+does not establish them.
+
+[cols="1,1,2",options="header"]
+|===
+|Token |Document |Required fact
+|CONDUCT_EMAIL |CODE_OF_CONDUCT.adoc |The contact address for conduct reports and appeals.
+|RESPONSE_TIME |CODE_OF_CONDUCT.adoc |The acknowledgment time that the maintainers commit to.
+|CONDUCT_TEAM |CODE_OF_CONDUCT.adoc |The people or body responsible for reviewing conduct reports.
+|PGP_KEY_URL |SECURITY.adoc |The authoritative download URL for the vulnerability-reporting public key.
+|===
+
+Do not infer these values from unrelated repositories or suppress the unresolved
+sections to satisfy a check. Remove this marker once all four values have been
+supplied and the policy documents have been checked.

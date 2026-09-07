@@ -1,0 +1,105 @@
+// SPDX-License-Identifier: CC-BY-SA-4.0
+// SPDX-FileCopyrightText: 2026 Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>
+= Direct-evidence narration: executable slice
+
+This slice implements accounts, focalization, direct-evidence warrants, a limited
+rival relation and hypothetical withdrawal. It runs over an imported immutable
+evidence snapshot. It is independent of the experimental storage substrate.
+
+== Run it
+
+[source,console]
+----
+lake build
+.lake/build/bin/gnpl narrate --evidence examples/narration/evidence.json --projection examples/narration/inspection.gnpl
+.lake/build/bin/gnpl narrate --evidence examples/narration/evidence.json --projection examples/narration/witness.gnpl
+.lake/build/bin/gnpl counterfactual --evidence examples/narration/evidence.json --projection examples/narration/inspection.gnpl --withdraw inspection-17
+.lake/build/bin/gnpl counterfactual --evidence examples/narration/evidence.json --projection examples/narration/inspection.gnpl --withdraw witness-22
+lake test
+----
+
+Both accounts are warranted under their explicit stance, although their bridge
+status assertions conflict. Withdrawing the inspection invalidates the inspection
+account; withdrawing the uncited witness preserves it. Neither counterfactual
+changes the evidence file. Exit 0 means warranted/preserved, 1 means refused or
+invalidated, and 2 means a usage, parsing or file-input error. JSON output includes
+the status; a refusal contains no partially constructed account.
+
+== Surface
+
+[source]
+----
+account "inspection account"
+focalized by "analyst"
+threshold 70
+assert "bridge" "status" "closed" citing "inspection-17"
+assert "site" "weather" "rain" citing "weather-3"
+----
+
+Each declaration occupies one line. Strings use JSON quoting and escapes.
+Blank lines and whole-line `--` comments are accepted. Header order is fixed;
+at least one assertion is required. Unknown declarations and trailing clauses
+are errors. An assertion assigns a value to a *single-valued subject/slot*.
+It is a structured recorded assertion, not a natural-language entailment claim.
+
+The projection declares telling order. This slice infers no temporal order,
+causality, granularity or narrative emphasis. In particular, the initial `Fabula`
+is an evidence snapshot without the planned partial-order event structure.
+
+== Warrant rule and trust boundary
+
+For each assertion, the selected evidence must be present, unwithdrawn, visible to
+the actor and an exact match for the requested subject/slot/value. Its source and
+rationale must be nonblank. Its declared confidence must be in 0–100 and meet the
+projection's threshold. Duplicate evidence identifiers, duplicate assertions and
+conflicting values within a single account are refused.
+
+Confidence here is an integer admission score declared in the input. No
+probabilistic meaning, averaging, confidence combination, entrenchment ordering or
+automatic choice between sources is implemented. The threshold is an explicit
+policy in the projection. This does not settle the broader confidence semantics.
+
+The importer trusts the snapshot's attribution, audience and scores. It does not
+authenticate the actor, verify a source signature, establish the truth of an
+assertion, or judge whether a rationale is persuasive. Focalization is evaluated
+against supplied audience data; it is not a network authorization service.
+
+`gnpl-evidence-v1` has an explicit version and required fields; unknown fields
+are refused. Output `gnpl-account-v1` contains a readable warrant trail. It is
+not a portable proof certificate: the Lean proofs are checked in the kernel,
+erased during execution and not encoded as independently checkable JSON proofs.
+
+== Types and proofs
+
+`Warrant` is indexed by the exact snapshot, focalization and assertion request.
+`Account` contains a narration indexed by the entire requested assertion list.
+It cannot silently drop an unwarranted assertion or reorder the telling.
+A warrant for an old snapshot is not a warrant for a changed snapshot.
+Historical accounts remain accounts of their original snapshots.
+
+Lean checks two general properties in `src/Gnpl/Core.lean`:
+
+* Withdrawn evidence cannot satisfy the direct-evidence support rule.
+* Every checked narration contains exactly the requested claims in their order.
+
+These properties are about the encoded rule and projection, not external truth
+or arbitrary narrative inference. Lean's transitive axiom audit reports only
+`propext` (propositional extensionality) for `narrate` and both theorems.
+`test/NarrationProofAudit.lean` checks this diagnostic during every default build.
+The kernel imports Lean/Std and does not depend on the storage substrate's
+floating-point equality assumption.
+
+The `rival` library operation detects different values for the same subject/slot
+across two checked accounts of the same snapshot. It retains both accounts. It
+does not implement general argumentation, entailment or automatic account search.
+
+== Validation and next integration
+
+`test/NarrationTest.lean` is built by `lake build` and run by `lake test`, including
+real executable invocations and their JSON/exit-code checks. It covers warranted
+accounts, inaccessible/mismatched/missing evidence, thresholds, malformed input,
+rival accounts, source withdrawal and preservation under an unrelated withdrawal.
+
+Next: a read-only Lithoglyph journal adapter supplying this snapshot contract,
+then checked derivation chains and explicit temporal/partial-order semantics.
+Durable account storage and Glyphbase rendering remain separate integration work.

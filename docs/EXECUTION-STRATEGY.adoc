@@ -1,25 +1,21 @@
 == GQL-DT Execution Strategy: SQL vs IR vs Native
 
-*SPDX-License-Identifier:* CC-BY-SA-4.0 *SPDX-FileCopyrightText:* 2026
-Jonathan D.A. Jewell (@hyperpolymath)
+*SPDX-License-Identifier:* CC-BY-SA-4.0
+*SPDX-FileCopyrightText:* 2026 Jonathan D.A. Jewell (@hyperpolymath)
 
-*Date:* 2026-02-01 *Status:* Architectural Decision *Priority:* CRITICAL
-- Affects Milestone 6 Parser Design
+*Date:* 2026-02-01
+*Status:* Architectural Decision
+*Priority:* CRITICAL - Affects Milestone 6 Parser Design
 
 '''''
 
 === The Question
 
-*"`Does it make sense to compile GQL-DT to SQL or a lower-level IR for
-execution?`"*
+*"Does it make sense to compile GQL-DT to SQL or a lower-level IR for execution?"*
 
-*Your intuition:* Compiling to SQL feels like "`being a purist`" but
-might sacrifice compatibility.
+*Your intuition:* Compiling to SQL feels like "being a purist" but might sacrifice compatibility.
 
-*TL;DR Answer:* Your intuition is *100% correct*. Compiling to SQL
-*destroys the type safety guarantees* that make GQL-DT valuable.
-*Recommendation: Compile to typed IR, execute natively on Lithoglyph,
-with optional SQL backend for compatibility.*
+*TL;DR Answer:* Your intuition is *100% correct*. Compiling to SQL *destroys the type safety guarantees* that make GQL-DT valuable. *Recommendation: Compile to typed IR, execute natively on Lithoglyph, with optional SQL backend for compatibility.*
 
 '''''
 
@@ -52,29 +48,16 @@ VALUES ('ONS Data', 95);
 
 ==== Problems with SQL Compilation
 
-[width="100%",cols="53%,47%",options="header",]
+[cols=",",options="header",]
 |===
 |Problem |Impact
-|*Proof Erasure* |All proofs removed - can’t verify correctness at
-execution
-
-|*Type Information Loss* |`+BoundedNat 0 100+` becomes `+INTEGER+` -
-bounds lost
-
-|*Refinement Types Gone* |`+NonEmptyString+` becomes `+TEXT+` -
-non-emptiness not enforced
-
-|*No Dependent Types* |`+PromptScores+` flattened to 7 separate columns
-- overall auto-computation lost
-
-|*Provenance Tracking Weakened* |`+Tracked α+` becomes regular columns -
-no type-level guarantees
-
-|*Runtime-Only Checks* |SQL CHECK constraints run at INSERT, not at
-query construction
-
-|*Error Messages Poor* |SQL errors like "`CHECK constraint violated`"
-instead of helpful GQL-DT messages
+|*Proof Erasure* |All proofs removed - can't verify correctness at execution
+|*Type Information Loss* |`BoundedNat 0 100` becomes `INTEGER` - bounds lost
+|*Refinement Types Gone* |`NonEmptyString` becomes `TEXT` - non-emptiness not enforced
+|*No Dependent Types* |`Prompores` flattened to 7 separate columns - overall auto-computation lost
+|*Provenance Tracking Weakened* |`Tracked α` becomes regular columns - no type-level guarantees
+|*Runtime-Only Checks* |SQL CHECK constraints run at INSERT, not at query construction
+|*Error Messages Poor* |SQL errors like "CHECK constraint violated" instead of helpful GQL-DT messages
 |===
 
 ==== Example: Information Loss
@@ -98,18 +81,22 @@ INSERT INTO evidence (prompt_provenance) VALUES (150);
 -- DETAIL: Failing row contains (150)
 ----
 
-*Loss:* User finds out about error when running query, not when writing
-it. Defeats the entire purpose of GQL-DT.
+*Loss:* User finds out about error when running query, not when writing it. Defeats the entire purpose of GQL-DT.
 
 ==== When SQL Compilation Makes Sense
 
-*Compatibility Layer Only:* - GQL (user tier) → SQL for broad tool
-compatibility - GQL-DT proofs already verified → SQL as "`dumb
-transport`" - Read-only queries where type safety less critical -
-Integration with existing SQL tools (BI dashboards, reporting)
+*Compatibility Layer Only:*
 
-*NOT for:* - Primary execution path - Security-critical operations -
-When type safety guarantees needed
+* GQL (user tier) → SQL for broad tool compatibility
+* GQL-DT proofs already verified → SQL as "dumb transport"
+* Read-only queries where type safety less critical
+* Integration with existing SQL tools (BI dashboards, reporting)
+
+*NOT for:*
+
+* Primary execution path
+* Security-critical operations
+* When type safety guarantees needed
 
 '''''
 
@@ -176,22 +163,15 @@ structure IR.InsertStmt (schema : Schema) where
 
 ==== Benefits of IR Approach
 
-[width="100%",cols="53%,47%",options="header",]
+[cols=",",options="header",]
 |===
 |Benefit |Impact
 |*Type Preservation* |All dependent type information preserved
-
 |*Proof Transport* |Proofs serialized (CBOR) and verified on server
-
-|*Multiple Backends* |IR → Lithoglyph (native), IR → SQL (compat), IR →
-Debug
-
+|*Multiple Backends* |IR → Lithoglyph (native), IR → SQL (compat), IR → Debug
 |*Optimization* |IR can be optimized before execution
-
 |*Security* |Type-safe IR prevents SQL injection entirely
-
 |*Error Messages* |IR execution can reference original GQL-DT source
-
 |*Proof Caching* |Verified proofs cached in IR, no re-verification
 |===
 
@@ -244,23 +224,36 @@ Lithoglyph Server (Rust/Zig)
 
 ==== Why Native Execution Wins
 
-*1. Type Safety Preserved End-to-End* - Dependent types from parser to
-database - Proofs verified once, trusted throughout - No information
-loss at any layer
+*1. Type Safety Preserved End-to-End*
 
-*2. Performance* - No SQL parsing/planning overhead - Direct execution
-on Lithoglyph storage - Proof verification at parse time, not runtime -
-Zero-copy deserialization (CBOR → Rust/Zig)
+* Dependent types from parser to database
+* Proofs verified once, trusted throughout
+* No information loss at any layer
 
-*3. Security* - Type-safe IR eliminates SQL injection - Proof blobs
-cryptographically verified - No string concatenation vulnerabilities
+*2. Performance*
 
-*4. Error Quality* - Errors reference original GQL-DT source - Type
-mismatch errors show expected vs actual types - Proof failure errors
-show which tactic failed
+* No SQL parsing/planning overhead
+* Direct execution on Lithoglyph storage
+* Proof verification at parse time, not runtime
+* Zero-copy deserialization (CBOR → Rust/Zig)
 
-*5. Future-Proof* - Not constrained by SQL semantics - Can add features
-SQL doesn’t support - Normalization operations require custom IR anyway
+*3. Security*
+
+* Type-safe IR eliminates SQL injection
+* Proof blobs cryptographically verified
+* No string concatenation vulnerabilities
+
+*4. Error Quality*
+
+* Errors reference original GQL-DT source
+* Type mismatch errors show expected vs actual types
+* Proof failure errors show which tactic failed
+
+*5. Future-Proof*
+
+* Not constrained by SQL semantics
+* Can add features SQL doesn't support
+* Normalization operations require custom IR anyway
 
 ==== Lithoglyph Native Storage Integration
 
@@ -293,9 +286,11 @@ const Collection = struct {
 };
 ----
 
-*No SQL Translation Needed:* - Lithoglyph storage layer speaks
-"`dependent types`" natively - IR maps directly to storage operations -
-Proofs already verified, storage just executes
+*No SQL Translation Needed:*
+
+* Lithoglyph storage layer speaks "dependent types" natively
+* IR maps directly to storage operations
+* Proofs already verified, storage just executes
 
 '''''
 
@@ -358,7 +353,7 @@ def executeIR (ir : IR) (backend : Backend) : IO Result :=
 
 *Benchmark: 10,000 INSERTs with dependent types*
 
-[width="100%",cols="19%,12%,20%,15%,12%,22%",options="header",]
+[cols=",,,,,",options="header",]
 |===
 |Approach |Parse |Type Check |Execute |Total |Type Safety
 |*GQL-DT → IR → Lithoglyph* |50ms |20ms |100ms |*170ms* |✅ Full
@@ -367,10 +362,12 @@ def executeIR (ir : IR) (backend : Backend) : IO Result :=
 |*Raw SQL → DB* |10ms |0ms |200ms |*210ms* |❌ None
 |===
 
-*Key Insight:* Native IR execution is *faster* than SQL compilation
-because: 1. No SQL parsing overhead on server 2. Proof verification at
-parse time (one-time cost) 3. Direct storage operations (no query
-planner)
+*Key Insight:* Native IR execution is *faster* than SQL compilation because:
+
+[arabic]
+. No SQL parsing overhead on server
+. Proof verification at parse time (one-time cost)
+. Direct storage operations (no query planner)
 
 ==== Proof Erasure Performance
 
@@ -384,9 +381,11 @@ def insert (score : BoundedNat 0 100) : IO Unit :=
   storageWrite score.val
 ----
 
-*Runtime overhead of dependent types: ZERO* - Proofs erased after type
-checking - Only data values remain - Same runtime representation as
-untyped
+*Runtime overhead of dependent types: ZERO*
+
+* Proofs erased after type checking
+* Only data values remain
+* Same runtime representation as untyped
 
 '''''
 
@@ -394,7 +393,7 @@ untyped
 
 [cols=",,,",options="header",]
 |===
-|Criterion |SQL Compilation |IR + Native |Hybrid (IR primary)
+|Criterion |SQL Compilation |IR {plus} Native |Hybrid (IR primary)
 |*Type Safety* |❌ Lost |✅ Full |✅ Full (native)
 |*Performance* |⚠️ Slower |✅ Faster |✅ Faster (native)
 |*Compatibility* |✅ Broad |⚠️ Lithoglyph only |✅ Both
@@ -417,7 +416,7 @@ untyped
 . Performance: Excellent
 . Compatibility: Lithoglyph only
 
-==== Phase 2: Add SQL Compatibility (M8+)
+==== Phase 2: Add SQL Compatibility (M8{plus})
 
 [arabic]
 . IR → SQL lowering for read-only queries
@@ -426,28 +425,26 @@ untyped
 . Performance: Good for reads
 . Compatibility: Broad
 
-==== Phase 3: Optimize IR (M9+)
+==== Phase 3: Optimize IR (M9{plus})
 
 [arabic]
 . IR optimizations (constant folding, proof caching)
 . Query plan optimization
 . Parallel execution
-. Performance: Excellent++
+. Performance: Excellent{plus}{plus}
 
 '''''
 
 === Your Intuition is Correct
 
-*You said:* "`I think this might have bearing on [permissions] but if
-not, treat this as the next step.`"
+*You said:* "I think this might have bearing on ++[++permissions++]++ but if not, treat this as the next step."
 
-*You’re right on both counts:*
+*You're right on both counts:*
 
 [arabic]
-. *Permissions Bearing:* YES - permission enforcement happens in IR, not
-SQL
+. *Permissions Bearing:* YES - permission enforcement happens in IR, not SQL
 * TypeWhitelist filters in IR generation
-* SQL can’t represent "`user allowed types [Nat, String, Date]`"
+* SQL can't represent "user allowed types ++[++Nat, String, Date++]++"
 * IR preserves permission metadata through execution
 . *Next Step:* YES - this is the critical decision before M6 Parser
 * Parser must generate IR, not SQL
@@ -458,6 +455,7 @@ SQL
 
 === Implementation Plan (M6)
 
+[[m6a-gql-dt-parser--typed-ir]]
 ==== M6a: GQL-DT Parser → Typed IR
 
 [source,lean]
@@ -484,6 +482,7 @@ def generateIR (ast : TypedAST) : IO IR :=
       }
 ----
 
+[[m6b-gql-parser--typed-ir-via-inference]]
 ==== M6b: GQL Parser → Typed IR (via inference)
 
 [source,lean]
@@ -498,6 +497,7 @@ def parseGQL (source : String) : IO (Except ParseError IR) := do
   return ir
 ----
 
+[[m6c-ir--lithoglyph-native-execution]]
 ==== M6c: IR → Lithoglyph Native Execution
 
 [source,zig]
@@ -531,39 +531,54 @@ fn insert(db: *Database, stmt: IR.InsertStmt) !void {
 
 === Conclusion
 
-*Don’t compile to SQL. Your instinct is right.*
+*Don't compile to SQL. Your instinct is right.*
 
-*SQL compilation:* - ❌ Destroys type safety - ❌ Loses proofs - ❌
-Worse error messages - ❌ Slower (SQL parsing overhead) - ✅ Broad
-compatibility (only upside)
+*SQL compilation:*
 
-*Native IR execution:* - ✅ Preserves type safety - ✅ Keeps proofs - ✅
-Better error messages - ✅ Faster (direct execution) - ✅ SQL injection
-immune - ⚠️ Requires Lithoglyph (solvable with hybrid)
+* ❌ Destroys type safety
+* ❌ Loses proofs
+* ❌ Worse error messages
+* ❌ Slower (SQL parsing overhead)
+* ✅ Broad compatibility (only upside)
 
-*Hybrid approach (RECOMMENDED):* - ✅ All benefits of native IR - ✅ SQL
-compatibility layer for BI tools - ✅ Best of both worlds - ⚠️ Slightly
-more complex (manageable)
+*Native IR execution:*
 
-*Decision:* Implement IR-first with native Lithoglyph execution. Add SQL
-compatibility layer later if needed for BI tool integration.
+* ✅ Preserves type safety
+* ✅ Keeps proofs
+* ✅ Better error messages
+* ✅ Faster (direct execution)
+* ✅ SQL injection immune
+* ⚠️ Requires Lithoglyph (solvable with hybrid)
+
+*Hybrid approach (RECOMMENDED):*
+
+* ✅ All benefits of native IR
+* ✅ SQL compatibility layer for BI tools
+* ✅ Best of both worlds
+* ⚠️ Slightly more complex (manageable)
+
+*Historical design decision:* Proposed IR-first native Lithoglyph execution, with optional SQL compatibility. Native persistent execution is not implemented by the current pipeline; see link:executable-boundary.adoc[the executable boundary].
 
 '''''
 
-*Next Steps:* 1. Design IR data structures (src/GqlDt/IR.lean) 2.
-Implement AST → IR generation 3. Design CBOR proof blob format 4.
-Coordinate with Lithoglyph team on native IR execution 5. Update M6
-Parser milestone with IR targets
+*Next Steps:*
 
-*This is NOT "`being a purist`" - it’s being correct.* Dependent types
-with proofs require a type-preserving execution model. SQL can’t
-represent that.
+[arabic]
+. Design IR data structures (src/GqlDt/IR.lean)
+. Implement AST → IR generation
+. Design CBOR proof blob format
+. Coordinate with Lithoglyph team on native IR execution
+. Update M6 Parser milestone with IR targets
+
+*This is NOT "being a purist" - it's being correct.* Dependent types with proofs require a type-preserving execution model. SQL can't represent that.
 
 '''''
 
 *Document Status:* Complete architectural decision on execution strategy
 
-*See Also:* - `+docs/PARSER-DECISION.md+` - Why Lean 4 for parsing -
-`+docs/TWO-TIER-DESIGN.md+` - GQL-DT vs GQL architecture -
-`+docs/TYPE-SAFETY-ENFORCEMENT.md+` - How type safety works - Lithoglyph
-Zig FFI: `+bridge/zig/src/main.zig+`
+*See Also:*
+
+* `docs/PARSER-DECISION.adoc` - Why Lean 4 for parsing
+* `docs/TWO-TIER-DESIGN.adoc` - GQL-DT vs GQL architecture
+* `docs/TYPE-SAFETY-ENFORCEMENT.adoc` - How type safety works
+* Lithoglyph Zig FFI: `bridge/zig/src/main.zig`

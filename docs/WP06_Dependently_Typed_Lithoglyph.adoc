@@ -1,29 +1,21 @@
+// SPDX-License-Identifier: CC-BY-SA-4.0
+// SPDX-FileCopyrightText: 2026 Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>
 == White Paper 06: Dependently-Typed Lithoglyph
 
 *Status*: Research Proposal +
 *Version*: 0.1.0 +
 *Date*: 2025-01-11 +
 *Authors*: Jonathan D.A. Jewell, Claude (Anthropic) +
-*License*: MPL-2.0
+*License*: CC-BY-SA-4.0
 
 === Abstract
 
-Lithoglyph’s narrative-first architecture demands stronger correctness
-guarantees than traditional databases can provide. We propose extending
-Lithoglyph with dependent types—types that depend on values—enabling
-compile-time verification of epistemic properties. This transforms
-Lithoglyph from a database that _records_ provenance to one that
-_proves_ provenance. We demonstrate how dependent types naturally
-express PROMPT score constraints, provenance tracking, reversibility
-proofs, and belief fusion in the My-Newsroom multi-agent system. Our
-approach is incremental: refinement types first (simple, high ROI), then
-full dependent types (research frontier). This positions Lithoglyph as
-the first database with *provable epistemology*, uniquely suited for
-journalism, scientific reproducibility, and AI agent collaboration where
-correctness is non-negotiable.
+Lithoglyph's narrative-first architecture demands stronger correctness guarantees than traditional databases can provide. We propose extending Lithoglyph with dependent types—types that depend on values—enabling compile-time verification of epistemic properties. This transforms Lithoglyph from a database that _records_ provenance to one that _proves_ provenance. We demonstrate how dependent types naturally express PROMPT score constraints, provenance tracking, reversibility proofs, and belief fusion in the My-Newsroom multi-agent system. Our approach is incremental: refinement types first (simple, high ROI), then full dependent types (research frontier). This positions Lithoglyph as the first database with *provable epistemology*, uniquely suited for journalism, scientific reproducibility, and AI agent collaboration where correctness is non-negotiable.
 
+[[1-introduction]]
 === 1. Introduction
 
+[[11-the-problem-runtime-correctness-is-insufficient]]
 ==== 1.1 The Problem: Runtime Correctness Is Insufficient
 
 Traditional databases enforce correctness at *runtime*:
@@ -40,12 +32,15 @@ INSERT INTO evidence (prompt_provenance) VALUES (150);
 -- ERROR: Check constraint "prompt_provenance_range" violated
 ----
 
-*Problems*: 1. *Late detection*: Errors caught during execution, not
-development 2. *Incomplete coverage*: Can’t express "`every UPDATE must
-have REASON`" 3. *No proofs*: Can’t prove invariants hold across all
-operations 4. *Agent confusion*: LLM agents struggle with runtime-only
-validation
+*Problems*:
 
+[arabic]
+. *Late detection*: Errors caught during execution, not development
+. *Incomplete coverage*: Can't express "every UPDATE must have REASON"
+. *No proofs*: Can't prove invariants hold across all operations
+. *Agent confusion*: LLM agents struggle with runtime-only validation
+
+[[12-the-solution-dependent-types]]
 ==== 1.2 The Solution: Dependent Types
 
 *Dependent types* are types that depend on values:
@@ -53,30 +48,33 @@ validation
 [source,idris]
 ----
 -- Idris: Compile-time proof
-data PromptScore : Type where
-  MkPromptScore : (n : Nat) -> 
+data Prompore : Type where
+  MkPrompore : (n : Nat) ->
                   {auto prf : LTE n 100} ->  -- Proof obligation
-                  PromptScore
+                  Prompore
 
 -- Invalid score is a TYPE ERROR, caught immediately
-badScore : PromptScore
-badScore = MkPromptScore 150  -- TYPE ERROR: Can't prove LTE 150 100
+badScore : Prompore
+badScore = MkPrompore 150  -- TYPE ERROR: Can't prove LTE 150 100
 ----
 
-*Benefits*: 1. *Early detection*: Type errors at compile time (or
-before) 2. *Complete coverage*: Type system enforces ALL invariants 3.
-*Machine-checkable proofs*: Types ARE proofs (Curry-Howard
-correspondence) 4. *Agent-friendly*: LLM agents can check types before
-generating code
+*Benefits*:
 
+[arabic]
+. *Early detection*: Type errors at compile time (or before)
+. *Complete coverage*: Type system enforces ALL invariants
+. *Machine-checkable proofs*: Types ARE proofs (Curry-Howard correspondence)
+. *Agent-friendly*: LLM agents can check types before generating code
+
+[[13-why-lithoglyph-needs-this]]
 ==== 1.3 Why Lithoglyph Needs This
 
 Lithoglyph has *unique epistemic requirements*:
 
-[width="100%",cols="26%,35%,39%",options="header",]
+[cols=",,",options="header",]
 |===
 |Requirement |Current (Runtime) |With Dependent Types
-|PROMPT scores in [0, 100] |Runtime CHECK |Compile-time proof
+|PROMPT scores in ++[++0, 100++]++ |Runtime CHECK |Compile-time proof
 |Every INSERT needs RATIONALE |Parser check |Type system enforces
 |Provenance tracked |Application code |Baked into types
 |Operations reversible |Runtime verification |Proof of inverse exists
@@ -84,11 +82,12 @@ Lithoglyph has *unique epistemic requirements*:
 |Navigation paths ordered |Runtime sort |Type proves ordering
 |===
 
-*Thesis*: Dependent types transform Lithoglyph from a database that
-_records_ epistemology to one that _proves_ epistemology.
+*Thesis*: Dependent types transform Lithoglyph from a database that _records_ epistemology to one that _proves_ epistemology.
 
+[[2-background-dependent-types]]
 === 2. Background: Dependent Types
 
+[[21-what-are-dependent-types]]
 ==== 2.1 What Are Dependent Types?
 
 *Simple types* (SQL, most PLs):
@@ -106,9 +105,9 @@ Bounded 0 100 Int      -- Integer between 0 and 100
 {x : Int | x > 0}      -- Refinement: positive integers
 ....
 
-Key insight: *Types can mention values*, enabling precise
-specifications.
+Key insight: *Types can mention values*, enabling precise specifications.
 
+[[22-refinement-types-subset-of-dependent-types]]
 ==== 2.2 Refinement Types (Subset of Dependent Types)
 
 *Refinement types* restrict existing types with predicates:
@@ -118,13 +117,16 @@ specifications.
 -- Base type + predicate
 type PositiveInt = {n : Int | n > 0}
 type Email = {s : String | matches s emailRegex}
-type PromptScore = {n : Nat | 0 <= n && n <= 100}
+type Prompore = {n : Nat | 0 <= n && n <= 100}
 ----
 
-*Why start here?* - Easier to understand than full dependent types -
-High ROI: catches most errors - Libraries exist (Liquid Haskell, F*,
-Dafny)
+*Why start here?*
 
+* Easier to understand than full dependent types
+* High ROI: catches most errors
+* Libraries exist (Liquid Haskell, F++*++, Dafny)
+
+[[23-full-dependent-types]]
 ==== 2.3 Full Dependent Types
 
 *Full dependent types* allow arbitrary value dependencies:
@@ -144,10 +146,13 @@ head (x :: xs) = x
 (++) : Vect n a -> Vect m a -> Vect (n + m) a
 ----
 
-*Why eventually move here?* - Express complex invariants (navigation
-path ordering) - Prove operations correct (reversibility) - Enable
-advanced reasoning (belief fusion proofs)
+*Why eventually move here?*
 
+* Express complex invariants (navigation path ordering)
+* Prove operations correct (reversibility)
+* Enable advanced reasoning (belief fusion proofs)
+
+[[24-curry-howard-correspondence]]
 ==== 2.4 Curry-Howard Correspondence
 
 *Key insight*: Types = Propositions, Programs = Proofs
@@ -175,11 +180,12 @@ plusZeroRightNeutral (S k) =       -- Proof for successor
   rewrite plusZeroRightNeutral k in Refl
 ----
 
-*For Lithoglyph*: Type-checking = Proof-checking. If it compiles, the
-proof is valid!
+*For Lithoglyph*: Type-checking = Proof-checking. If it compiles, the proof is valid!
 
-=== 3. Motivation: Lithoglyph’s Epistemic Requirements
+[[3-motivation-lithoglyphs-epistemic-requirements]]
+=== 3. Motivation: Lithoglyph's Epistemic Requirements
 
+[[31-prompt-score-invariants]]
 ==== 3.1 PROMPT Score Invariants
 
 *Current* (runtime):
@@ -200,9 +206,13 @@ CREATE COLLECTION evidence (
 );
 ----
 
-*Problems*: 1. Can construct invalid struct: `+{provenance: 150, ...}+`
-2. Runtime error only on INSERT 3. No proof that `+overall+` is in [0,
-100] 4. Agents might hallucinate invalid scores
+*Problems*:
+
+[arabic]
+. Can construct invalid struct: `++{++provenance: 150, ...}`
+. Runtime error only on INSERT
+. No proof that `overall` is in ++[++0, 100++]++
+. Agents might hallucinate invalid scores
 
 *With Dependent Types*:
 
@@ -213,8 +223,8 @@ PromptDimension : Type
 PromptDimension = BoundedNat 0 100
 
 -- Struct with proof that overall is computed correctly
-data PromptScores : Type where
-  MkPromptScores :
+data Prompores : Type where
+  MkPrompores :
     (provenance : PromptDimension) ->
     (replicability : PromptDimension) ->
     (objective : PromptDimension) ->
@@ -222,24 +232,27 @@ data PromptScores : Type where
     (publication : PromptDimension) ->
     (transparency : PromptDimension) ->
     (overall : PromptDimension) ->
-    {auto prf : overall = computeOverall provenance replicability 
-                                         objective methodology 
+    {auto prf : overall = computeOverall provenance replicability
+                                         objective methodology
                                          publication transparency} ->
-    PromptScores
+    Prompores
 
 -- Proof that average of bounded values is bounded
 computeOverall : PromptDimension -> PromptDimension -> PromptDimension ->
                  PromptDimension -> PromptDimension -> PromptDimension ->
                  PromptDimension
-computeOverall p r o m pub t = 
+computeOverall p r o m pub t =
   MkBounded ((p + r + o + m + pub + t) `div` 6)
     {prf = averageInBounds p r o m pub t}
 ----
 
-*Benefits*: - Invalid scores are TYPE ERRORS (caught at compile time) -
-Proof that `+overall+` is always in range - Agents can type-check before
-execution
+*Benefits*:
 
+* Invalid scores are TYPE ERRORS (caught at compile time)
+* Proof that `overall` is always in range
+* Agents can type-check before execution
+
+[[32-mandatory-rationale]]
 ==== 3.2 Mandatory Rationale
 
 *Current* (parser):
@@ -258,7 +271,7 @@ INSERT INTO claims (text) VALUES ('Some claim');
 ----
 -- Operations MUST carry provenance
 data ProvenanceTracked : Type -> Type where
-  MkTracked : 
+  MkTracked :
     (value : a) ->
     (added_by : String) ->
     (added_at : Timestamp) ->
@@ -266,16 +279,19 @@ data ProvenanceTracked : Type -> Type where
     ProvenanceTracked a
 
 -- Type signature FORCES provenance
-insertClaim : (text : String) -> 
+insertClaim : (text : String) ->
               (rationale : NonEmptyString) ->  -- Required argument!
               (actor : String) ->
               ProvenanceTracked Claim
 ----
 
-*Benefits*: - Impossible to forget RATIONALE (type error) - Type system
-enforces ALL insertions have provenance - LLM agents see type signature,
-know what’s required
+*Benefits*:
 
+* Impossible to forget RATIONALE (type error)
+* Type system enforces ALL insertions have provenance
+* LLM agents see type signature, know what's required
+
+[[33-reversibility-proofs]]
 ==== 3.3 Reversibility Proofs
 
 *Current* (runtime verification):
@@ -288,8 +304,11 @@ INSERT INTO claims (text) VALUES ('X') RATIONALE "...";
 -- Tests at runtime that inverse works
 ----
 
-*Problem*: - Inverse might be wrong (subtle bugs) - Only tested on
-specific data - No guarantee for ALL possible inputs
+*Problem*:
+
+* Inverse might be wrong (subtle bugs)
+* Only tested on specific data
+* No guarantee for ALL possible inputs
 
 *With Dependent Types*:
 
@@ -301,13 +320,13 @@ data Reversible : Type -> Type where
            (inverse : Delete a) ->
            {auto prf : roundTrip data inverse = data} ->  -- Proof!
            Reversible a
-  
+
   Update : (old : a) ->
            (new : a) ->
            (inverse : Update a) ->
            {auto prf : roundTrip (old, new) inverse = (new, old)} ->
            Reversible a
-  
+
   Irreversible : (data : a) ->
                  (reason : NonEmptyString) ->
                  (justification : Why reason) ->  -- Proof of why!
@@ -315,14 +334,17 @@ data Reversible : Type -> Type where
 
 -- Proof that round-trip preserves data
 roundTrip : a -> (a -> a) -> a
-roundTripPreservesIdentity : (x : a) -> (f : a -> a) -> 
+roundTripPreservesIdentity : (x : a) -> (f : a -> a) ->
                               roundTrip x f = x
 ----
 
-*Benefits*: - *Mathematical proof* that inverse is correct - Proof holds
-for ALL inputs, not just tested cases - Can’t mark something
-irreversible without proving why
+*Benefits*:
 
+* *Mathematical proof* that inverse is correct
+* Proof holds for ALL inputs, not just tested cases
+* Can't mark something irreversible without proving why
+
+[[34-confidence-levels]]
 ==== 3.4 Confidence Levels
 
 *Current*:
@@ -348,15 +370,18 @@ data Claim : Confidence -> Type where
             Claim c
 
 -- Type system ensures confidence matches evidence
-combineClaims : Claim c1 -> Claim c2 -> 
+combineClaims : Claim c1 -> Claim c2 ->
                 {auto prf : Compatible c1 c2} ->
                 Claim (fuseConfidence c1 c2)
 ----
 
-*Benefits*: - Confidence can’t exceed 1.0 (type error) - Type proves
-confidence matches evidence - Combining claims requires proof of
-compatibility
+*Benefits*:
 
+* Confidence can't exceed 1.0 (type error)
+* Type proves confidence matches evidence
+* Combining claims requires proof of compatibility
+
+[[35-navigation-path-ordering]]
 ==== 3.5 Navigation Path Ordering
 
 *Current*:
@@ -386,31 +411,47 @@ data NavigationPath : (ordering : Evidence -> Evidence -> Bool) -> Type where
 
 -- Type proves path is ordered
 createSkepticPath : List Evidence -> NavigationPath (orderByObjective)
-createSkepticPath evs = MkPath (sort orderByObjective evs) 
+createSkepticPath evs = MkPath (sort orderByObjective evs)
                                {prf = sortProducesSorted _ _}
 ----
 
-*Benefits*: - Type proves path satisfies ordering invariant - Can’t
-create invalid path (type error) - Different audiences get different
-ordering proofs
+*Benefits*:
 
+* Type proves path satisfies ordering invariant
+* Can't create invalid path (type error)
+* Different audiences get different ordering proofs
+
+[[4-type-system-design]]
 === 4. Type System Design
 
+[[41-three-tier-approach]]
 ==== 4.1 Three-Tier Approach
 
-*Tier 1: Refinement Types* (Month 1-6) - Bounded integers:
-`+BoundedNat 0 100+` - Non-null strings: `+NonEmptyString+` - Bounded
-floats: `+BoundedFloat 0.0 1.0+` - Pattern-matched enums
+*Tier 1: Refinement Types* (Month 1-6)
 
-*Tier 2: Simple Dependent Types* (Month 7-12) - Length-indexed arrays:
-`+Vect n a+` - Computed fields with proofs - Provenance-tracked values:
-`+Tracked a+` - Type-safe edges: `+Edge from to+`
+* Bounded integers: `BoundedNat 0 100`
+* Non-null strings: `NonEmptyString`
+* Bounded floats: `BoundedFloat 0.0 1.0`
+* Pattern-matched enums
 
-*Tier 3: Full Dependent Types* (Month 13-18) - Reversibility proofs -
-Belief fusion proofs - Path ordering proofs - Complex invariants
+*Tier 2: Simple Dependent Types* (Month 7-12)
 
+* Length-indexed arrays: `Vect n a`
+* Computed fields with proofs
+* Provenance-tracked values: `Tracked a`
+* Type-safe edges: `Edge from to`
+
+*Tier 3: Full Dependent Types* (Month 13-18)
+
+* Reversibility proofs
+* Belief fusion proofs
+* Path ordering proofs
+* Complex invariants
+
+[[42-core-type-definitions]]
 ==== 4.2 Core Type Definitions
 
+[[421-bounded-types]]
 ===== *4.2.1 Bounded Types*
 
 [source,idris]
@@ -438,6 +479,7 @@ Percentage : Type
 Percentage = BoundedFloat 0.0 100.0
 ----
 
+[[422-non-empty-strings]]
 ===== *4.2.2 Non-Empty Strings*
 
 [source,idris]
@@ -456,6 +498,7 @@ ActorId : Type
 ActorId = NonEmptyString
 ----
 
+[[423-provenance-tracked-values]]
 ===== *4.2.3 Provenance-Tracked Values*
 
 [source,idris]
@@ -477,12 +520,13 @@ getProvenance : Tracked a -> (ActorId, Timestamp, Rationale)
 getProvenance (MkTracked _ actor ts rat) = (actor, ts, rat)
 ----
 
+[[424-prompt-scores]]
 ===== *4.2.4 PROMPT Scores*
 
 [source,idris]
 ----
-data PromptScores : Type where
-  MkPromptScores :
+data Prompores : Type where
+  MkPrompores :
     (provenance : PromptDimension) ->
     (replicability : PromptDimension) ->
     (objective : PromptDimension) ->
@@ -490,16 +534,16 @@ data PromptScores : Type where
     (publication : PromptDimension) ->
     (transparency : PromptDimension) ->
     (overall : PromptDimension) ->
-    {auto prf : overall = computeOverall provenance replicability 
-                                         objective methodology 
+    {auto prf : overall = computeOverall provenance replicability
+                                         objective methodology
                                          publication transparency} ->
-    PromptScores
+    Prompores
 
 -- Proof that average is in bounds
 computeOverall : PromptDimension -> PromptDimension -> PromptDimension ->
                  PromptDimension -> PromptDimension -> PromptDimension ->
                  PromptDimension
-computeOverall (MkBounded p) (MkBounded r) (MkBounded o) 
+computeOverall (MkBounded p) (MkBounded r) (MkBounded o)
                (MkBounded m) (MkBounded pub) (MkBounded t) =
   MkBounded ((p + r + o + m + pub + t) `div` 6)
     {prf = averagePreservesBounds p r o m pub t}
@@ -511,6 +555,7 @@ averagePreservesBounds : (p, r, o, m, pub, t : Nat) ->
                          LTE ((p + r + o + m + pub + t) `div` 6) 100
 ----
 
+[[425-collections-tables]]
 ===== *4.2.5 Collections (Tables)*
 
 [source,idris]
@@ -531,6 +576,7 @@ query : Collection a -> (a -> Bool) -> List (Tracked a)
 query (MkCollection _ rows) predicate = filter (predicate . getValue) rows
 ----
 
+[[426-edge-collections]]
 ===== *4.2.6 Edge Collections*
 
 [source,idris]
@@ -547,10 +593,11 @@ data Edge : Type -> Type -> Type where
 
 -- Type-safe graph traversal
 traverse : List (Edge a b) -> a -> List b
-traverse edges start = 
+traverse edges start =
   [getValue to | MkEdge from to _ _ _ <- edges, getValue from == start]
 ----
 
+[[427-reversible-operations]]
 ===== *4.2.7 Reversible Operations*
 
 [source,idris]
@@ -561,19 +608,19 @@ data ReversibleOp : Type -> Type where
            (inverse : Delete a) ->
            {auto prf : composeInverses (insert data) (delete inverse) = id} ->
            ReversibleOp a
-  
+
   Update : (old : Tracked a) ->
            (new : Tracked a) ->
            (inverse : Update a) ->
-           {auto prf : composeInverses (update old new) inverse = 
+           {auto prf : composeInverses (update old new) inverse =
                        update new old} ->
            ReversibleOp a
-  
+
   Delete : (data : Tracked a) ->
            (inverse : Insert a) ->
            {auto prf : composeInverses (delete data) (insert inverse) = id} ->
            ReversibleOp a
-  
+
   Irreversible : (data : Tracked a) ->
                  (reason : Rationale) ->
                  (justification : Why reason) ->  -- Proof of necessity
@@ -587,8 +634,10 @@ data JournalEntry : Type where
             JournalEntry
 ----
 
+[[43-gql-syntax-extensions]]
 ==== 4.3 GQL Syntax Extensions
 
+[[431-type-annotations]]
 ===== *4.3.1 Type Annotations*
 
 [source,gql]
@@ -604,11 +653,12 @@ CREATE COLLECTION evidence (
 CREATE COLLECTION evidence (
   id : UUID,
   title : NonEmptyString,
-  prompt_scores : PromptScores,  -- Type carries proofs!
+  prompt_scores : Prompores,  -- Type carries proofs!
   added : Tracked ()  -- Provenance automatically tracked
 ) WITH DEPENDENT_TYPES;
 ----
 
+[[432-insertion-with-proof-obligations]]
 ===== *4.3.2 Insertion with Proof Obligations*
 
 [source,gql]
@@ -629,6 +679,7 @@ RATIONALE "Official UK statistics";
 -- 4. Operation reversible ✓
 ----
 
+[[433-queries-with-refinements]]
 ===== *4.3.3 Queries with Refinements*
 
 [source,gql]
@@ -641,6 +692,7 @@ RETURNING (e : Evidence | e.prompt_scores.overall > 90);
 -- Return type PROVES all results satisfy predicate
 ----
 
+[[434-verified-updates]]
 ===== *4.3.4 Verified Updates*
 
 [source,gql]
@@ -658,8 +710,10 @@ WITH_PROOF {
 };
 ----
 
+[[5-implementation-strategy]]
 === 5. Implementation Strategy
 
+[[51-architecture]]
 ==== 5.1 Architecture
 
 ....
@@ -694,14 +748,26 @@ WITH_PROOF {
 └──────────────────────────────────────────────────┘
 ....
 
+[[52-phase-1-external-type-checker-month-1-6]]
 ==== 5.2 Phase 1: External Type Checker (Month 1-6)
 
 *Goal*: Opt-in type checking without changing Lithoglyph runtime.
 
-*Implementation*: 1. *GQL Parser Extension*:
-`+elixir    # Parse dependent type annotations    defmodule GQL.Parser.DependentTypes do      def parse_type_annotation(tokens) do        # Parse: "x : BoundedNat 0 100"        # Returns: {:bounded_nat, 0, 100}      end    end+`
+*Implementation*:
 
-[arabic, start=2]
+[arabic]
+. *GQL Parser Extension*:
++
+[source,elixir]
+----
+# Parse dependent type annotations
+defmodule GQL.Parser.DependentTypes do
+  def parse_type_annotation(tokens) do
+    # Parse: "x : BoundedNat 0 100"
+    # Returns: {:bounded_nat, 0, 100}
+  end
+end
+----
 . *Type Checker (Idris 2)*:
 +
 [source,idris]
@@ -748,7 +814,7 @@ lithoglyph execute output.gql
 cat > example.gql.idr
 CREATE COLLECTION evidence (
   id : UUID,
-  prompt_scores : PromptScores
+  prompt_scores : Prompores
 );
 
 INSERT INTO evidence VALUES (...);
@@ -758,6 +824,7 @@ INSERT INTO evidence VALUES (...);
 ./check_gql.sh example.gql.idr
 ----
 
+[[53-phase-2-proof-carrying-code-month-7-12]]
 ==== 5.3 Phase 2: Proof-Carrying Code (Month 7-12)
 
 *Goal*: Store proofs alongside data in journal.
@@ -802,6 +869,7 @@ WHERE prompt_scores.provenance = 100
 -- Returns data + proof verification results
 ----
 
+[[54-phase-3-verified-runtime-month-13-24]]
 ==== 5.4 Phase 3: Verified Runtime (Month 13-24)
 
 *Goal*: Replace critical paths with verified code.
@@ -830,8 +898,10 @@ method InsertWithProvenance(
 
 *Compile to C* → Link with Forth/Zig → Verified bridge!
 
+[[55-tooling]]
 ==== 5.5 Tooling
 
+[[551-ide-support]]
 ===== *5.5.1 IDE Support*
 
 *Lean 4 LSP* (best IDE support):
@@ -866,6 +936,7 @@ $ lean4 --server
 }
 ----
 
+[[552-proof-tactics]]
 ===== *5.5.2 Proof Tactics*
 
 *Auto-solving Simple Proofs*:
@@ -883,6 +954,7 @@ example : 95 ≤ 100 := by lithoglyph_bounds
 -- Proven automatically!
 ----
 
+[[553-error-messages]]
 ===== *5.5.3 Error Messages*
 
 *Current*:
@@ -899,7 +971,7 @@ TYPE ERROR at line 5, column 12:
 
   INSERT INTO evidence (prompt_scores) VALUES ({provenance: 150, ...})
                                                             ^^^
-Cannot construct PromptScores with provenance = 150
+Cannot construct Prompores with provenance = 150
 
 Expected: BoundedNat 0 100
 Got: 150 (out of bounds)
@@ -912,8 +984,10 @@ Suggestion: Use a value between 0 and 100
 
 Much clearer!
 
+[[6-synergy-with-my-newsroom]]
 === 6. Synergy with My-Newsroom
 
+[[61-me-dialect-already-has-epistemic-types]]
 ==== 6.1 Me Dialect Already Has Epistemic Types
 
 *From My-Newsroom*:
@@ -944,6 +1018,7 @@ getConfidence : Belief c a -> BoundedFloat 0.0 1.0
 getConfidence (MkBelief _ c) = c
 ----
 
+[[62-type-safe-dempster-shafer-fusion]]
 ==== 6.2 Type-Safe Dempster-Shafer Fusion
 
 *Current* (Julia, runtime):
@@ -971,9 +1046,13 @@ fusionPreservesBounds : (c1, c2 : BoundedFloat 0.0 1.0) ->
                         BoundedFloat 0.0 1.0 (dempsterFusion c1 c2)
 ----
 
-*Benefits*: - Type system ensures fusion is valid - Proof that result
-confidence is in [0.0, 1.0] - Agent can check types before executing
+*Benefits*:
 
+* Type system ensures fusion is valid
+* Proof that result confidence is in ++[++0.0, 1.0++]++
+* Agent can check types before executing
+
+[[63-agent-introspection-with-proofs]]
 ==== 6.3 Agent Introspection with Proofs
 
 *Current*:
@@ -1010,8 +1089,9 @@ RETURN (reasoning, proof)
 -- ]
 ----
 
-*Agent Beta* can now *verify Agent Alpha’s proofs* before trusting them!
+*Agent Beta* can now *verify Agent Alpha's proofs* before trusting them!
 
+[[64-byzantine-fault-tolerance-with-proofs]]
 ==== 6.4 Byzantine Fault Tolerance with Proofs
 
 *Current*: 33% malicious agents tolerated (voting)
@@ -1030,7 +1110,7 @@ data VerifiedClaim : Type where
     VerifiedClaim
 
 -- Orchestrator verifies all proofs
-verifyAgentClaims : List (Agent, VerifiedClaim) -> 
+verifyAgentClaims : List (Agent, VerifiedClaim) ->
                     Either ProofError (List VerifiedClaim)
 verifyAgentClaims claims = do
   -- Check each proof
@@ -1039,176 +1119,235 @@ verifyAgentClaims claims = do
   pure (map snd claims)
 ----
 
-*Benefits*: - Malicious agents can’t fake proofs (type system enforces)
-- Honest agents’ proofs always verify - Higher fault tolerance (50%+
-malicious if proofs required)
+*Benefits*:
 
+* Malicious agents can't fake proofs (type system enforces)
+* Honest agents' proofs always verify
+* Higher fault tolerance (50%{plus} malicious if proofs required)
+
+[[7-research-contributions]]
 === 7. Research Contributions
 
+[[71-novel-contributions]]
 ==== 7.1 Novel Contributions
 
 [arabic]
 . *First dependently-typed database*
 * Databases: None have dependent types (to our knowledge)
-* Programming languages: Many (Idris, Agda, Lean, Coq, F*)
-* *Gap*: Database + dependent types = novel!
+* Programming languages: Many (Idris, Agda, Lean, Coq, F++*++)
+* *Gap*: Database {plus} dependent types = novel!
 . *Provable epistemology*
-* Traditional: "`This claim has confidence 0.9`" (no proof)
-* Lithoglyph: "`This claim has confidence 0.9 AND here’s a proof it’s
-justified`"
+* Traditional: "This claim has confidence 0.9" (no proof)
+* Lithoglyph: "This claim has confidence 0.9 AND here's a proof it's justified"
 * *Impact*: Trust is verifiable, not just asserted
 . *Type-safe multi-agent systems*
 * Traditional: Agents share unverified beliefs
-* Lithoglyph: Agents share beliefs + proofs
+* Lithoglyph: Agents share beliefs {plus} proofs
 * *Impact*: Byzantine resilience via proof verification
 . *Proof-carrying provenance*
 * Traditional: Provenance is metadata (can be forged)
-* Lithoglyph: Provenance is part of type (can’t be forged)
+* Lithoglyph: Provenance is part of type (can't be forged)
 * *Impact*: Cryptographic-strength audit trails
 
+[[72-publications]]
 ==== 7.2 Publications
 
 ===== *Paper 1: POPL 2027 (Programming Languages)*
 
-*Title*: "`Lithoglyph: A Dependently-Typed Database for Verified
-Epistemology`" - Core type system - Proof-erasure semantics - Idris/Lean
-integration - *Venue*: Symposium on Principles of Programming Languages
-(top-tier PL)
+*Title*: "Lithoglyph: A Dependently-Typed Database for Verified Epistemology"
+
+* Core type system
+* Proof-erasure semantics
+* Idris/Lean integration
+* *Venue*: Symposium on Principles of Programming Languages (top-tier PL)
 
 ===== *Paper 2: VLDB 2027 (Databases)*
 
-*Title*: "`Dependent Types for Database Constraints: A Case Study in
-Journalism`" - BoFIG case study (UK Inflation 2023 dataset) - PROMPT
-score verification - Performance evaluation (type-checking overhead) -
-*Venue*: Very Large Data Bases (top-tier DB)
+*Title*: "Dependent Types for Database Constraints: A Case Study in Journalism"
+
+* BoFIG case study (UK Inflation 2023 dataset)
+* PROMPT score verification
+* Performance evaluation (type-checking overhead)
+* *Venue*: Very Large Data Bases (top-tier DB)
 
 ===== *Paper 3: ICFP 2027 (Functional Programming)*
 
-*Title*: "`Proof-Carrying Provenance: Dependent Types for Audit Trails`"
-- Reversibility proofs - Journal encoding with proof objects -
-Verification strategies - *Venue*: International Conference on
-Functional Programming
+*Title*: "Proof-Carrying Provenance: Dependent Types for Audit Trails"
+
+* Reversibility proofs
+* Journal encoding with proof objects
+* Verification strategies
+* *Venue*: International Conference on Functional Programming
 
 ===== *Paper 4: AAMAS 2027 (Multi-Agent Systems)*
 
-*Title*: "`Verified Belief Fusion: Dependent Types for Multi-Agent
-Epistemology`" - My-Newsroom integration - Type-safe Dempster-Shafer
-fusion - Byzantine resilience with proofs - *Venue*: Autonomous Agents
-and Multiagent Systems
+*Title*: "Verified Belief Fusion: Dependent Types for Multi-Agent Epistemology"
 
+* My-Newsroom integration
+* Type-safe Dempster-Shafer fusion
+* Byzantine resilience with proofs
+* *Venue*: Autonomous Agents and Multiagent Systems
+
+[[73-comparison-to-related-work]]
 ==== 7.3 Comparison to Related Work
 
-[width="100%",cols="21%,16%,18%,27%,18%",options="header",]
+[cols=",,,,",options="header",]
 |===
 |System |Types |Proofs |Provenance |Domain
-|Lithoglyph (ours) |✓ Dependent |✓ Machine-checkable |✓ Type-level
-|Journalism/i-docs
-
+|Lithoglyph (ours) |✓ Dependent |✓ Machine-checkable |✓ Type-level |Journalism/i-docs
 |Datomic |Simple |✗ |✓ Time-based |General
-
 |XTDB |Simple |✗ |✓ Bitemporal |General
-
 |Prisma |Simple |✗ |✗ |General
-
 |Liquid Haskell |✓ Refinement |✓ SMT-based |✗ |Programming
-
-|F* |✓ Dependent |✓ SMT + Tactics |✗ |Programming
-
+|F++*++ |✓ Dependent |✓ SMT {plus} Tactics |✗ |Programming
 |Agda |✓ Dependent |✓ Interactive |✗ |Mathematics
 |===
 
-*Key Insight*: Lithoglyph combines database + dependent types +
-provenance = *unique position*.
+*Key Insight*: Lithoglyph combines database {plus} dependent types {plus} provenance = *unique position*.
 
+[[8-evaluation]]
 === 8. Evaluation
 
+[[81-type-checking-performance]]
 ==== 8.1 Type-Checking Performance
 
-*Benchmark*: UK Inflation 2023 dataset (BoFIG) - 7 claims - 10 evidence
-items - 10 relationships - 3 navigation paths
+*Benchmark*: UK Inflation 2023 dataset (BoFIG)
 
-*Metrics*: - Type-checking time per operation - Proof generation time -
-Memory overhead - Journal size increase (with proofs)
+* 7 claims
+* 10 evidence items
+* 10 relationships
+* 3 navigation paths
 
-*Expected Results*: - Type-checking: <100ms per operation (acceptable
-for development) - Proof generation: <500ms (one-time cost) - Memory:
-+10-20% (proof objects) - Journal size: +5-10% (serialized proofs)
+*Metrics*:
 
+* Type-checking time per operation
+* Proof generation time
+* Memory overhead
+* Journal size increase (with proofs)
+
+*Expected Results*:
+
+* Type-checking: ++<++100ms per operation (acceptable for development)
+* Proof generation: ++<++500ms (one-time cost)
+* Memory: {plus}10-20% (proof objects)
+* Journal size: {plus}5-10% (serialized proofs)
+
+[[82-error-detection]]
 ==== 8.2 Error Detection
 
-*Compare*: - Runtime errors caught with traditional GQL - Type errors
-caught with dependent types
+*Compare*:
 
-*Hypothesis*: Dependent types catch 80%+ of errors at compile time.
+* Runtime errors caught with traditional GQL
+* Type errors caught with dependent types
 
-*Methodology*: - Seed dataset with 100 intentional errors: - Invalid
-PROMPT scores (20) - Missing rationale (20) - Invalid confidence levels
-(20) - Incorrect computed fields (20) - Invalid reversibility claims
-(20) - Measure: How many caught at type-check vs. runtime?
+*Hypothesis*: Dependent types catch 80%{plus} of errors at compile time.
 
+*Methodology*:
+
+* Seed dataset with 100 intentional errors:
+** Invalid PROMPT scores (20)
+** Missing rationale (20)
+** Invalid confidence levels (20)
+** Incorrect computed fields (20)
+** Invalid reversibility claims (20)
+* Measure: How many caught at type-check vs. runtime?
+
+[[83-developer-experience]]
 ==== 8.3 Developer Experience
 
-*User Study*: - 20 developers (10 Lithoglyph users, 10 control) - Task:
-Implement evidence import from Zotero - Measure: - Time to completion -
-Number of bugs - User satisfaction (Likert scale)
+*User Study*:
 
-*Hypothesis*: Dependent types reduce bugs by 50%, with 20% time
-overhead.
+* 20 developers (10 Lithoglyph users, 10 control)
+* Task: Implement evidence import from Zotero
+* Measure:
+** Time to completion
+** Number of bugs
+** User satisfaction (Likert scale)
 
+*Hypothesis*: Dependent types reduce bugs by 50%, with 20% time overhead.
+
+[[84-agent-integration]]
 ==== 8.4 Agent Integration
 
-*Experiment*: - 10-agent My-Newsroom system - Task: Verify 50 claims
-from UK Inflation investigation - Compare: - Without proofs: Agents vote
-(Byzantine voting) - With proofs: Agents verify proofs (proof-checking)
+*Experiment*:
 
-*Metrics*: - Consensus time - Accuracy (vs. ground truth) - Byzantine
-resilience (% malicious agents tolerated)
+* 10-agent My-Newsroom system
+* Task: Verify 50 claims from UK Inflation investigation
+* Compare:
+** Without proofs: Agents vote (Byzantine voting)
+** With proofs: Agents verify proofs (proof-checking)
 
-*Hypothesis*: Proof-checking enables 50% malicious tolerance (vs. 33%
-with voting).
+*Metrics*:
 
+* Consensus time
+* Accuracy (vs. ground truth)
+* Byzantine resilience (% malicious agents tolerated)
+
+*Hypothesis*: Proof-checking enables 50% malicious tolerance (vs. 33% with voting).
+
+[[9-challenges-and-mitigations]]
 === 9. Challenges and Mitigations
 
+[[91-challenge-learning-curve]]
 ==== 9.1 Challenge: Learning Curve
 
 *Problem*: Dependent types are hard for most developers.
 
-*Mitigations*: 1. *Gradual adoption*: Start with refinement types
-(easier) 2. *IDE support*: Lean 4 LSP provides excellent autocomplete 3.
-*Proof tactics*: Automate 80% of proofs 4. *Documentation*: Extensive
-examples, tutorials 5. *Opt-in*: Can use simple types if needed
+*Mitigations*:
 
+[arabic]
+. *Gradual adoption*: Start with refinement types (easier)
+. *IDE support*: Lean 4 LSP provides excellent autocomplete
+. *Proof tactics*: Automate 80% of proofs
+. *Documentation*: Extensive examples, tutorials
+. *Opt-in*: Can use simple types if needed
+
+[[92-challenge-compilation-time]]
 ==== 9.2 Challenge: Compilation Time
 
 *Problem*: Proof checking is slow (can be minutes for complex proofs).
 
-*Mitigations*: 1. *Caching*: Store proofs, don’t recheck 2. *Incremental
-checking*: Only check changed proofs 3. *Proof parallelization*: Check
-proofs in parallel 4. *Development mode*: Skip proofs during dev, check
-on commit 5. *Proof complexity budgets*: Warn if proof too complex
+*Mitigations*:
 
+[arabic]
+. *Caching*: Store proofs, don't recheck
+. *Incremental checking*: Only check changed proofs
+. *Proof parallelization*: Check proofs in parallel
+. *Development mode*: Skip proofs during dev, check on commit
+. *Proof complexity budgets*: Warn if proof too complex
+
+[[93-challenge-proof-obligation-failures]]
 ==== 9.3 Challenge: Proof Obligation Failures
 
 *Problem*: Users write code, type checker demands proof, user stuck.
 
-*Mitigations*: 1. *Proof search*: Auto-generate simple proofs (e.g.,
-`+omega+` tactic) 2. *Partial proofs*: Allow `+admit+` during
-development 3. *Proof assistants*: Provide tactics for common patterns
-4. *Error messages*: Suggest fixes (e.g., "`Try reducing value from 150
-to 100`") 5. *Proof libraries*: Pre-proved theorems for common cases
+*Mitigations*:
 
+[arabic]
+. *Proof search*: Auto-generate simple proofs (e.g., `omega` tactic)
+. *Partial proofs*: Allow `admit` during development
+. *Proof assistants*: Provide tactics for common patterns
+. *Error messages*: Suggest fixes (e.g., "Try reducing value from 150 to 100")
+. *Proof libraries*: Pre-proved theorems for common cases
+
+[[94-challenge-runtime-performance]]
 ==== 9.4 Challenge: Runtime Performance
 
 *Problem*: Proof objects increase journal size.
 
-*Mitigations*: 1. *Proof erasure*: Erase proofs at runtime (Idris/Lean
-support this) 2. *Optional proofs*: Only store proofs for critical
-operations 3. *Proof compression*: Serialize proofs efficiently 4.
-*Proof summaries*: Store hash instead of full proof 5. *Proof generation
-on demand*: Regenerate proofs from code if needed
+*Mitigations*:
 
+[arabic]
+. *Proof erasure*: Erase proofs at runtime (Idris/Lean support this)
+. *Optional proofs*: Only store proofs for critical operations
+. *Proof compression*: Serialize proofs efficiently
+. *Proof summaries*: Store hash instead of full proof
+. *Proof generation on demand*: Regenerate proofs from code if needed
+
+[[10-future-work]]
 === 10. Future Work
 
+[[101-full-verification-stack]]
 ==== 10.1 Full Verification Stack
 
 *Goal*: End-to-end verified database.
@@ -1237,24 +1376,31 @@ on demand*: Regenerate proofs from code if needed
 
 *Impact*: *Fully verified database* from top to bottom!
 
+[[102-proof-checked-journalism]]
 ==== 10.2 Proof-Checked Journalism
 
 *Vision*: Journalists publish *proofs* alongside articles.
 
-*Example*: > *Claim*: "`UK rent inflation exceeded overall inflation by
-4.7 percentage points in 2023`" > > *Evidence*: ONS CPI data
-(provenance: 100, replicability: 100) > > *Proof*: [Download
-machine-checkable proof] > > Readers can verify the proof in Lean 4 or
-Idris 2. The claim is *mathematically guaranteed* to follow from the
-evidence.
+*Example*:
+
+____
+*Claim*: "UK rent inflation exceeded overall inflation by 4.7 percentage points in 2023"
+
+*Evidence*: ONS CPI data (provenance: 100, replicability: 100)
+
+*Proof*: ++[++Download machine-checkable proof++]++
+
+Readers can verify the proof in Lean 4 or Idris 2. The claim is *mathematically guaranteed* to follow from the evidence.
+____
 
 *Impact*: *Verifiable journalism* - trust is provable, not asserted!
 
+[[103-llm-agents-with-proof-obligations]]
 ==== 10.3 LLM Agents with Proof Obligations
 
 *Current*: LLM agents hallucinate, make mistakes.
 
-*With Dependent Types*: LLM generates code + proofs.
+*With Dependent Types*: LLM generates code {plus} proofs.
 
 ....
 User: "Add evidence with PROMPT score 95/100"
@@ -1288,9 +1434,10 @@ LLM: "Sorry, 150 is out of range. Let me fix that..."
 
 *Impact*: *Hallucination-proof LLMs* via type checking!
 
+[[104-proof-carrying-smart-contracts]]
 ==== 10.4 Proof-Carrying Smart Contracts
 
-*Blockchain + Dependent Types*:
+*Blockchain {plus} Dependent Types*:
 
 [source,idris]
 ----
@@ -1306,31 +1453,27 @@ contract TransferFunds : Contract where
 
 *Impact*: *Mathematically verified smart contracts* - no exploits!
 
+[[11-conclusion]]
 === 11. Conclusion
 
-Dependent types transform Lithoglyph from a database that *records*
-epistemology to one that *proves* epistemology. This enables:
+Dependent types transform Lithoglyph from a database that *records* epistemology to one that *proves* epistemology. This enables:
 
 [arabic]
-. *Compile-time correctness*: Invalid data is a type error, caught
-immediately
-. *Provable provenance*: Can’t forge provenance (it’s in the type)
-. *Verified multi-agent systems*: Agents provide proofs, not just
-assertions
+. *Compile-time correctness*: Invalid data is a type error, caught immediately
+. *Provable provenance*: Can't forge provenance (it's in the type)
+. *Verified multi-agent systems*: Agents provide proofs, not just assertions
 . *Hallucination-proof LLMs*: Type checker catches LLM mistakes
 . *Verifiable journalism*: Readers can verify claims mathematically
 
-Our approach is incremental (refinement types → full dependent types →
-verified stack), making it practical for real-world adoption.
+Our approach is incremental (refinement types → full dependent types → verified stack), making it practical for real-world adoption.
 
-Lithoglyph becomes the *first dependently-typed database*, uniquely
-positioned for journalism, scientific reproducibility, and AI agent
-collaboration where *correctness is non-negotiable*.
+Lithoglyph becomes the *first dependently-typed database*, uniquely positioned for journalism, scientific reproducibility, and AI agent collaboration where *correctness is non-negotiable*.
 
 '''''
 
 === Appendix A: Idris 2 Primer
 
+[[a1-basic-syntax]]
 ==== A.1 Basic Syntax
 
 [source,idris]
@@ -1356,6 +1499,7 @@ plusZeroRightNeutral Z     = Refl
 plusZeroRightNeutral (S k) = cong S (plusZeroRightNeutral k)
 ----
 
+[[a2-tactics]]
 ==== A.2 Tactics
 
 [source,idris]
@@ -1368,6 +1512,7 @@ example x y = ?proof
 ?proof = rewrite plusCommutative x y in Refl
 ----
 
+[[a3-auto-implicit-arguments]]
 ==== A.3 Auto-Implicit Arguments
 
 [source,idris]
@@ -1385,6 +1530,7 @@ x = MkBounded 50  -- {prf = ...} filled in by compiler
 
 === Appendix B: Lean 4 Primer
 
+[[b1-basic-syntax]]
 ==== B.1 Basic Syntax
 
 [source,lean]
@@ -1412,6 +1558,7 @@ theorem plus_zero : ∀ n : Nat, n + 0 = n := by
   | succ k ih => simp [plus]; exact ih
 ----
 
+[[b2-tactics]]
 ==== B.2 Tactics
 
 [source,lean]
@@ -1422,6 +1569,7 @@ theorem example : ∀ x y : Nat, x + y = y + x := by
   rw [Nat.add_comm]
 ----
 
+[[b3-type-classes]]
 ==== B.3 Type Classes
 
 [source,lean]
@@ -1454,14 +1602,14 @@ instance : Bounded Nat where
 |Proof libraries |Medium |Large |Large |Very Large
 |===
 
-*Recommendation*: *Lean 4* for best IDE support and automation. *Idris
-2* for simplicity. *Dafny* for C interop.
+*Recommendation*: *Lean 4* for best IDE support and automation. *Idris 2* for simplicity. *Dafny* for C interop.
 
 '''''
 
-*Document Status*: Research proposal. Implementation timeline: 18-24
-months.
+*Document Status*: Research proposal. Implementation timeline: 18-24 months.
 
-*See Also*: - GQL Dependent Types Specification (companion document) -
-Lithoglyph arXiv paper (Section 14: Future Work) - My-Newsroom Me
-dialect specification
+*See Also*:
+
+* GQL Dependent Types Specification (companion document)
+* Lithoglyph arXiv paper (Section 14: Future Work)
+* My-Newsroom Me dialect specification

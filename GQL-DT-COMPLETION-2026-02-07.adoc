@@ -1,31 +1,29 @@
-== GQL-DT Production Ready - Completion Report
+// SPDX-License-Identifier: CC-BY-SA-4.0
+// SPDX-FileCopyrightText: 2026 Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>
+== GQL-DT Historical Completion Report (Superseded)
 
-*Date:* 2026-02-07 *Status:* ✅ 100% COMPLETE - PRODUCTION READY
+*Date:* 2026-02-07
+*Status:* Superseded. The historical claims below are not the current executable contract.
+See link:docs/executable-boundary.adoc[the current execution and refusal boundaries]
+and link:docs/narration-slice.adoc[the implemented GNPL narration slice].
 *Previous Status:* 94% (Milestone 6 substantially complete)
 
 '''''
 
 === Executive Summary
 
-GQL-DT (Glyph Query Language with Dependent Types) has reached *100%
-completion* and is *production-ready*. All 7 milestones are complete,
-including comprehensive rebranding from Lith/GQL to Lithoglyph/GQL, full
-Zig FFI bridge, LSP server, VS Code extension, debugger, and
-Svalinn/Vordr verified container stack with post-quantum cryptography.
+GQL-DT (Glyph Query Language with Dependent Types) has reached *100% completion* and is *production-ready*. All 7 milestones are complete, including comprehensive rebranding from Lith/GQL to Lithoglyph/GQL, full Zig FFI bridge, LSP server, VS Code extension, debugger, and Svalinn/Vordr verified container stack with post-quantum cryptography.
 
-*Key Achievement:* GQL-DT is now *equivalent to Phronesis* in production
-readiness, with all standard tooling (LSP, debugger, container
-deployment) plus dependent types, SLSA Level 3 provenance, and formal
-verification.
+*Key Achievement:* GQL-DT is now *equivalent to Phronesis* in production readiness, with all standard tooling (LSP, debugger, container deployment) plus dependent types, SLSA Level 3 provenance, and formal verification.
 
 '''''
 
 === Completion Metrics
 
-[width="100%",cols="28%,25%,22%,25%",options="header",]
+[cols=",,,",options="header",]
 |===
 |Metric |Before |After |Change
-|*Overall Completion* |94% |*100%* |+6%
+|*Overall Completion* |94% |*100%* |{plus}6%
 |*Phase* |Implementation |*Production Ready* |✅
 |*Milestones Complete* |6/7 |*7/7* |M7 ✅
 |*Zig FFI Bridge* |Not Started |*Complete* |M5 ✅
@@ -38,37 +36,42 @@ verification.
 
 '''''
 
+[[what-was-built-94--100]]
 === What Was Built (94% → 100%)
 
-==== 1. *Comprehensive Rebranding* (Task #28)
+[[1-comprehensive-rebranding-task-28]]
+==== 1. *Comprehensive Rebranding* (Task ++#++28)
 
 *Problem:* Repository used outdated Lith/GQL/GQLdt naming throughout.
 
-*Solution:* Automated rebrand script affecting 708 lines across 26
-files.
+*Solution:* Automated rebrand script affecting 708 lines across 26 files.
 
-*Changes:* - `+Lith+` → `+Lithoglyph+` (database branding) - `+GQL+` →
-`+GQL+` (query language) - `+GQLdt+` → `+GQL-DT+` (dependent types
-variant) - `+GQL+` → `+GQL+` (all forms)
+*Changes:*
 
-*Files Affected:* - 4 spec files renamed: `+GQLdt-*.md+` →
-`+GQL-DT-*.md+` - 38 Lean source files updated - All documentation and
-comments updated - README, README.adoc, lakefile.lean,
-docker-compose.yml
+* `Lith` → `Lithoglyph` (database branding)
+* `GQL` → `GQL` (query language)
+* `GQLdt` → `GQL-DT` (dependent types variant)
+* `GQL` → `GQL` (all forms)
 
-*Critical Fix:* Changed `+GQL-DT+` to `+GQLdt+` in Lean code (hyphens
-invalid in identifiers).
+*Files Affected:*
 
-*Script:* `+scripts/rebrand-to-gql.sh+` (automated, repeatable)
+* 4 spec files renamed: `GQLdt-++*++.md` → `GQL-DT-++*++.md`
+* 38 Lean source files updated
+* All documentation and comments updated
+* README, README.adoc, lakefile.lean, docker-compose.yml
+
+*Critical Fix:* Changed `GQL-DT` to `GQLdt` in Lean code (hyphens invalid in identifiers).
+
+*Script:* `scripts/rebrand-to-gql.sh` (automated, repeatable)
 
 '''''
 
+[[2-zig-ffi-bridge-milestone-5-white_check_mark]]
 ==== 2. *Zig FFI Bridge* (Milestone 5) ✅
 
-*File:* `+ffi/zig/src/main.zig+`
+*File:* `ffi/zig/src/main.zig`
 
-*Purpose:* C ABI bridge for language bindings (per hyperpolymath
-universal standard).
+*Purpose:* C ABI bridge for language bindings (per hyperpolymath universal standard).
 
 *Exports:*
 
@@ -81,41 +84,55 @@ export fn gqldt_free_query(query: *GqldtQuery) callconv(.c) void
 export fn gqldt_get_last_error() callconv(.c) [*:0]const u8
 ----
 
-*Status Enum:* - `+ok+` (0) - `+invalid_arg+` (1) - `+type_mismatch+`
-(2) - `+proof_failed+` (3) - `+permission_denied+` (4) -
-`+out_of_memory+` (5) - `+internal_error+` (6)
+*Status Enum:*
 
-*Opaque Types:* - `+GqldtDb+` (database handle) - `+GqldtQuery+` (parsed
-query) - `+GqldtSchema+` (schema metadata)
+* `ok` (0)
+* `invalid++_++arg` (1)
+* `type++_++mismatch` (2)
+* `proof++_++failed` (3)
+* `permission++_++denied` (4)
+* `out++_++of++_++memory` (5)
+* `internal++_++error` (6)
 
-*Tests:* 5/5 passing ✅ - `+test_init_success+` -
-`+test_parse_valid_query+` - `+test_parse_invalid_query+` -
-`+test_execute_query+` - `+test_error_handling+`
+*Opaque Types:*
 
-*Build:* `+zig test src/main.zig -lc+`
+* `GqldtDb` (database handle)
+* `GqldtQuery` (parsed query)
+* `Gqldhema` (schema metadata)
 
-*Notes:* Pure ABI bridge - delegates safety to Idris2 ABI layer (per
-standard).
+*Tests:* 5/5 passing ✅
+
+* `test++_++init++_++success`
+* `test++_++parse++_++valid++_++query`
+* `test++_++parse++_++invalid++_++query`
+* `test++_++execute++_++query`
+* `test++_++error++_++handling`
+
+*Build:* `zig test src/main.zig -lc`
+
+*Notes:* Pure ABI bridge - delegates safety to Idris2 ABI layer (per standard).
 
 '''''
 
+[[3-lsp-server-milestone-7-white_check_mark]]
 ==== 3. *LSP Server* (Milestone 7) ✅
 
-*File:* `+cli/lsp-server.ts+` (180 LOC)
+*File:* `cli/lsp-server.ts` (180 LOC)
 
-*Purpose:* Language Server Protocol for IDE integration (VS Code, Vim,
-Emacs, etc.)
+*Purpose:* Language Server Protocol for IDE integration (VS Code, Vim, Emacs, etc.)
 
-*Features:* 1. *Real-time Diagnostics* - Missing RATIONALE clauses
-(INSERT/UPDATE/DELETE) - Invalid type annotations - BoundedNat bounds
-validation (min < max)
+*Features:*
 
-[arabic, start=2]
+[arabic]
+. *Real-time Diagnostics*
+* Missing RATIONALE clauses (INSERT/UPDATE/DELETE)
+* Invalid type annotations
+* BoundedNat bounds validation (min ++<++ max)
 . *Hover Provider*
 * Keyword documentation
 * Type information
 . *Completion Provider*
-* 80+ GQL-DT keywords
+* 80{plus} GQL-DT keywords
 * Type names (BoundedNat, NonEmptyString, Confidence, etc.)
 * SQL keywords (SELECT, INSERT, WHERE, etc.)
 
@@ -129,15 +146,15 @@ const GQL_KEYWORDS = new Set([
   "RATIONALE", "AS", "NORMALIZE", "WITH",
   "Nat", "Int", "String", "Bool", "Float",
   "BoundedNat", "BoundedInt", "NonEmptyString", "Confidence",
-  "PromptScores", "Tracked",
+  "Prompores", "Tracked",
 ]);
 ----
 
-*Diagnostics Examples:* - Error:
-`+INSERT statement requires RATIONALE clause for provenance tracking+` -
-Warning:
-`+Type annotation may be invalid. Expected: Nat, Int, String, Bool, BoundedNat, NonEmptyString, etc.+`
-- Error: `+BoundedNat: min (10) must be less than max (5)+`
+*Diagnostics Examples:*
+
+* Error: `INSERT statement requires RATIONALE clause for provenance tracking`
+* Warning: `Type annotation may be invalid. Expected: Nat, Int, String, Bool, BoundedNat, NonEmptyString, etc.`
+* Error: `BoundedNat: min (10) must be less than max (5)`
 
 *Server:* Runs on stdio, compatible with all LSP clients.
 
@@ -150,15 +167,24 @@ deno run --allow-net --allow-read cli/lsp-server.ts
 
 '''''
 
+[[4-vs-code-extension-milestone-7-white_check_mark]]
 ==== 4. *VS Code Extension* (Milestone 7) ✅
 
-*Files:* - `+vscode-extension/package.json+` (extension manifest) -
-`+vscode-extension/syntaxes/gql-dt.tmLanguage.json+` (TextMate grammar)
+*Files:*
 
-*Features:* - File associations: `+.gql+`, `+.gqldt+` - Syntax
-highlighting for: - Keywords (SELECT, INSERT, RATIONALE, etc.) - Types
-(BoundedNat, NonEmptyString, Confidence) - Operators - Strings (with
-escape sequences) - Numbers - Comments (– single line, /* */ multi-line)
+* `vscode-extension/package.json` (extension manifest)
+* `vscode-extension/syntaxes/gql-dt.tmLanguage.json` (TextMate grammar)
+
+*Features:*
+
+* File associations: `.gql`, `.gqldt`
+* Syntax highlighting for:
+** Keywords (SELECT, INSERT, RATIONALE, etc.)
+** Types (BoundedNat, NonEmptyString, Confidence)
+** Operators
+** Strings (with escape sequences)
+** Numbers
+** Comments (-- single line, /++*++ ++*++/ multi-line)
 
 *Manifest:*
 
@@ -186,16 +212,20 @@ vsce package
 code --install-extension gql-dt-1.0.0.vsix
 ----
 
-*Grammar Scopes:* - `+keyword.control.gql-dt+` (SELECT, INSERT, WHERE) -
-`+storage.type.gql-dt+` (BoundedNat, Confidence) -
-`+string.quoted.double.gql-dt+` - `+constant.numeric.gql-dt+` -
-`+comment.line.double-dash.gql-dt+`
+*Grammar Scopes:*
+
+* `keyword.control.gql-dt` (SELECT, INSERT, WHERE)
+* `storage.type.gql-dt` (BoundedNat, Confidence)
+* `string.quoted.double.gql-dt`
+* `constant.numeric.gql-dt`
+* `comment.line.double-dash.gql-dt`
 
 '''''
 
+[[5-debugger-milestone-7-white_check_mark]]
 ==== 5. *Debugger* (Milestone 7) ✅
 
-*File:* `+cli/debugger.ts+`
+*File:* `cli/debugger.ts`
 
 *Purpose:* Step-by-step execution with proof obligation visualization.
 
@@ -223,11 +253,15 @@ interface TypeConstraint {
 }
 ----
 
-*Commands:* - `+step+` - Execute next statement - `+continue+` - Run
-until breakpoint - `+breakpoint <line>+` - Set breakpoint -
-`+inspect <var>+` - Show variable type and proof status - `+proofs+` -
-List all proof obligations - `+constraints+` - Show type constraints -
-`+quit+` - Exit debugger
+*Commands:*
+
+* `step` - Execute next statement
+* `continue` - Run until breakpoint
+* `breakpoint ++<++line++>++` - Set breakpoint
+* `inspect ++<++var++>++` - Show variable type and proof status
+* `proofs` - List all proof obligations
+* `constraints` - Show type constraints
+* `quit` - Exit debugger
 
 *Usage:*
 
@@ -248,17 +282,16 @@ deno run cli/debugger.ts "SELECT * FROM evidence WHERE score > 50 RATIONALE 'tes
 ✗ invalid_field: requires NonEmptyString
 ....
 
-*Visualization:* Shows proof status at each step, helping developers
-understand type safety guarantees.
+*Visualization:* Shows proof status at each step, helping developers understand type safety guarantees.
 
 '''''
 
+[[6-svalinnvordr-verified-container-stack-milestone-7-white_check_mark]]
 ==== 6. *Svalinn/Vordr Verified Container Stack* (Milestone 7) ✅
 
-*File:* `+svalinn-compose.yaml+`
+*File:* `svalinn-compose.yaml`
 
-*Purpose:* Production deployment with formal verification and
-post-quantum cryptography.
+*Purpose:* Production deployment with formal verification and post-quantum cryptography.
 
 *Services:*
 
@@ -275,7 +308,7 @@ post-quantum cryptography.
 . *ide-playground* (1 replica)
 * Port: 8080
 * Web IDE for GQL-DT queries
-* Connects to LSP + executor
+* Connects to LSP {plus} executor
 
 *Post-Quantum Cryptography:*
 
@@ -289,9 +322,12 @@ x-svalinn-policy:
   slsa-level: 3
 ----
 
-*Attestations:* - Require SBOM (CycloneDX JSON) - Require cryptographic
-signatures (Dilithium5) - Require SLSA provenance (v1.0) - Verify on
-pull and run
+*Attestations:*
+
+* Require SBOM (CycloneDX JSON)
+* Require cryptographic signatures (Dilithium5)
+* Require SLSA provenance (v1.0)
+* Verify on pull and run
 
 *Vordr Runtime Verification:*
 
@@ -313,40 +349,28 @@ x-vordr-config:
 nerdctl compose -f svalinn-compose.yaml up -d
 ----
 
-*Security:* All containers verified before execution, post-quantum
-crypto protects against quantum attacks.
+*Security:* All containers verified before execution, post-quantum crypto protects against quantum attacks.
 
 '''''
 
 === Comparison: GQL-DT vs Phronesis
 
-[width="100%",cols="26%,30%,22%,22%",options="header",]
+[cols=",,,",options="header",]
 |===
 |Feature |Phronesis |GQL-DT |Status
 |*LSP Server* |✅ |✅ |EQUIVALENT
-
 |*VS Code Extension* |✅ |✅ |EQUIVALENT
-
 |*Debugger* |✅ |✅ |EQUIVALENT
-
 |*Container Stack* |✅ |✅ |EQUIVALENT
-
 |*Post-Quantum Crypto* |✅ |✅ |EQUIVALENT
-
 |*Zig FFI Bridge* |✅ |✅ |EQUIVALENT
-
 |*Dependent Types* |❌ |✅ |*GQL-DT ADVANTAGE*
-
 |*SLSA Level 3* |❌ |✅ |*GQL-DT ADVANTAGE*
-
 |*Svalinn/Vordr* |❌ |✅ |*GQL-DT ADVANTAGE*
-
-|*Formal Verification* |Partial |Full (Idris2 + Lean 4) |*GQL-DT
-ADVANTAGE*
+|*Formal Verification* |Partial |Full (Idris2 {plus} Lean 4) |*GQL-DT ADVANTAGE*
 |===
 
-*Conclusion:* GQL-DT is *production-ready* and *equivalent or superior*
-to Phronesis across all dimensions.
+*Conclusion:* GQL-DT is *production-ready* and *equivalent or superior* to Phronesis across all dimensions.
 
 '''''
 
@@ -372,8 +396,11 @@ VALUES (42, 85)
 RATIONALE "Initial prompt evaluation"
 ----
 
-*Compile-time Check:* - ✅ `+42+` is in range `+[1, 1000]+` - ✅ `+85+`
-is in range `+[0, 100]+` - ✅ RATIONALE provided
+*Compile-time Check:*
+
+* ✅ `42` is in range `++[++1, 1000++]++`
+* ✅ `85` is in range `++[++0, 100++]++`
+* ✅ RATIONALE provided
 
 *Runtime:* Zero overhead - proofs erased after type checking.
 
@@ -381,17 +408,24 @@ is in range `+[0, 100]+` - ✅ RATIONALE provided
 
 ==== SLSA Level 3 Provenance
 
-*What is SLSA?* Supply chain Levels for Software Artifacts (SLSA) is a
-security framework ensuring software integrity.
+*What is SLSA?*
+Supply chain Levels for Software Artifacts (SLSA) is a security framework ensuring software integrity.
 
-*Level 3 Requirements:* 1. ✅ Build from source (no binary artifacts) 2.
-✅ Cryptographic signatures (Dilithium5) 3. ✅ SBOM (Software Bill of
-Materials) 4. ✅ Provenance attestation 5. ✅ Reproducible builds
+*Level 3 Requirements:*
 
-*GQL-DT Implementation:* - Every container image signed with
-post-quantum crypto - SBOM in CycloneDX JSON format - Provenance
-metadata embedded in images - Verification before execution
-(verify-on-pull, verify-on-run)
+[arabic]
+. ✅ Build from source (no binary artifacts)
+. ✅ Cryptographic signatures (Dilithium5)
+. ✅ SBOM (Software Bill of Materials)
+. ✅ Provenance attestation
+. ✅ Reproducible builds
+
+*GQL-DT Implementation:*
+
+* Every container image signed with post-quantum crypto
+* SBOM in CycloneDX JSON format
+* Provenance metadata embedded in images
+* Verification before execution (verify-on-pull, verify-on-run)
 
 '''''
 
@@ -399,8 +433,7 @@ metadata embedded in images - Verification before execution
 
 *Why Post-Quantum?*
 
-Classical crypto (RSA, ECDSA, Ed25519) vulnerable to quantum computers.
-NIST standardized post-quantum algorithms in 2024.
+Classical crypto (RSA, ECDSA, Ed25519) vulnerable to quantum computers. NIST standardized post-quantum algorithms in 2024.
 
 *GQL-DT Uses:*
 
@@ -425,9 +458,9 @@ NIST standardized post-quantum algorithms in 2024.
 
 ==== Prerequisites
 
-* Deno 2.0+ (for LSP server, debugger)
-* Zig 0.15.2+ (for FFI bridge)
-* Lean 4.15.0+ (for type checking)
+* Deno 2.0{plus} (for LSP server, debugger)
+* Zig 0.15.2{plus} (for FFI bridge)
+* Lean 4.15.0{plus} (for type checking)
 * Nerdctl/Podman (for container deployment)
 
 ==== Quick Start
@@ -476,7 +509,8 @@ npm install && npm run compile
 vsce package
 code --install-extension gql-dt-1.0.0.vsix
 ----
-. *Configure LSP:* Add to `+settings.json+`:
+. *Configure LSP:*
+Add to `settings.json`:
 +
 [source,json]
 ----
@@ -484,8 +518,8 @@ code --install-extension gql-dt-1.0.0.vsix
   "gql-dt.lspPath": "/path/to/cli/lsp-server.ts"
 }
 ----
-. *Open .gql file:* Syntax highlighting and diagnostics active
-automatically.
+. *Open .gql file:*
+Syntax highlighting and diagnostics active automatically.
 
 '''''
 
@@ -493,25 +527,24 @@ automatically.
 
 ==== Created (6 new files):
 
-* `+ffi/zig/src/main.zig+` - Zig FFI bridge (170 LOC)
-* `+ffi/zig/build.zig+` - Zig build configuration
-* `+cli/lsp-server.ts+` - LSP server (180 LOC)
-* `+cli/debugger.ts+` - Debugger with proof visualization
-* `+vscode-extension/package.json+` - VS Code extension manifest
-* `+vscode-extension/syntaxes/gql-dt.tmLanguage.json+` - TextMate
-grammar
+* `ffi/zig/src/main.zig` - Zig FFI bridge (170 LOC)
+* `ffi/zig/build.zig` - Zig build configuration
+* `cli/lsp-server.ts` - LSP server (180 LOC)
+* `cli/debugger.ts` - Debugger with proof visualization
+* `vscode-extension/package.json` - VS Code extension manifest
+* `vscode-extension/syntaxes/gql-dt.tmLanguage.json` - TextMate grammar
 
 ==== Created (2 deployment files):
 
-* `+svalinn-compose.yaml+` - Verified container stack
-* `+scripts/rebrand-to-gql.sh+` - Automated rebrand script
+* `svalinn-compose.yaml` - Verified container stack
+* `scripts/rebrand-to-gql.sh` - Automated rebrand script
 
 ==== Modified (26 files):
 
 * 4 spec files renamed (GQLdt → GQL-DT)
 * 38 Lean source files updated
 * README.adoc, lakefile.lean, docker-compose.yml
-* `+.machine_readable/STATE.scm+` updated to 100%
+* `.machine++_++readable/STATE.scm` updated to 100%
 
 ==== Total Impact:
 
@@ -525,7 +558,7 @@ grammar
 
 [cols=",,,",options="header",]
 |===
-|# |Milestone |Status |Completion Date
+|++#++ |Milestone |Status |Completion Date
 |1 |Lean 4 Project Setup |✅ Complete |2026-01-12
 |2 |Core Refinement Types |✅ Complete |2026-01-12
 |3 |PROMPT Score Types |✅ Complete |2026-01-12
@@ -572,20 +605,23 @@ grammar
 
 *GQL-DT has achieved 100% completion and is production-ready.*
 
-All standard tooling is built, tested, and functional: - ✅ Zig FFI
-bridge for language bindings - ✅ LSP server for IDE integration - ✅ VS
-Code extension for syntax highlighting - ✅ Debugger for proof
-visualization - ✅ Svalinn/Vordr for verified containers - ✅
-Post-quantum cryptography for security - ✅ SLSA Level 3 for supply
-chain integrity - ✅ Comprehensive rebrand to GQL/Lithoglyph
+All standard tooling is built, tested, and functional:
 
-*GQL-DT is equivalent to Phronesis* in production readiness, with
-additional advantages in dependent types, formal verification, and
-supply chain security.
+* ✅ Zig FFI bridge for language bindings
+* ✅ LSP server for IDE integration
+* ✅ VS Code extension for syntax highlighting
+* ✅ Debugger for proof visualization
+* ✅ Svalinn/Vordr for verified containers
+* ✅ Post-quantum cryptography for security
+* ✅ SLSA Level 3 for supply chain integrity
+* ✅ Comprehensive rebrand to GQL/Lithoglyph
+
+*GQL-DT is equivalent to Phronesis* in production readiness, with additional advantages in dependent types, formal verification, and supply chain security.
 
 *Deployment:* Ready for use in production environments immediately.
 
 '''''
 
-*Report Generated:* 2026-02-07 *Author:* Claude Sonnet 4.5
-(Hyperpolymath Standards) *License:* CC-BY-SA-4.0
+*Report Generated:* 2026-02-07
+*Author:* Claude Sonnet 4.5 (Hyperpolymath Standards)
+*License:* CC-BY-SA-4.0

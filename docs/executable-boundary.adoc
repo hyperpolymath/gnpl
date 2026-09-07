@@ -1,0 +1,81 @@
+// SPDX-License-Identifier: CC-BY-SA-4.0
+// SPDX-FileCopyrightText: 2026 Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>
+= GNPL: executable boundary
+
+GNPL is a narration/projection language. Its public semantic objects are accounts,
+stances, warrants and rival accounts. Existing selection, type validation and
+storage code is private implementation machinery; it does not define a second
+public language or commit GNPL to a relational compilation target.
+
+The historical `GqlDt` source namespace remains a compatibility identifier.
+Renaming every import is separate from implementing the narration semantics.
+
+== What narration executes
+
+`src/Gnpl/` implements direct-evidence warrants, focalization, ordered accounts,
+a limited rival relation and hypothetical withdrawal. The `gnpl` executable
+parses a complete projection and imports a versioned evidence snapshot. It
+returns a warranted account or an explicit refusal, with no partial account on
+failure. See link:narration-slice.adoc[the surface, commands and trust boundary].
+
+`test/NarrationTest.lean` supplies 35 checks, including actual CLI invocations.
+The interpretation is independent of the private storage modules; it is not yet
+connected to a live Lithoglyph journal or Glyphbase.
+
+== What the executable substrate does
+
+`lake build` builds `substrate_test`; `lake test` runs it alongside the existing
+lexer, parser and type-safety suites. `test/SubstrateTest.lean` exercises source
+text through parsing, schema validation, IR construction, in-memory insertion
+and filtered retrieval. A second row is excluded by the predicate, so merely
+returning all stored rows cannot satisfy the positive control.
+
+Negative controls reject out-of-range evidence, empty refined strings and
+rationales, unknown tables and columns, mismatched annotations, arity errors,
+malformed optional clauses, trailing input and multiple statements. Repetition
+is executable and bounded by input consumption; a parser that consumes nothing
+is rejected. Insert typing witnesses are built by the validator against the
+caller's schema, instead of being supplied by an unconditional axiom.
+
+The private substrate's `Confidence` type preserves its distinct type tag and
+an integer admission score in `[0, 100]` through insertion, display storage and
+the typed-value JSON, CBOR and binary codecs. These bounded scores do not
+establish a probability or the truth of the supplied evidence. Empty insert
+column lists and fractional or out-of-range confidence inputs are rejected.
+
+The in-memory evaluator stores display strings. The pipeline therefore permits
+ordered predicates and sorting only for natural-number columns; string/Boolean
+predicates support equality and inequality. Other comparisons are refused until
+the evaluator can preserve their typed semantics.
+
+== Explicitly unavailable
+
+* Attached-proof checking: the corresponding mode refuses input.
+* Persistent execution through this pipeline: refuses success.
+* Complete IR wire encoding/decoding: the public pipeline refuses serialization
+  and decoding refuses reconstruction. Low-level experimental encoders remain;
+  some omit clauses and must not be used as a complete interchange protocol.
+* Checked update/delete lowering in this pipeline: refused until schema
+  validation is implemented.
+* General warrant derivations, temporal/causal event semantics, confidence
+  composition, live journal import and durable account storage remain outside
+  the implemented narration fragment.
+
+== Proof scope
+
+Dependent values establish their stated local constraints. Serialized descriptive
+proof blobs are not independently checkable certificates, and a nonempty rationale
+does not establish the truth, sufficiency or provenance of an account.
+
+The narration kernel constructs support witnesses and proves withdrawal
+exclusion and preservation of the requested claim order. Lean's transitive audit
+reports only `propext` for `narrate` and those two theorems. The default build
+checks the expected footprint in `test/NarrationProofAudit.lean`. This scope does
+not extend to the private substrate or to claims of external truth.
+
+The private parser and pipeline no longer require executable parser axioms or the
+unconditional inferred-insert typing axiom. This is not an axiom-free library:
+the validator still depends on its existing floating-point equality assumption,
+and other modules retain assumptions. A successful build or test suite is not a
+proof of the whole language. Historical total counts in older status documents
+must not be treated as a current trusted-base inventory.
