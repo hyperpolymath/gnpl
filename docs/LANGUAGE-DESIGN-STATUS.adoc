@@ -1,10 +1,10 @@
-== GQL-DT Language Design - Complete Status
+== GQL-DT Language Design - Implementation Status
 
 *SPDX-License-Identifier:* CC-BY-SA-4.0
 *SPDX-FileCopyrightText:* 2026 Jonathan D.A. Jewell (@hyperpolymath)
 
 *Date:* 2026-02-01
-*Status:* ✅ ALL REQUIREMENTS MET
+*Status:* ⚠️ PARTIAL — selected typed-value codecs exist; complete IR encoding and decoding are not implemented
 
 '''''
 
@@ -246,12 +246,12 @@ Well-typed queries cannot produce runtime type errors.
 [[white_check_mark-4-serializationdeserialization-converting-between-types-and-storage-formats]]
 ==== 4. Serialization/Deserialization: Partial Private Substrate
 
-*Status:* Partial. Selected typed-value codecs exist. The pipeline refuses complete IR interchange when it would lose clauses or require unchecked proof reconstruction. The supported public snapshot format is documented in link:narration-slice.adoc[the narration guide]; link:executable-boundary.adoc[the executable boundary] supersedes the historical codec claims below.
+*Status:* Partial. Selected typed-value codecs only; this support explicitly excludes complete IR encoding and decoding. The pipeline refuses complete IR interchange when it would lose clauses or require unchecked proof reconstruction. The supported public snapshot format is documented in link:narration-slice.adoc[the narration guide]; link:executable-boundary.adoc[the executable boundary] supersedes the historical codec claims below.
 
 *Files:*
 
-* `src/GqlDt/Serialization.lean` - *NEW* Complete serialization (600{plus} lines)
-* `src/GqlDt/IR.lean` - IR with CBOR support
+* `src/GqlDt/Serialization.lean` - Selected typed-value codecs only; no complete IR encoder or decoder
+* `src/GqlDt/IR.lean` - Typed IR definitions; not completely encoded or decoded by the codecs
 
 *Supported Formats:*
 
@@ -276,7 +276,7 @@ Well-typed queries cannot produce runtime type errors.
 * Proof blobs included
 * Round-trip identity
 
-===== CBOR (RFC 8949) - Proof Blobs, IR Transport
+===== CBOR (RFC 8949) - Selected Typed Values
 
 ✅ *Binary format with semantic tags*
 
@@ -320,7 +320,7 @@ def fromSQLValue (sql : String) (hint : TypeExpr) : TypedValue t
 * NonEmptyString → TEXT (proof lost)
 * Only for compatibility layer
 
-*Features:*
+*Features for selected typed values only:*
 
 * ✅ Preserve type information in serialized form
 * ✅ Include proofs in representation
@@ -489,7 +489,7 @@ Lean 4 Parser
 Typed AST (with proofs)
     ↓
 Typed IR (preserves dependent types)
-    ↓ CBOR serialization
+    ↓ Planned complete IR encoding (not implemented)
 Lithoglyph Native Execution (Zig/Rust)
     ↓
 Direct storage operations (no SQL)
@@ -571,7 +571,7 @@ ReScript/Rust/Julia/Gleam/etc.
 |*1. Type System* |✅ COMPLETE |9 files |All custom types implemented with proofs
 |*2. Grammar & Syntax* |✅ COMPLETE |4 files |EBNF, lexical, railroad diagrams
 |*3. Type Safety* |✅ COMPLETE |5 files |Compile-time {plus} runtime enforcement
-|*4. Serialization* |✅ COMPLETE |1 file |JSON, CBOR, Binary, SQL formats
+|*4. Serialization* |⚠️ PARTIAL |1 file |Selected typed-value codecs only; no complete IR encoding or decoding
 |*5. ReScript Integration* |✅ COMPLETE |2 files |Bindings, WASM, utilities
 |===
 
@@ -589,22 +589,22 @@ ReScript/Rust/Julia/Gleam/etc.
 
 === Next Steps (M6 Parser)
 
-*Current:* Type system, grammar, type safety, serialization all complete
+*Current:* Type system, grammar, and type safety are complete. Serialization supports selected typed-value codecs only; complete IR encoding and decoding are not implemented.
 
 *Ready to implement:*
 
 [arabic]
 . ✅ IR data structures → *DONE* (src/GqlDt/IR.lean)
 . ✅ Type inference → *DONE* (src/GqlDt/TypeInference.lean)
-. ✅ Serialization → *DONE* (src/GqlDt/Serialization.lean)
+. ⚠️ Selected typed-value codecs → *PARTIAL* (src/GqlDt/Serialization.lean); excludes complete IR encoding and decoding
 . ⏳ Actual parser (text → AST) - NEXT
 . ⏳ AST → IR generation - NEXT
-. ⏳ CBOR encoding implementation - NEXT
+. ⏳ Complete IR encoding and decoding, including CBOR transport - NEXT
 
-*All language design requirements: ✅ COMPLETE*
+*Language design implementation: ⚠️ PARTIAL — complete IR encoding and decoding remain outstanding*
 
 '''''
 
-*Document Status:* Complete language design verification
+*Document Status:* Implementation status with serialization gap recorded
 
-*Recommendation:* All requirements met. Ready for parser implementation (M6).
+*Recommendation:* Proceed with parser implementation (M6) while treating complete IR encoding and decoding as outstanding work.

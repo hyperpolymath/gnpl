@@ -145,7 +145,7 @@ User writes GQL
       ↓
 Type Inference (auto-generate types)
       ↓
-Proof Generation (auto-generate proofs or admit)
+Proof Generation (auto-generate proofs or reject)
       ↓
 GQL-DT AST (with types & proofs)
       ↓
