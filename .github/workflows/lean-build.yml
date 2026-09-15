@@ -1,192 +1,83 @@
+# This workflow is managed by gh actions-lock.
 # SPDX-License-Identifier: MPL-2.0
-# This workflow is managed by gh actions-lock.
-# This workflow is managed by gh actions-lock.
-# Lean 4 Build and Test Workflow
 name: Lean 4 Build
-
 on:
-  push:
-    branches: [ main, master, develop ]
   pull_request:
-    branches: [ main, master ]
+  push:
+    branches: [main]
   workflow_dispatch:
-
-permissions: read-all
-
+permissions:
+  contents: read
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 jobs:
   build:
     name: Build and Test Lean 4
     runs-on: ubuntu-latest
-
+    timeout-minutes: 20
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4.1.1
-
-      - name: Install elan (Lean version manager)
-        run: |
-          curl https://raw.githubusercontent.com/leanprover/elan/master/elan-init.sh -sSf | sh -s -- -y --default-toolchain none
-          echo "$HOME/.elan/bin" >> $GITHUB_PATH
-
-      - name: Verify Lean toolchain
-        run: |
-          elan --version
-          lean --version
-          lake --version
-
-      # Was actions/cache@0c45773b… — a deprecated version that GitHub hard-fails.
-      # That failure aborted this job BEFORE `lake build` ever ran, which is why
-      # CI never once reported whether this project compiles.
-      - name: Cache Lean dependencies
-        uses: actions/cache@v4.2.3
+      - uses: actions/checkout@v4.1.1
         with:
-          path: |
-            .lake
-            ~/.elan
-          key: ${{ runner.os }}-lean-${{ hashFiles('lake-manifest.json') }}
-          restore-keys: |
-            ${{ runner.os }}-lean-
-
-      # Tee the build so the proof gate can read Lean's own diagnostics.
-      # pipefail so a build failure is not masked by the pipe into tee.
-      - name: Build Lean 4 project
+          persist-credentials: false
+      - name: Install pinned Lean toolchain
+        uses: leanprover/lean-action@v1.6.0
+        with:
+          auto-config: 'false'
+          build: 'false'
+          test: 'false'
+          lint: 'false'
+          use-mathlib-cache: 'false'
+          use-github-cache: 'false'
+      - name: Build library, executable suites and narration axiom audit
         run: |
-          set -o pipefail
+          set -euo pipefail
           lake build 2>&1 | tee lake-build.log
-
-      # `lake test` exits non-zero BOTH when tests fail and when no test driver
-      # is configured. The previous step was `lake test || echo "..."`, which
-      # swallowed both — so a genuine test failure could never turn this job red.
-      # Tolerate only the "no test driver" case, and surface it as a warning
-      # rather than a silent pass: no driver means no executable test coverage.
-      - name: Run Lean tests
+      - name: Run every registered suite, including real narration processes
         run: |
-          set -o pipefail
-          if lake test 2>&1 | tee lake-test.log; then
-            echo "✅ lake test passed"
-          elif grep -q "no test driver configured" lake-test.log; then
-            echo "::warning::No Lean test driver is configured, so this repository has NO executable test coverage. Add a @[test_driver] to lakefile.lean."
-          else
-            echo "::error::lake test failed"
-            exit 1
-          fi
-
-      # Authoritative proof gate. Lean itself emits "declaration uses 'sorry'";
-      # the previous gate was `! grep -r "sorry\|admit" src/`, which fired on a
-      # lexer keyword table, a string literal, a comment and two constructor
-      # references — and could not see a sorry reached through a tactic block.
-      - name: Check for incomplete proofs (authoritative)
+          set -euo pipefail
+          lake test 2>&1 | tee lake-test.log
+      - name: Check Lean incomplete-proof diagnostics
         run: ./scripts/check-lean-proofs.sh --build-log lake-build.log
-
-      - name: Upload build log
+      - uses: actions/upload-artifact@v4.6.2
         if: always()
-        uses: actions/upload-artifact@v4.3.0
         with:
-          name: lake-build-log
-          path: lake-build.log
-          retention-days: 30
-
+          name: lean-validation
+          path: |
+            lake-build.log
+            lake-test.log
+          if-no-files-found: error
   zig-ffi:
     name: Build Zig FFI Bridge
     runs-on: ubuntu-latest
-
+    timeout-minutes: 15
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4.1.1
-
-      # Was goto-bus-stop/setup-zig@2a9625d… — that SHA does not exist and the
-      # action is unmaintained (it has no v2 tag at all), so this job could
-      # never start. mlugg/setup-zig is the maintained successor.
-      - name: Setup Zig
-        uses: mlugg/setup-zig@v2.2.1
+      - uses: actions/checkout@v4.1.1
         with:
-          version: 0.16.0
-
-      # Was `working-directory: bridge/zig`. That is a stale skeleton on the
-      # pre-0.15 Build API (`addStaticLibrary`, `linkLibC`) which no longer
-      # compiles, and nothing links against it. The real bridge is `bridge/`:
-      # `lakefile.lean` links `-Lbridge/zig-out/lib -llith_bridge`, and
-      # `bridge/build.zig` is what produces `liblith_bridge.a` at that path.
-      - name: Build Zig bridge
+          persist-credentials: false
+      - uses: mlugg/setup-zig@v2.2.1
+        with:
+          version: '0.16.0'
+      - name: Build and test bridge
         working-directory: bridge
-        run: zig build
-
-      - name: Verify the artifact Lean links against exists
-        working-directory: bridge
-        run: test -f zig-out/lib/liblith_bridge.a
-
-      # bridge/build.zig declares exactly two steps: "shared" and "test".
-      # The old workflow also ran `zig build test-integration`, which is not a
-      # step in any build.zig here and would always have failed.
-      - name: Run Zig tests
-        working-directory: bridge
-        run: zig build test
-
+        run: |
+          set -euo pipefail
+          zig build
+          zig build test
+          test -f zig-out/lib/liblith_bridge.a
   spec-validation:
     name: Validate Specifications
     runs-on: ubuntu-latest
-
+    timeout-minutes: 5
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4.1.1
-
-      - name: Check EBNF grammar syntax
+      - uses: actions/checkout@v4.1.1
+        with:
+          persist-credentials: false
+      - name: Check implemented contract and private specification inventory
         run: |
-          echo "Validating EBNF grammar..."
-          if ! grep -E '::=' spec/GQLdt-Grammar.ebnf > /dev/null; then
-            echo "❌ No production rules found in grammar"
-            exit 1
-          fi
-          echo "✅ Grammar file appears valid"
-
-      # Filenames corrected: these are GQL-DT-*, not GQLdt-*. The old list made
-      # this job fail on a spelling mismatch and report it as a MISSING SPEC.
-      - name: Verify specification files
-        run: |
-          missing=0
-          for file in spec/GQL_Dependent_Types_Complete_Specification.md \
-                      spec/normalization-types.md \
-                      spec/GQLdt-Grammar.ebnf \
-                      spec/GQL-DT-Lexical.md \
-                      spec/GQL-DT-Railroad-Diagrams.md; do
-            if [ ! -f "$file" ]; then
-              echo "❌ Missing required spec file: $file"
-              missing=1
-            fi
+          set -euo pipefail
+          for file in docs/narration-slice.adoc test/NarrationTest.lean test/NarrationProofAudit.lean spec/GQLdt-Grammar.ebnf spec/GQL-DT-Lexical.adoc; do
+            test -s "$file"
           done
-          [ "$missing" -eq 0 ] || exit 1
-          echo "✅ All specification files present"
-
-      # REMOVED: a "naming consistency" step that ran
-      #     grep -i "gql-dt" STATE.scm ECOSYSTEM.scm 2>/dev/null
-      #   -> echo "Found old naming (gql-dt instead of gql-dt)"
-      # It compared a string to itself, over two files that do not exist in this
-      # repo (2>/dev/null swallowed the error), so it could only ever pass.
-      # Deleted rather than repaired: there is no naming rule for it to enforce.
-
-  documentation:
-    name: Build Documentation
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4.1.1
-
-      - name: Check markdown links
-        uses: gaurav-nelson/github-action-markdown-link-check@1.0.15
-        with:
-          use-quiet-mode: 'yes'
-          config-file: '.github/markdown-link-check-config.json'
-        continue-on-error: true
-
-      - name: Generate spec index
-        run: |
-          echo "Specification files:" > spec-index.txt
-          find spec/ -name "*.md" -o -name "*.ebnf" >> spec-index.txt
-          cat spec-index.txt
-
-      - name: Upload spec index
-        uses: actions/upload-artifact@v4.3.0
-        with:
-          name: spec-index
-          path: spec-index.txt
-          retention-days: 30
+          # Presence is an inventory check; executable conformance is tested above.
+          grep -q '::=' spec/GQLdt-Grammar.ebnf

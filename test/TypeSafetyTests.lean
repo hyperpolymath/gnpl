@@ -105,6 +105,7 @@ def test_execution_safety : IO Unit := do
 private def valueInvariant (pair : Σ t : TypeExpr, TypedValue t) : Prop :=
   match pair with
   | ⟨.boundedNat min max, .boundedNat _ _ bn⟩ => min ≤ bn.val ∧ bn.val ≤ max
+  | ⟨.confidence, .confidence score⟩ => score.val ≤ 100
   | ⟨.nonEmptyString, .nonEmptyString nes⟩ => nes.val.length > 0
   | _ => True
 
@@ -123,6 +124,7 @@ private theorem valueInvariant_holds (pair : Σ t : TypeExpr, TypedValue t)
   | .float, .float _ => trivial
   | .boundedNat min max, .boundedNat _ _ bn =>
       exact ⟨bn.min_le, bn.le_max⟩
+  | .confidence, .confidence score => exact score.le_max
   | .nonEmptyString, .nonEmptyString nes =>
       exact nes.nonempty
   | .promptScores, .promptScores _ => trivial

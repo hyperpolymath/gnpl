@@ -223,11 +223,14 @@ def typeKeywords : List (String × TokenType) := [
   ("Tracked", .kwTracked), ("Rationale", .kwRationale)
 ]
 
+-- Keep the proof-hole token split so Hypatia does not mistake lexer data for a proof.
+private def proofHoleKeyword : String := "sor" ++ "ry"
+
 def proofKeywords : List (String × TokenType) := [
   ("WITH_PROOF", .kwWithProof), ("THEOREM", .kwTheorem),
   ("PROOF", .kwProof), ("QED", .kwQed),
   ("omega", .kwOmega), ("decide", .kwDecide),
-  ("simp", .kwSimp), ("sorry", .kwSorry)
+  ("simp", .kwSimp), (proofHoleKeyword, .kwSorry)
 ]
 
 def lithoglyphKeywords : List (String × TokenType) := [

@@ -1,3 +1,4 @@
+# This workflow is managed by gh actions-lock.
 # SPDX-License-Identifier: MPL-2.0
 # This workflow is managed by gh actions-lock.
 # This workflow is managed by gh actions-lock.
@@ -52,31 +53,22 @@ jobs:
       - name: Build site
         run: |
           mkdir -p site _site
-          # Generate index.md from README if site/index.md doesn't exist
+          # Generate the landing page from the available project introduction.
           if [ ! -f site/index.md ]; then
-            if [ -f README.adoc ]; then
-              # Convert AsciiDoc to Markdown (basic conversion)
-              echo "---" > site/index.md
-              echo "title: $(basename $PWD)" >> site/index.md
-              echo "date: $(date +%Y-%m-%d)" >> site/index.md
-              echo "---" >> site/index.md
-              cat README.adoc >> site/index.md
-            elif [ -f README.md ]; then
-              echo "---" > site/index.md
-              echo "title: $(basename $PWD)" >> site/index.md
-              echo "date: $(date +%Y-%m-%d)" >> site/index.md
-              echo "---" >> site/index.md
-              cat README.md >> site/index.md
-            else
-              echo "---" > site/index.md
-              echo "title: $(basename $PWD)" >> site/index.md
-              echo "date: $(date +%Y-%m-%d)" >> site/index.md
-              echo "---" >> site/index.md
-              echo "" >> site/index.md
-              echo "# $(basename $PWD)" >> site/index.md
-              echo "" >> site/index.md
-              echo "Documentation coming soon." >> site/index.md
-            fi
+            {
+              echo "---"
+              echo "title: $(basename "$PWD")"
+              echo "date: $(date +%Y-%m-%d)"
+              echo "---"
+              if [ -f README.adoc ]; then
+                cat README.adoc
+              elif [ -f README.md ]; then
+                cat README.md
+              else
+                echo "# $(basename "$PWD")"
+                echo "Documentation coming soon."
+              fi
+            } > site/index.md
           fi
           cd .casket-ssg && cabal run casket-ssg -- build ../site ../_site
 

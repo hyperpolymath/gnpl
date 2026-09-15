@@ -1,17 +1,17 @@
 == GQL-DT Language Bindings: Multi-Language Support
 
-*SPDX-License-Identifier:* CC-BY-SA-4.0 *SPDX-FileCopyrightText:* 2026
-Jonathan D.A. Jewell (@hyperpolymath)
+*SPDX-License-Identifier:* CC-BY-SA-4.0
+*SPDX-FileCopyrightText:* 2026 Jonathan D.A. Jewell (@hyperpolymath)
 
-*Date:* 2026-02-01 *Status:* Language Binding Specifications *Priority:*
-MEDIUM - Post-Core Implementation
+*Date:* 2026-02-01
+*Status:* Language Binding Specifications
+*Priority:* MEDIUM - Post-Core Implementation
 
 '''''
 
 === Overview
 
-GQL-DT provides language bindings for all *allowed languages* in the
-hyperpolymath ecosystem (per `+CLAUDE.md+` language policy).
+GQL-DT provides language bindings for all *allowed languages* in the hyperpolymath ecosystem (per `CLAUDE.md` language policy).
 
 ==== Binding Architecture
 
@@ -36,28 +36,32 @@ Zig FFI (C-compatible bridge)
 
 '''''
 
+[[1-rescript-bindings-primary]]
 === 1. ReScript Bindings (PRIMARY)
 
-*Status:* ✅ Specified in `+docs/INTEGRATION.md+`
+*Status:* ✅ Specified in `docs/INTEGRATION.adoc`
 
 *Priority:* CRITICAL - Primary language for application development
 
-*Location:* `+bindings/rescript/+`
+*Location:* `bindings/rescript/`
 
-*Use Cases:* - Lithoglyph Studio (web UI) - Client-side query validation
-- Browser-based type checking - Deno backend services
+*Use Cases:*
 
-*See:* `+docs/INTEGRATION.md+` for complete ReScript binding
-specification
+* Lithoglyph Studio (web UI)
+* Client-side query validation
+* Browser-based type checking
+* Deno backend services
+
+*See:* `docs/INTEGRATION.adoc` for complete ReScript binding specification
 
 '''''
 
+[[2-rust-bindings]]
 === 2. Rust Bindings
 
-*Priority:* HIGH - Systems programming, CLI tools, performance-critical
-code
+*Priority:* HIGH - Systems programming, CLI tools, performance-critical code
 
-*Location:* `+bindings/rust/+`
+*Location:* `bindings/rust/`
 
 *Directory Structure:*
 
@@ -93,7 +97,7 @@ pub enum TypedValue {
     Nat(u64),
     BoundedNat { min: u64, max: u64, value: u64 },
     NonEmptyString(String),
-    PromptScores(PromptScores),
+    Prompores(Prompores),
 }
 
 /// INSERT statement builder (Rust-idiomatic API)
@@ -245,11 +249,12 @@ criterion = "0.5"  # For benchmarks
 
 '''''
 
+[[3-julia-bindings]]
 === 3. Julia Bindings
 
 *Priority:* MEDIUM - Batch scripts, data processing (per RSR)
 
-*Location:* `+bindings/julia/+`
+*Location:* `bindings/julia/`
 
 *Directory Structure:*
 
@@ -393,11 +398,12 @@ julia = "1.9"
 
 '''''
 
+[[4-gleam-bindings]]
 === 4. Gleam Bindings
 
 *Priority:* MEDIUM - Backend services on BEAM
 
-*Location:* `+bindings/gleam/+`
+*Location:* `bindings/gleam/`
 
 *Directory Structure:*
 
@@ -424,11 +430,11 @@ pub type TypedValue {
   Nat(Int)
   BoundedNat(min: Int, max: Int, value: Int)
   NonEmptyString(String)
-  PromptScores(PromptScores)
+  Prompores(Prompores)
 }
 
-pub type PromptScores {
-  PromptScores(
+pub type Prompores {
+  Prompores(
     provenance: Int,
     replicability: Int,
     objective: Int,
@@ -544,11 +550,12 @@ ERL_NIF_INIT(gqldt_nif, nif_funcs, NULL, NULL, NULL, NULL)
 
 '''''
 
+[[5-elixir-bindings]]
 === 5. Elixir Bindings
 
 *Priority:* MEDIUM - Distributed systems, Phoenix backend
 
-*Location:* `+bindings/elixir/+`
+*Location:* `bindings/elixir/`
 
 *Directory Structure:*
 
@@ -669,11 +676,12 @@ end
 
 '''''
 
+[[6-haskell-bindings]]
 === 6. Haskell Bindings
 
 *Priority:* LOW-MEDIUM - Scaffoldia CLI, type-heavy tools
 
-*Location:* `+bindings/haskell/+`
+*Location:* `bindings/haskell/`
 
 *Directory Structure:*
 
@@ -803,11 +811,12 @@ insertCreate table columns values rationale = do
 
 '''''
 
+[[7-denojavascript-bindings]]
 === 7. Deno/JavaScript Bindings
 
 *Priority:* MEDIUM - Runtime, glue code, MCP protocol
 
-*Location:* `+bindings/deno/+`
+*Location:* `bindings/deno/`
 
 *Directory Structure:*
 
@@ -833,9 +842,9 @@ export type TypedValue =
   | { type: "nat"; value: number }
   | { type: "bounded_nat"; min: number; max: number; value: number }
   | { type: "non_empty_string"; value: string }
-  | { type: "prompt_scores"; value: PromptScores };
+  | { type: "prompt_scores"; value: Prompores };
 
-export interface PromptScores {
+export interface Prompores {
   provenance: number;
   replicability: number;
   objective: number;
@@ -906,20 +915,20 @@ await new InsertBuilder("evidence")
 
 '''''
 
+[[8-ada-bindings]]
 === 8. Ada Bindings
 
 *Priority:* LOW - Safety-critical systems (where required per ecosystem)
 
-*Location:* `+bindings/ada/+`
+*Location:* `bindings/ada/`
 
-*Note:* Ada bindings follow same pattern as other languages but use
-Ada’s package system and GNAT FFI (Interfaces.C).
+*Note:* Ada bindings follow same pattern as other languages but use Ada's package system and GNAT FFI (Interfaces.C).
 
 '''''
 
 === Language Priority Summary
 
-[width="100%",cols="27%,26%,26%,21%",options="header",]
+[cols=",,,",options="header",]
 |===
 |Language |Priority |Use Case |Status
 |*ReScript* |✅ CRITICAL |Web, apps, primary development |✅ Specified
@@ -937,6 +946,7 @@ Ada’s package system and GNAT FFI (Interfaces.C).
 
 === Common Patterns Across All Bindings
 
+[[1-builder-pattern]]
 ==== 1. Builder Pattern
 
 All languages use ergonomic builder APIs:
@@ -945,23 +955,36 @@ All languages use ergonomic builder APIs:
 new(table) → column(name, value) → rationale(text) → execute()
 ....
 
+[[2-type-safety]]
 ==== 2. Type Safety
 
-Type systems leveraged where possible: - Rust: Enums + Result types -
-Haskell: GADTs + phantom types - ReScript: Variants + polymorphic
-variants - Gleam: Custom types + Result - Elixir: Type specs + structs
+Type systems leveraged where possible:
 
+* Rust: Enums {plus} Result types
+* Haskell: GADTs {plus} phantom types
+* ReScript: Variants {plus} polymorphic variants
+* Gleam: Custom types {plus} Result
+* Elixir: Type specs {plus} structs
+
+[[3-error-handling]]
 ==== 3. Error Handling
 
-All bindings return `+Result+`/`+Either+`/tuple types: - Rust:
-`+Result<T, Error>+` - ReScript: `+result<'a, 'e>+` - Gleam:
-`+Result(a, String)+` - Elixir: `+{:ok, value} | {:error, msg}+` -
-Haskell: `+Either String a+`
+All bindings return `Result`/`Either`/tuple types:
 
+* Rust: `Result++<++T, Error++>++`
+* ReScript: `result++<++'a, 'e++>++`
+* Gleam: `Result(a, String)`
+* Elixir: `++{++:ok, value} ++|++ ++{++:error, msg}`
+* Haskell: `Either String a`
+
+[[4-ffi-safety]]
 ==== 4. FFI Safety
 
-All bindings validate inputs before calling Zig FFI: - Non-null strings
-- Array bounds - Type tags
+All bindings validate inputs before calling Zig FFI:
+
+* Non-null strings
+* Array bounds
+* Type tags
 
 '''''
 
@@ -969,7 +992,7 @@ All bindings validate inputs before calling Zig FFI: - Non-null strings
 
 ==== M9: ReScript Bindings (PRIORITY)
 
-* [ ] Create `+bindings/rescript/+` structure
+* [ ] Create `bindings/rescript/` structure
 * [ ] Implement FFI bindings to Zig
 * [ ] Builder API with type safety
 * [ ] Examples and documentation
@@ -977,19 +1000,21 @@ All bindings validate inputs before calling Zig FFI: - Non-null strings
 
 ==== M10: Rust Bindings
 
-* [ ] Create `+bindings/rust/+` structure
-* [ ] Cargo.toml + build.rs
+* [ ] Create `bindings/rust/` structure
+* [ ] Cargo.toml {plus} build.rs
 * [ ] FFI bindings via unsafe blocks
 * [ ] Safe Rust API wrapper
 * [ ] Examples and tests
 
-==== M11: Julia + Deno Bindings
+[[m11-julia--deno-bindings]]
+==== M11: Julia {plus} Deno Bindings
 
-* [ ] Julia: `+bindings/julia/+` with ccall
-* [ ] Deno: `+bindings/deno/+` with dlopen
+* [ ] Julia: `bindings/julia/` with ccall
+* [ ] Deno: `bindings/deno/` with dlopen
 * [ ] Examples for both
 
-==== M12: BEAM Bindings (Gleam + Elixir)
+[[m12-beam-bindings-gleam--elixir]]
+==== M12: BEAM Bindings (Gleam {plus} Elixir)
 
 * [ ] Erlang NIF (C bridge to Zig)
 * [ ] Gleam bindings
@@ -1006,11 +1031,16 @@ All bindings validate inputs before calling Zig FFI: - Non-null strings
 
 *Document Status:* Complete language binding specifications
 
-*Next Steps:* 1. Complete M6 Parser (typed IR generation) 2. Complete M7
-Idris2 ABI + M8 Zig FFI (foundation for all bindings) 3. Implement M9
-ReScript bindings (highest priority) 4. Implement remaining bindings
-based on ecosystem needs
+*Next Steps:*
 
-*See Also:* - `+docs/INTEGRATION.md+` - ReScript, WASM, ABI/FFI
-architecture - `+docs/EXECUTION-STRATEGY.md+` - Why native IR execution
-- `+~/abi-migration-guide.md+` - Idris2 ABI + Zig FFI universal standard
+[arabic]
+. Complete M6 Parser (typed IR generation)
+. Complete M7 Idris2 ABI {plus} M8 Zig FFI (foundation for all bindings)
+. Implement M9 ReScript bindings (highest priority)
+. Implement remaining bindings based on ecosystem needs
+
+*See Also:*
+
+* `docs/INTEGRATION.adoc` - ReScript, WASM, ABI/FFI architecture
+* `docs/EXECUTION-STRATEGY.adoc` - Why native IR execution
+* `~/abi-migration-guide.md` - Idris2 ABI {plus} Zig FFI universal standard

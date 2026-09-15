@@ -1,0 +1,22 @@
+# SPDX-License-Identifier: MPL-2.0
+# Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <j.d.a.jewell@open.ac.uk>
+#
+# ECOSYSTEM.a2ml — GNPL ecosystem position
+[metadata]
+version = "1.0.0"
+last-updated = "2026-09-07"
+
+[project]
+name = "GNPL"
+purpose = "Construct warranted accounts under declared focalization and retain rival interpretations over evidence"
+role = "narration-and-projection-language"
+
+[position-in-ecosystem]
+category = "database-languages"
+
+[related-projects]
+projects = [
+  "lithoglyph: intended durable evidence source; live snapshot adapter remains work",
+  "glyphbase: intended account rendering surface; integration remains work",
+  "nextgen-databases: portfolio coordination only"
+]

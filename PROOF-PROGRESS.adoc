@@ -1,0 +1,61 @@
+// SPDX-License-Identifier: CC-BY-SA-4.0
+// SPDX-FileCopyrightText: 2026 Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>
+= GNPL proof progress
+:revdate: 2026-09-07
+
+Observation horizon: the local Lean 4.15.0 build and focused tests on 2026-09-07.
+This is a scoped account of the narration fragment, not a whole-repository
+verification, remote CI or deployment claim.
+
+== Implemented construction discipline
+
+`src/Gnpl/Core.lean` defines `Warrant` indexed by the exact evidence snapshot,
+focalization and assertion request. `Narration` is indexed by the requested
+assertion list, and `Account` also carries snapshot/projection validity proofs.
+The checker constructs these witnesses from a decidable direct-evidence rule.
+It does not accept an unconditional witness or a descriptive proof blob.
+
+== Checked properties
+
+[cols="1,3",options=header]
+|===
+| Declaration | Property
+| `withdrawn_cannot_support`
+| Evidence marked withdrawn cannot satisfy the direct-evidence support rule.
+| `narration_preserves_projection`
+| The checked narration's claims equal the requested claims in their telling order.
+|===
+
+Lean's transitive axiom report for `narrate` and both theorems is `[propext]`.
+`test/NarrationProofAudit.lean` checks that exact diagnostic during the default
+build. A deliberately wrong expectation in an isolated scratch file was rejected
+with exit 1; the real audit builds successfully.
+
+The narration kernel imports Lean/Std independently of the private substrate's
+floating-point equality assumption. The substrate retains other proof debt;
+historical totals in link:docs/proof-debt.adoc[] are not a current axiom inventory.
+
+== Executable evidence
+
+`lake build` succeeds and `lake test` passes five suites, including 35 narration
+checks and 26 private-substrate checks alongside the existing suites. Narration
+checks cover actual CLI runs, acceptance, access and citation refusals, rivalry,
+threshold boundaries and dependent versus unrelated withdrawal. The original
+evidence file remains byte-for-byte unchanged by counterfactual evaluation.
+
+The successful build log passes `scripts/check-lean-proofs.sh --build-log`.
+That gate detects incomplete-proof diagnostics, not every assumption.
+
+== Remaining obligations
+
+* Live Lithoglyph import must preserve source attribution, visibility, consistent
+  revision identity and withdrawal semantics.
+* Additional warrant derivations need explicit rules and soundness properties.
+* Temporal/partial-order semantics and richer account relations need definition.
+* Confidence composition remains open; integer threshold checks do not settle it.
+* Durable account storage and Glyphbase rendering need integration tests.
+
+The current rule proves traceability and declared admission, not external truth,
+source authenticity, persuasive rationale or probabilistic confidence. Output
+JSON carries a readable warrant trail, not independently checkable proof terms.
+See link:docs/narration-slice.adoc[the implemented contract].

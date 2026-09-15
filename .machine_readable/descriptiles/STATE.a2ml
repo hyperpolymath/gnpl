@@ -1,0 +1,58 @@
+# SPDX-License-Identifier: MPL-2.0
+# SPDX-FileCopyrightText: 2026 Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>
+# Current local checkpoint; historical checkpoints remain in Git history.
+
+[metadata]
+project = "gnpl"
+version = "0.3.0"
+last-updated = "2026-09-07"
+status = "active"
+
+[project-context]
+name = "GNPL"
+purpose = "Warranted accounts, focalization and rival interpretations over evidence."
+phase = "implemented direct-evidence narration fragment; live journal integration next"
+maturity = "experimental"
+
+[implemented]
+narration = "src/Gnpl/: typed direct-evidence warrants and accounts, focalization, telling order, limited rival relation and hypothetical withdrawal"
+cli = "src/GnplMain.lean: narrate and counterfactual over versioned imported snapshots"
+private-substrate = "Complete-statement parsing and schema-validated in-memory insertion/retrieval fragment; historical namespace is not a public language or fixed lowering target"
+
+[verification]
+horizon = "Local working tree on 2026-09-07, Lean 4.15.0; remote CI and deployment not established"
+build = "lake build: exit 0"
+test = "lake test: exit 0, five suites"
+suites = ["lexer_test", "parser_test", "type_safety_test", "substrate_test", "narration_test"]
+private-substrate-checks = 26
+narration-checks = 35
+narration-cli = "Warranted accounts, focalization refusal, cited-withdrawal invalidation, unrelated-withdrawal preservation, input failure and byte-for-byte evidence preservation"
+proof-gate = "Successful build log passes scripts/check-lean-proofs.sh --build-log"
+narration-properties = ["withdrawn_cannot_support", "narration_preserves_projection"]
+narration-axiom-footprint = "Lean reports [propext] for narrate and both properties; default-build NarrationProofAudit checks this exact diagnostic"
+ffi = "Separate boundary; not covered by lake test and not reverified in this checkpoint"
+
+[trust-boundary]
+inputs = "Imported source attribution, audience and integer scores are trusted declarations; no source authentication or external truth claim"
+warrant = "Exact claim match, present active evidence, audience membership, nonblank provenance fields and explicit threshold"
+confidence = "Declared integer in 0–100; no composition, probability, source ranking or entrenchment semantics"
+proof-scope = "New narration kernel is independent of private storage assumptions; private modules retain proof debt, including floating-point equality"
+wire = "Readable JSON warrant trail; erased Lean proofs are not portable proof certificates"
+
+[known-limits]
+narration = ["Live Lithoglyph journal adapter", "General derivation chains", "Partial-order and temporal event semantics", "General account relations and search", "Confidence composition", "Durable account storage and Glyphbase rendering"]
+private-pipeline-refuses = ["Unverified attached-proof mode", "Persistent execution", "Complete IR interchange", "Unchecked update/delete lowering"]
+initialisation = "REQUIRES_INITIALISATION.adoc lists unresolved conduct/security facts in the current AsciiDoc sources; no values invented"
+
+[critical-next-actions]
+actions = ["Connect a consistent real Lithoglyph snapshot and test cited versus unrelated withdrawal across revisions", "Define and prove additional warrant derivation rules", "Keep broader confidence and temporal semantics explicit before implementation"]
+
+[history-landmines]
+notes = ["The extract from nextgen-databases was a squash; granular history survives in its _split_gnpl branch. Never prune it.", "Do not replay superseded sweep branches that reintroduce boilerplate or an incompatible licence.", "July proof-debt totals and external CI issue statuses are historical; this checkpoint does not revalidate them."]
+
+[evidence]
+build = "lake build"
+test = "lake test"
+guide = "docs/narration-slice.adoc"
+boundary = "docs/executable-boundary.adoc"
+next-integration = "docs/LITHOGLYPH.adoc"

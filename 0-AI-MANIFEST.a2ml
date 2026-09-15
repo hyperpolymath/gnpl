@@ -1,7 +1,7 @@
 ; SPDX-License-Identifier: MPL-2.0
 ; SPDX-FileCopyrightText: 2026 Jonathan D.A. Jewell (hyperpolymath)
 ;
-; 0-AI-MANIFEST.a2ml — Universal AI entry point for GQL-DT
+; 0-AI-MANIFEST.a2ml — Universal AI entry point for GNPL
 ; Media-Type: application/a2ml
 
 (manifest
@@ -13,7 +13,7 @@
     (license "MPL-2.0")
     (author "Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>")
     (parent-project "lithoglyph")
-    (monorepo-parent "nextgen-databases"))
+    (coordination-repository "nextgen-databases"))
 
   (purpose
     "Lithoglyph's narration/projection language. Where a query language answers
@@ -22,41 +22,38 @@
      does the same evidence also support?' — for forensic histories, counterfactual
      paths, plural meanings, and synchronic/diachronic evidence interpretation.
 
-     TWO LAYERS, ONE REPO. GNPL is built on top of GQLdt here and lowers to it:
-     GNPL (what account) -> GQLdt (what is) -> Zig FFI -> Lithoglyph (the store).
-     This is why every source file is namespaced GqlDt in a repo named gnpl; that
-     is expected, not a mistake. GQLdt is the dependently-typed query core — Lean 4
-     with Mathlib, compile-time verification of database constraints, provenance
-     tracking and normalization proofs — and it is GNPL's compilation target.
+     IMPLEMENTED: a direct-evidence narration fragment in src/Gnpl/, with a
+     projection parser, versioned evidence import, CLI, focalization, checked
+     warrants, ordered accounts, a limited rival relation and hypothetical
+     withdrawal. The snapshot importer is not a live Lithoglyph adapter.
 
-     STATUS: GQLdt builds and is tested (163 checks). GNPL itself is DESIGN ONLY —
-     docs/THEORY.adoc and docs/LITHOGLYPH.adoc; there is no src/Gnpl/ yet.")
+     Private selection, type validation and storage code remains under its
+     historical source namespace. It is not a second public language or a
+     prescribed lowering target. See docs/narration-slice.adoc and
+     docs/executable-boundary.adoc for the executable contracts.")
 
   (caveat-for-agents
-    "A green proof gate here means 'nothing is admitted mid-proof'. It does NOT mean
-     'nothing is assumed'. Lean's sorry warning does not fire on `axiom`, and this
-     repo declares 16 axioms — five in EXECUTABLE position (parseToIR, deserializeIR,
-     many, many1, sepBy), which therefore have no implementation at all. Code calling
-     them typechecks and cannot run. Do not report this repository as 'verified' on the
-     strength of a green build. See docs/proof-debt.md.")
+    "A green incomplete-proof gate does not establish an axiom-free repository.
+     The new narration kernel depends only on Lean/Std. Its default-build audit
+     requires Lean to report only propext for narrate and the two scoped theorems.
+     Private substrate modules retain separate assumptions, including floating-
+     point equality. Historical proof-debt totals are not a current inventory.
+     Imported attribution, audience and scores are trusted inputs; checked
+     support is not proof of external truth or authenticated source provenance.")
 
-  ;; Corrected 2026-07-28: all six of the previous entries pointed at files that do not
-  ;; exist. The .scm state/meta/ecosystem/roadmap files were converted to .a2ml under
-  ;; .machine_readable/6a2/ and never repointed; there is no AI.a2ml and no justfile.
-  ;; Every path below was checked to exist at the time of writing.
   (canonical-locations
-    (agent-instructions ".machine_readable/6a2/AGENTIC.a2ml")
-    (state ".machine_readable/6a2/STATE.a2ml")
-    (meta ".machine_readable/6a2/META.a2ml")
-    (ecosystem ".machine_readable/6a2/ECOSYSTEM.a2ml")
-    (playbook ".machine_readable/6a2/PLAYBOOK.a2ml")
-    (neurosym ".machine_readable/6a2/NEUROSYM.a2ml")
+    (agent-instructions ".machine_readable/descriptiles/AGENTIC.a2ml")
+    (state ".machine_readable/descriptiles/STATE.a2ml")
+    (meta ".machine_readable/descriptiles/META.a2ml")
+    (ecosystem ".machine_readable/descriptiles/ECOSYSTEM.a2ml")
+    (playbook ".machine_readable/descriptiles/PLAYBOOK.a2ml")
+    (neurosym ".machine_readable/descriptiles/NEUROSYM.a2ml")
     (roadmap ".machine_readable/ROADMAP.a2ml")
-    (proof-debt "docs/proof-debt.md")
+    (proof-debt "docs/proof-debt.adoc")
     (design-theory "docs/THEORY.adoc")
     (design-application "docs/LITHOGLYPH.adoc")
-    (architecture "ARCHITECTURE.md")
-    (governance "GOVERNANCE.md")
+    (architecture "ARCHITECTURE.adoc")
+    (governance "GOVERNANCE.adoc")
     (build "lakefile.lean")
     (test "lakefile.lean")            ;; @[test_driver] script test
     (proof-gate "scripts/check-lean-proofs.sh")
@@ -65,12 +62,12 @@
     (spec "spec/")
     (ffi-bridge "bridge/")
     (abi "src/GQLdt/ABI/")
-    (lean-entry "src/GqlDt.lean"))
+    (lean-entry "src/Gnpl.lean"))
 
   ;; Commands that reproduce every claim this manifest makes.
   (evidence
     (build "lake build")
-    (test "lake test")                ;; 163 checks across 3 suites
+    (test "lake test")                ;; 5 suites; 35 narration and 26 private-substrate checks
     (bridge "cd bridge && zig build && zig build test")
     (proof-gate "lake build 2>&1 | tee lake-build.log && ./scripts/check-lean-proofs.sh --build-log lake-build.log"))
 
@@ -84,15 +81,15 @@
 
   (architecture
     (lean4-core
-      (description "Core type system, refinement types, normalization proofs")
+      (description "Narration kernel plus private validation/storage modules")
       (location "src/")
-      (entry "src/GqlDt.lean"))
+      (entry "src/Gnpl.lean"))
     (bridge
-      (description "Zig FFI bridge for native query execution")
+      (description "Experimental Zig FFI bridge for storage operations")
       (location "bridge/"))
     (cli
-      (description "Command-line query tool")
-      (location "cli/"))
+      (description "GNPL narration and hypothetical withdrawal CLI")
+      (location "src/GnplMain.lean"))
     (vscode-extension
       (description "VS Code language support")
       (location "vscode-extension/")))
@@ -103,3 +100,20 @@
     (rule "All proofs must be constructive where possible")
     (rule "Container runtime is Podman — never Docker")
     (rule "Completion claims require honest audit")))
+
+<!-- BEGIN requires-initialisation -->
+
+## PRIORITY ACTION — this repository is not fully initialised
+
+4 substitution token(s) still have no value. **Read
+`REQUIRES_INITIALISATION.adoc` in the repository root before doing anything
+else here** — it lists every outstanding token, what it means, and which
+files it belongs in.
+
+Do not fabricate values for them, and do not delete the sections that
+contain them to quiet a gate. They are unfilled because they need a
+decision, not because they were overlooked. Resolve what you legitimately
+can, leave the rest, and delete `REQUIRES_INITIALISATION.adoc` only when
+nothing outstanding remains.
+
+<!-- END requires-initialisation -->

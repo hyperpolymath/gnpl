@@ -22,10 +22,9 @@ workflows:
     '.github/workflows/label-triage.yml': []
     '.github/workflows/labels.yml': []
     '.github/workflows/lean-build.yml':
-        - 'actions/cache@v4.2.3'
         - 'actions/checkout@v4.1.1'
-        - 'actions/upload-artifact@v4.3.0'
-        - 'gaurav-nelson/github-action-markdown-link-check@1.0.15'
+        - 'actions/upload-artifact@v4.6.2'
+        - 'leanprover/lean-action@v1.6.0'
         - 'mlugg/setup-zig@v2.2.1'
     '.github/workflows/push-email-notify.yml':
         - 'hyperpolymath/smtp-notify-action@v0.2.0'
@@ -35,14 +34,14 @@ workflows:
         - 'ossf/scorecard-action@v2.4.3'
     '.github/workflows/secret-scanner.yml': []
 dependencies:
-    'actions/cache@v4.2.3':
-        ref: 'v4.2.3'
-        commit: 'sha1-5a3ec84eff668545956fd18022155c47e93e2684'
-        owner_id: 44036562
-        repo_id: 215566462
     'actions/cache@v4.3.0':
         ref: 'v4.3.0'
         commit: 'sha1-0057852bfaa89a56745cba8c7296529d2fc39830'
+        owner_id: 44036562
+        repo_id: 215566462
+    'actions/cache@v5':
+        ref: 'v5'
+        commit: 'sha1-caa296126883cff596d87d8935842f9db880ef25'
         owner_id: 44036562
         repo_id: 215566462
     'actions/checkout@v4.1.1':
@@ -97,11 +96,6 @@ dependencies:
         commit: 'sha1-2f0cc07b4b9bea248ae098aba9e1a8a1de5ec24c'
         owner_id: 47606891
         repo_id: 331103973
-    'gaurav-nelson/github-action-markdown-link-check@1.0.15':
-        ref: '1.0.15'
-        commit: 'sha1-d53a906aa6b22b8979d33bc86170567e619495ec'
-        owner_id: 23069445
-        repo_id: 178552370
     'github/codeql-action@v4.31.10':
         ref: 'v4.31.10'
         commit: 'sha1-cdefb33c0f6224e58673d9004f47f7cb3e328b89'
@@ -117,6 +111,13 @@ dependencies:
         commit: 'sha1-ede1191ef6ff3ac02c4f4d9efdf837ee517e11d7'
         owner_id: 6759885
         repo_id: 1352485172
+    'leanprover/lean-action@v1.6.0':
+        ref: 'v1.6.0'
+        commit: 'sha1-50fcf42d2e460296f1a34b402e990d1b24f8b596'
+        owner_id: 7233018
+        repo_id: 795738301
+        uses:
+            - 'actions/cache@v5'
     'mlugg/setup-zig@v2.2.1':
         ref: 'v2.2.1'
         commit: 'sha1-d1434d08867e3ee9daa34448df10607b98908d29'

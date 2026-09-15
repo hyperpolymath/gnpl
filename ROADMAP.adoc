@@ -1,22 +1,39 @@
 // SPDX-License-Identifier: CC-BY-SA-4.0
-= Gql Dt Roadmap
+// SPDX-FileCopyrightText: 2026 Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>
+= GNPL engineering roadmap
+:revdate: 2026-09-07
 
-== Current Status
+== Implemented foundation
 
-Initial development phase.
+* Executable private parser and schema validation, with explicit refusals where
+  persistence, proof checking and interchange remain incomplete.
+* Direct-evidence narration: typed accounts and warrants, focalization, declared
+  telling order, a limited rival relation and hypothetical withdrawal.
+* A `.gnpl` projection surface, versioned evidence import and executable CLI.
+* Five passing Lean suites, including acceptance and rejection controls.
+* Two checked narration properties and a default-build transitive axiom audit.
 
-== Milestones
+== Next: connect the evidence source
 
-=== v0.1.0 - Foundation
-* [ ] Core functionality
-* [ ] Basic documentation
-* [ ] CI/CD pipeline
+Implement a read-only Lithoglyph adapter for the snapshot contract. Demonstrate
+an account over real stored evidence, invalidate it after a cited withdrawal,
+and preserve it after an unrelated withdrawal. Preserve revision identity and
+historical accounts. See link:docs/LITHOGLYPH.adoc[the integration contract].
 
-=== v1.0.0 - Stable Release
-* [ ] Full feature set
-* [ ] Comprehensive tests
-* [ ] Production ready
+== Extend the semantics deliberately
 
-== Future Directions
+* Checked derivation chains with named inference rules and compositional warrant.
+* Event identity and partial-order/temporal semantics, separate from telling order.
+* Richer account relations, with the intended argumentation semantics explicit.
+* A justified confidence-composition policy; declared integer thresholds do not
+  settle PROMPT averaging, probability or epistemic entrenchment.
 
-_To be determined based on community feedback._
+Each extension needs an acceptance case, a meaningful refusal case and a precise
+proof obligation. Keep useful selection and storage operations as private
+machinery; no additional public language or fixed lowering target is assumed.
+
+== Complete the application path
+
+Add durable account storage and Glyphbase rendering only with an end-to-end
+warrant/withdrawal test. Report configured CI separately from remote results,
+and local proofs separately from source authenticity or deployed guarantees.
