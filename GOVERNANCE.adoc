@@ -62,4 +62,4 @@ unavoidable it carries a comment naming the upstream issue.
 
 === Contributing
 
-See `CONTRIBUTING.adoc`. Code is MPL-2.0, documentation is CC-BY-SA-4.0.
+See `.github/CONTRIBUTING.md`. Code is MPL-2.0, documentation is CC-BY-SA-4.0.
