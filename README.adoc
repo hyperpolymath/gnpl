@@ -72,7 +72,7 @@ source-to-IR path, rejection behaviour and remaining proof assumptions.
 * The substrate parses one complete statement, validates inserts against a supplied
   schema and supports in-memory insertion/retrieval. It rejects unverified proof mode,
   unchecked mutations, incomplete wire interchange and persistent-execution requests.
-* Existing ABI/FFI code is separate from the durable narration pipeline (_verification intended; Lean proofs are provenance_).
+* Existing ABI/FFI code is separate from the direct-evidence narration pipeline (_verification intended; Lean proofs are provenance_).
 * The direct-evidence rule checks traceability and declared admission policy.
   It does not establish external truth, authenticate source declarations, or
   settle confidence composition and general narrative inference.
